@@ -706,9 +706,9 @@ def test_remove_confirm_dialog_mentions_audio_files_untouched(qapp, qtbot, monke
 
     assert bodies, "confirm dialog should have been shown"
     body = bodies[0]
-    assert "audio" in body.lower() or "untouched" in body.lower(), (
-        f"Dialog body should mention audio files are safe: {body!r}"
-    )
+    assert (
+        "audio" in body.lower() or "untouched" in body.lower()
+    ), f"Dialog body should mention audio files are safe: {body!r}"
 
 
 # ---------------------------------------------------------------------------
