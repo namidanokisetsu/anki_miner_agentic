@@ -1,23 +1,17 @@
 # Anki Miner Agentic
 
-Anki Miner already handles the fiddly parts of sentence mining: subtitles, dictionaries, screenshots, audio, and Anki notes. This fork lets an agent decide what is worth learning and carry those choices all the way into Anki, removing the manual selection and card-creation steps while keeping the final write guarded.
+A fork of [Anki Miner](https://github.com/0xzerolight/anki_miner) that lets an agent choose useful mining candidates and add cards automatically to your deck. For the original desktop app, its features, and general help, use the [upstream README](https://github.com/0xzerolight/anki_miner#readme).
 
-The agent reviews sentence candidates prepared from your source media. To judge what suits you, it gets a compact learner profile built from the Anki fields you choose, but it cannot browse or edit your raw notes. It can use that learning history and local dictionary data to pick useful sentences, choose the right meaning, and add a short translation. Anki Miner still builds the cards, enforces the limits, and decides what may be written.
+## What this fork changes
 
-This is an independent fork of [Anki Miner](https://github.com/0xzerolight/anki_miner), maintained and released separately. The original project and its contributors built the desktop app and mining pipeline underneath it.
+- Builds a learner profile from the Anki decks and fields you choose.
+- Lets an agent rank prepared candidates, pick a dictionary meaning, and add a short translation.
+- Keeps card creation behind limits, an exact dry run, and explicit approval.
+- Supports MCP for agents and a JSON CLI for manual runs and debugging.
 
-## What this fork adds
+## Install
 
-- **A learner profile, not just a known-word list.** You choose which Anki fields and decks to map. The profile then distinguishes unseen, learning, young, and mature vocabulary without handing raw notes to the agent.
-- **Knowledge-aware candidate review.** The agent sees the sentence, prior exposure, frequency, available pitch data, dictionary meanings, and quality warnings before deciding whether a card is useful.
-- **Bounded card enrichment.** For a selected card, the agent may choose a dictionary-backed meaning and add a one-line sentence translation. It cannot invent card HTML, furigana, pitch, frequency, media, or arbitrary Anki fields.
-- **Guarded writes.** Card eligibility and batch limits are enforced by the application. A live write needs an enabled target and a validation token from an exact dry run; changing the selection invalidates that token.
-- **Resumable batches with receipts.** Stable content fingerprints make retries safe, and every candidate ends with a created, duplicate, rejected, or failed result you can inspect.
-- **A small automation surface.** The same workflow is available through a JSON CLI and five focused MCP tools. There is no general shell, SQL, or unrestricted `addNotes` tool.
-
-## Install from source
-
-Python 3.11 or newer, Anki with [AnkiConnect](https://ankiweb.net/shared/info/2055492159), and ffmpeg are required. Keep Anki open during setup.
+You need Python 3.11+, Anki with [AnkiConnect](https://ankiweb.net/shared/info/2055492159), and ffmpeg. Keep Anki open during setup.
 
 ```bash
 git clone https://github.com/namidanokisetsu/anki_miner_agentic.git
@@ -28,170 +22,26 @@ python -m pip install -e ".[mcp]"
 anki_miner_agentic_gui
 ```
 
-Use a dedicated virtual environment. This fork has a distinct distribution name, but still inherits the internal `anki_miner` Python namespace from upstream and must not be installed into the same environment as `anki-miner`.
+Use a dedicated virtual environment. This fork and upstream `anki-miner` both use the `anki_miner` Python package, so do not install them together.
 
-Use **Tools → Download Recommended Resources** once to install the default dictionary, frequency, and pitch data. The current headless configuration can reuse those resources, but does not install them by itself.
+## Configure it
 
-## Set up an agent
+Set up dictionaries, frequency and pitch sources, Anki fields, filters, and media in the GUI. The agent inherits those settings.
 
-Give your agent terminal and filesystem access to this checkout, then paste:
+## Connect an agent
+
+Give your agent access to this checkout, then paste:
 
 ```text
-Configure the existing Anki Miner Agentic installation in this checkout. Read agentic-docs/agent-mining.md and skills/anki-miner-agent/SKILL.md. Reuse the active virtual environment; do not reinstall the package.
-
-Use the existing GUI config, installed dictionaries, mining settings, and live Anki schema. Do not guess deck, note-type, or field names. Put the agent config outside the repo and leave `write_target.enabled` false so setup cannot create cards. Run `anki_miner_agentic_agent --config <config> profile-validate`, `profile-sync`, and `profile-status`.
-
-Register `anki_miner_agentic_mcp --config <absolute-config-path>` as a stdio MCP server and verify its five tools. Fix routine setup errors, but never create cards until I approve the exact count after a dry run. Preserve the returned validation token and use it only with the unchanged live selection. Enabling the write target is a separate opt-in and does not replace explicit approval for a commit.
+Configure Anki Miner Agentic in this checkout. Read agentic-docs/agent-mining.md and skills/anki-miner-agent/SKILL.md. Reuse the active virtual environment and the GUI settings. Read deck, note-type, and field names from Anki instead of guessing them. Keep write_target.enabled false during setup. Validate and sync the learner profile, then register the five-tool MCP server. Never create cards until I approve the exact selection after a dry run.
 ```
 
-See the [agent mining guide](https://github.com/namidanokisetsu/anki_miner_agentic/blob/main/agentic-docs/agent-mining.md) for manual setup and the [MCP contract](https://github.com/namidanokisetsu/anki_miner_agentic/blob/main/skills/anki-miner-agent/references/mcp-contract.md) for tool payloads.
+`agent.json` stores the settings used only by automation: learner decks, the write target, safety limits, and intentional agent-only overrides. Once the agent is connected, you can ask naturally: "Use Mining as the destination deck" or "Limit batches to 20 cards." It should explain which setting it changed.
 
-## Mining demo
+Use MCP for normal conversations with an agent. Use the JSON CLI when you want to run or debug the same workflow manually in a terminal, automate it with a script, or connect a client that does not support MCP.
 
-![Anki Miner Showcase](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/demo.gif)
-
-<p align="center">⬇️ <a href="https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/demo.mp4">Full demo with sound (MP4)</a></p>
-
-### Example cards
-
-| ![ホント](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/ホント.gif) | ![いちゃいちゃ](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/いちゃいちゃ.gif) | ![代](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/代.gif) |
-|:--:|:--:|:--:|
-| ⬇️ [MP4 (sound)](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/ホント.mp4) | ⬇️ [MP4 (sound)](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/いちゃいちゃ.mp4) | ⬇️ [MP4 (sound)](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/代.mp4) |
-
-## Tabs
-
-- **Video** - mine a single video/subtitle pair, a batch folder, or YouTube URLs.
-- **Deck Builder** - mine a whole series into one frequency-ranked deck.
-- **Audiobooks** - mine audiobooks, podcasts, radio, songs (audio + subtitle/transcript pairs).
-- **Reading** - mine manga (mokuro), novels (`.epub`, `.txt`; single book or a whole folder), standalone subtitle files, or pasted Japanese text.
-- **Analytics** - mining history, difficulty rankings, milestones.
-- **Utilities** - generate subtitles (local Whisper), retime subtitles (alass), condense media to dialogue-only audio, copy the worth-learning part of a premade deck into a new one, and backfill fields on existing cards.
-- **Settings** - everything configurable.
-
-## Other Features
-
-- Word Curator - review every candidate word before cards are made, with its scene, manga page, and dictionary entry side by side.
-- Undo a run - delete the notes a run just created, straight from its results dialog.
-- Extensive filtering: i+1, frequency rank range, blacklist, regex, wordsets, and more.
-- Offline Yomitan dictionary import - definitions, pitch accent, frequency - chained by priority.
-- Multiple frequency lists chained by priority.
-- Word audio on cards from local audio packs, JapanesePod101, or Google TTS.
-- Sentence audio on Reading cards from Google Translate TTS or Naver Papago (off by default).
-- Per-dictionary glossary styling, Yomitan-style.
-- Embedded libmpv video preview - play a word's scene while curating, or nudge subtitle timing with live playback.
-- Animated screenshots (see example cards above).
-- Settings profiles - save named configurations and switch between them from the header.
-- Restyle Mined Cards - re-apply your current card styling to cards you already made (Tools menu).
-
-<details>
-<summary><strong>Built-in themes (29)</strong></summary>
-
-- **Ayu** - Light, Mirage, Dark
-- **Catppuccin** - Latte (light); Frappé, Macchiato, Mocha (dark)
-- **Dracula** - Dracula, Alucard
-- **Everforest** - Light, Dark
-- **GitHub** - Light; Dark, Dark Dimmed
-- **Gruvbox** - Light Medium, Dark Medium
-- **Kanagawa** - Lotus (light), Wave (dark)
-- **Rosé Pine** - Dawn (light); Main, Moon (dark)
-- **Solarized** - Light, Dark
-- **Standalone** - Light, Dark, Sakura, Nord, One Dark, Tokyo Night
-
-Theme licenses: [LICENSE-THEMES.md](LICENSE-THEMES.md). 
-Want another theme added? Suggest in a GitHub Issue.
-
-</details>
-
-<details>
-<summary><strong>How It Works</strong></summary>
-
-1. **Read the subtitles** and split Japanese into individual words.
-2. **Filter** to content words you don't already know - optionally reviewing the list yourself in the Word Curator.
-3. **Grab a screenshot and audio clip** from the video for each line.
-4. **Look up definitions** in your configured offline dictionaries, optionally falling back to Jisho online if enabled (slower, rate-limited).
-5. **Send the finished cards to Anki.**
-
-</details>
-
-## Recommended Resources
-
-| Type | Resource | Download | Add via |
-|------|----------|----------|---------|
-| Dictionary | [JMdict](https://github.com/yomidevs/jmdict-yomitan) | [Yomitan zip](https://github.com/yomidevs/jmdict-yomitan/releases/latest/download/JMdict_english.zip) | Add Dictionary… |
-| Dictionary | [Jitendex](https://jitendex.org/) | [Yomitan zip](https://github.com/stephenmk/stephenmk.github.io/releases/latest/download/jitendex-yomitan.zip) | Add Dictionary… |
-| Dictionary | [Bee's Character Dictionary](https://characterdictionary.tokyo/) | Generated on site | Add Dictionary… |
-| Pitch | [Kanjium](https://github.com/mifunetoshiro/kanjium) | [TSV](https://raw.githubusercontent.com/mifunetoshiro/kanjium/master/data/source_files/raw/accents.txt) | Pitch Accent -> Add pitch source… |
-| Pitch | [アクセント辞典v2](https://learnjapanese.moe/yomichan/#dictionaries) | [Drive](https://drive.google.com/drive/folders/1tTdLppnqMfVC5otPlX_cs4ixlIgjv_lH) | Pitch Accent -> Add pitch source… |
-| Frequency | [JPDB v2.2 Kana](https://github.com/Kuuuube/yomitan-dictionaries) | [Yomitan zip](https://github.com/Kuuuube/yomitan-dictionaries/raw/main/dictionaries/JPDB_v2.2_Frequency_Kana_2024-10-13.zip) | Frequency -> Add frequency source… |
-| Frequency | [BCCWJ SUW+LUW](https://github.com/Kuuuube/yomitan-dictionaries) | [Yomitan zip](https://github.com/Kuuuube/yomitan-dictionaries/raw/main/dictionaries/BCCWJ_SUW_LUW_combined.zip) | Frequency -> Add frequency source… |
-
-
-<details>
-<summary><strong>JMnedict License</strong></summary>
-
-Uses bundled name wordsets derived from [JMnedict](https://www.edrdg.org/enamdict/enamdict_doc.html) (JMdict/EDICT project, EDRDG, CC BY-SA 4.0).
-
-</details>
-
-## Troubleshooting
-
-| Issue                    | Solution                                                                         |
-|--------------------------|----------------------------------------------------------------------------------|
-| "Cannot connect to Anki" | Start Anki and ensure AnkiConnect is installed.                                  |
-| "Deck not found"         | Pick an existing deck in Settings -> Cards & Anki. Decks are not created for you; make it in Anki first if you need a new one. |
-| "Note type not found"    | Configure your note type's field names in Settings -> Cards & Anki.               |
-| "ffmpeg not found"       | Install ffmpeg and add it to PATH.                                               |
-| No definitions found     | Add a Yomitan dictionary in Settings -> Add Dictionary… (recommended), or enable the Jisho fallback (slower, rate-limited). |
-| Fresh install has no definitions | Run Tools -> Setup Wizard or Tools -> Download Recommended Resources. For manual import, keep the Yomitan ZIP intact (do not unzip it). |
-| Add Dictionary stalls or fails | Note the last visible stage and attach logs (see "Where are the logs?" below). Include the dictionary ZIP name, source, and size in the report. |
-| Where are the logs?      | Use Help -> Open Log Folder, or open `%USERPROFILE%\.anki_miner\anki_miner.log` on Windows or `~/.anki_miner/anki_miner.log` on macOS/Linux. Rotated logs use the `.1` through `.5` suffixes. |
-| Reporting a bug          | Help → Export Diagnostics… writes a ZIP with logs and system details to a location you choose. Review it before uploading because it contains file paths and file names from your computer. Nothing is uploaded automatically. |
-| More diagnostic logging | Set `ANKI_MINER_LOG_LEVEL=DEBUG` before starting Anki Miner to capture third-party yt-dlp, urllib3, and fugashi details. The default is `WARNING`; Anki Miner logs remain at DEBUG. |
-| Audio is wrong language  | The tool tries Japanese audio tracks first, then falls back to the default.      |
-| Subtitles out of sync    | Use the subtitle offset control in the GUI (range ±300 seconds).                 |
-
-## Agentic roadmap
-
-- [x] Learner-aware candidate preparation.
-- [x] Bounded MCP and JSON CLI.
-- [x] Guarded selected-only Anki writes and durable receipts.
-- [x] Dry-run validation tokens.
-- [ ] Guided configuration and live Anki schema discovery.
-- [ ] Human approval UI for live commits.
-- [ ] Headless recommended-resource installation.
-- [ ] Codex, Claude, and Hermes setup examples.
-- [ ] Disposable-profile live canary test.
-- [ ] Automated upstream compatibility workflow.
-- [ ] Agent-managed media library and watch folders.
-- [ ] Automatic Japanese subtitle acquisition.
-- [ ] Additional mining backends and languages.
-
-The desktop mining pipeline is based on upstream Anki Miner. See the [upstream project](https://github.com/0xzerolight/anki_miner) for its original product roadmap and Android port.
-
-
-## Contributing
-
-Contributions of any kind are welcome.
-If you want to support the project, please share it with others who may benefit from it.
-
-- New here? Start with [CONTRIBUTING.md](CONTRIBUTING.md).
-- Architecture overview: [ARCHITECTURE.md](ARCHITECTURE.md).
-- Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-- Security: [SECURITY.md](SECURITY.md).
-
-Bug reports and feature requests → [Agentic issues](https://github.com/namidanokisetsu/anki_miner_agentic/issues).
-General questions and discussion → [Agentic discussions](https://github.com/namidanokisetsu/anki_miner_agentic/discussions). For questions about the original application, use the [upstream project](https://github.com/0xzerolight/anki_miner).
-
-## Special Thanks
-
-Sincere thanks to people who made exceptional contributions to the project:
-
-- ★ **[StyraxBenzoin](https://github.com/StyraxBenzoin)** - Brilliant feature suggestions, new release testing, community building.
-- ★ **[rob-olvr](https://github.com/rob-olvr)** - Excellent feature suggestions, community building and moderation on Discord.
-
-See [CONTRIBUTORS.md](CONTRIBUTORS.md) for everyone who has made any kind of contribution to the project.
-
+For manual setup, read the [agent mining guide](agentic-docs/agent-mining.md). Exact tool payloads are in the [MCP contract](skills/anki-miner-agent/references/mcp-contract.md).
 
 ## License
 
-GNU General Public License v3.0. See [LICENSE](LICENSE).
+[GPL-3.0](LICENSE)
