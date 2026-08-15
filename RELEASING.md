@@ -1,11 +1,12 @@
-# Releasing
+# Releasing Anki Miner Agentic
 
 Maintainer-facing release SOP. Contributors should not need to run any of these steps.
 
 ## Prerequisites
 
-- Push access to `0xzerolight/anki_miner`.
-- PyPI trusted publisher already configured for the project; releases publish via `publish.yml` on tag push.
+- Push access to `namidanokisetsu/anki_miner_agentic`.
+- A PyPI trusted publisher configured for the `anki-miner-agentic` project and this repository; releases publish via `publish.yml` on tag push.
+- The pinned `vendor-libmpv-*` assets mirrored into this repository, with their URLs and SHA256 values updated in `release.yml`.
 - No outstanding regressions in `## [Unreleased]` of `CHANGELOG.md`.
 - `gh` authenticated with scopes `actions:write` + `actions:read` + `contents:read` (classic `repo`), needed for the dry-run gate below.
 
@@ -45,6 +46,9 @@ For a full-matrix rehearsal without cutting a release, run the dry-run gate. Req
 scripts/release_dryrun.sh                 # default: linux-windows
 scripts/release_dryrun.sh all             # all four legs (run once, green, right before tagging)
 ```
+
+After the first compatible Windows release exists, run the gate with
+`REQUIRE_WINDOWS_UPGRADE_SMOKE=1` so an upgrade-test skip fails the rehearsal.
 
 It dispatches the real `release.yml` build matrix via `workflow_dispatch` (`gh
 workflow run --ref <branch>`). Dispatch is a dry-run by construction — the `ci-gate`
@@ -92,7 +96,7 @@ and fix until green before tagging.
 
    Each Linux/Windows/macOS build runs `scripts/bundle_smoke.sh` — the bundle smokes (youtube extractor registry, offline ASR native-lib resolution, libmpv presence and dlopen, ffmpeg encoder set, and a whisper.cpp/pywhispercpp Vulkan import-loadability gate — a Linux+Windows-only native loadability check, skipped on macOS and in the local preflight), the same script the preflight runs. Artifacts upload to the GitHub Release for the tag.
 
-   Windows installer CI also runs three legs: leg 1 clean-installs with no optional tasks, leg 2 clean-installs with default tasks, and leg 3 overlays the new installer onto the newest eligible older release before probing a blocked downgrade. Leg 3 may emit `no-releases` only when the release listing is empty, or `no-eligible-version` when no published stable older `vX.Y.Z` release has the exact matching Windows installer asset (including asset-name drift); these skips are legitimate for forks or an initial release, while the `0xzerolight/anki_miner` dry-run requires a pass.
+   Windows installer CI also runs three legs: leg 1 clean-installs with no optional tasks, leg 2 clean-installs with default tasks, and leg 3 overlays the new installer onto the newest eligible older release before probing a blocked downgrade. Leg 3 may emit `no-releases` only when the release listing is empty, or `no-eligible-version` when no published stable older `vX.Y.Z` release has the exact matching Windows installer asset (including asset-name drift); these skips are legitimate for an initial Agentic release.
 
 6. **PyPI publish runs.** `.github/workflows/publish.yml` builds and publishes the sdist + wheel to PyPI via trusted publishing on the same tag.
 
@@ -104,7 +108,7 @@ and fix until green before tagging.
    - `AnkiMiner-macOS-arm64.tar.gz`
    - `AnkiMiner-macOS-x86_64.tar.gz`
 
-   And that PyPI lists the new version: <https://pypi.org/project/anki-miner/>.
+   And that PyPI lists the new version: <https://pypi.org/project/anki-miner-agentic/>.
 
    > **Intel macOS build is special.** The `AnkiMiner-macOS-x86_64.tar.gz` build runs on
    > GitHub's `macos-15-intel` runner and ships **without local Whisper ASR**: it installs

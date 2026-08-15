@@ -255,8 +255,8 @@ assert_installer_upgrade_terminal() {
     exit 1
   fi
   if [ "$skip_count" -eq 1 ]; then
-    if [ "$REPOSITORY" = "0xzerolight/anki_miner" ]; then
-      echo "ERROR: Windows installer upgrade smoke SKIP is not allowed for 0xzerolight/anki_miner; a prior release installer must produce PASS." >&2
+    if [ "${REQUIRE_WINDOWS_UPGRADE_SMOKE:-0}" = "1" ]; then
+      echo "ERROR: Windows installer upgrade smoke SKIP is not allowed when REQUIRE_WINDOWS_UPGRADE_SMOKE=1; a prior compatible installer must produce PASS." >&2
       exit 1
     fi
     echo "    Windows installer upgrade smoke emitted an allowed classifier SKIP on fork '$REPOSITORY'."

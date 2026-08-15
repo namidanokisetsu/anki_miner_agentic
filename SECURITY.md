@@ -5,9 +5,9 @@
 Please do not open a public issue for security vulnerabilities.
 
 Report privately via GitHub Security Advisories:
-<https://github.com/0xzerolight/anki_miner/security/advisories/new>
+<https://github.com/namidanokisetsu/anki_miner_agentic/security/advisories/new>
 
-Anki Miner is maintained by a single person on a best-effort basis. You can expect an acknowledgment within a reasonable time.
+Anki Miner Agentic is maintained on a best-effort basis. You can expect an acknowledgment within a reasonable time.
 
 ## Scope
 
@@ -25,4 +25,4 @@ Out of scope:
 
 ## Supported versions
 
-The latest minor release on PyPI is supported. Older versions may receive critical patches at maintainer discretion.
+The latest Anki Miner Agentic release is supported. Older versions may receive critical patches at maintainer discretion.

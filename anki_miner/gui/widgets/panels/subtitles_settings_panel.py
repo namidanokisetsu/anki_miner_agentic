@@ -448,6 +448,8 @@ class SubtitlesSettingsPanel(FormPanel):
         self.add_field(
             self.tr("alass binary"),
             self.alass_selector,
+            anchor="alass_binary",
+            anchor_focus=self.alass_selector,
             helper=self.tr(
                 "Optional: path to the alass executable used for subtitle retiming. "
                 "Leave blank to use a downloaded, bundled, or PATH alass."

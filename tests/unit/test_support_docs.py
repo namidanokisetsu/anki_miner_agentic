@@ -24,36 +24,27 @@ def test_asr_less_frozen_install_guidance_offers_only_executable_remedies(qtbot,
     assert commands == ['pipx install "anki-miner[asr]"']
     assert "pip install" not in message + " ".join(commands)
 
-    installation = (ROOT / "README.md").read_text(encoding="utf-8").split("## Installation", maxsplit=1)[1]
-    # The .deb ships the full bundle (ASR included) — the download table must
-    # not resurrect the pre-v2.10 "excludes local Whisper" footnote for it.
-    assert "| Linux (Debian/Ubuntu) | `anki-miner_*_amd64.deb` |" in installation
-    assert "² " not in installation
-    # The Intel-mac footnote (the one remaining ASR-less artifact) keeps the
-    # executable remedy the guidance block points at.
-    assert 'pipx install "anki-miner[asr]"' in installation
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    installation = readme.split("## Install from source", maxsplit=1)[1].split("## Set up an agent", maxsplit=1)[0]
+    assert 'python -m pip install -e ".[mcp]"' in installation
+    assert "anki_miner_agentic_gui" in installation
+    assert "must not be installed into the same environment as `anki-miner`" in installation
 
 
 def test_readme_exposes_first_install_recovery_and_troubleshooting() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    installation = readme.split("## Installation", maxsplit=1)[1].split("## Tabs", maxsplit=1)[0]
-    visible_notes = installation.split("<details>", maxsplit=1)[0]
+    installation = readme.split("## Install from source", maxsplit=1)[1].split("## Tabs", maxsplit=1)[0]
+    assert "python -m venv .venv" in installation
+    assert 'python -m pip install -e ".[mcp]"' in installation
+    assert "Reuse the active virtual environment; do not reinstall the package." in installation
 
-    heading = "### First-run notes (unsigned builds)"
-    assert heading in visible_notes
-    assert "**Windows SmartScreen**: **More info** -> **Run anyway**." in visible_notes
-    assert "**Windows Defender false positive**" in visible_notes
-    assert "report to Microsoft" in visible_notes
-
-    troubleshooting = readme.split("## Troubleshooting", maxsplit=1)[1].split("## Roadmap", maxsplit=1)[0]
+    troubleshooting = readme.split("## Troubleshooting", maxsplit=1)[1].split("## Agentic roadmap", maxsplit=1)[0]
     for issue in (
-        "Windows installer will not open / SmartScreen warning",
         "Fresh install has no definitions",
         "Add Dictionary stalls or fails",
         "Where are the logs?",
     ):
         assert f"| {issue}" in troubleshooting
-    assert "[First-run notes](#first-run-notes-unsigned-builds)" in troubleshooting
     assert "Tools -> Setup Wizard or Tools -> Download Recommended Resources" in troubleshooting
     assert "keep the Yomitan ZIP intact (do not unzip it)" in troubleshooting
     assert "last visible stage" in troubleshooting
