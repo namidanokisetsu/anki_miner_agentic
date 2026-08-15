@@ -1,4 +1,4 @@
 interface:
-  display_name: "Anki Miner Agent"
+  display_name: "Anki Miner Agentic"
   short_description: "Run the safe Anki mining workflow step by step"
-  default_prompt: "Use $anki-miner-agent to sync, prepare, review, dry-run, and only then commit the exact number of cards I authorize."
+  default_prompt: "Use $anki-miner-agent to sync, prepare, review, save the dry-run validation token, and only then commit the exact unchanged selection I authorize."

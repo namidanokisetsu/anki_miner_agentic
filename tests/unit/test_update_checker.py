@@ -364,8 +364,8 @@ class TestCheckForUpdate:
         headers = {k.lower(): v for k, v in request.header_items()}
         assert "user-agent" in headers
         ua = headers["user-agent"]
-        assert ua.startswith("anki-miner/")
-        assert "github.com/0xzerolight/anki_miner" in ua
+        assert ua.startswith("anki-miner-agentic/")
+        assert "github.com/namidanokisetsu/anki_miner_agentic" in ua
 
     @patch("anki_miner.services.update_checker.urllib.request.urlopen")
     def test_missing_body_field_yields_empty_string(self, mock_urlopen):

@@ -23,6 +23,13 @@ class FakeAnalyzer:
 class FakeGateway:
     def __init__(self) -> None:
         self.bad_cards = False
+        self.card_queue = 2
+
+    def get_deck_names(self):
+        return ["Deck A", "Destination"]
+
+    def get_model_names(self):
+        return ["ExampleNote"]
 
     def ordered_note_type_field_names(self, model_name: str):
         return ["word", "sentence", "answer"]
@@ -57,7 +64,7 @@ class FakeGateway:
                 "interval": 30,
                 "reps": 3,
                 "lapses": lapses,
-                "queue": 2,
+                "queue": self.card_queue,
                 "type": 2,
             }
         ]
@@ -104,6 +111,17 @@ def test_bad_refresh_does_not_replace_published_profile(tmp_path):
     assert store.profile_status()["revision_id"] == valid["revision_id"]
 
 
+def test_suspended_cards_are_excluded_from_knowledge_evidence(tmp_path):
+    store = AgentStore(tmp_path / "learner.sqlite3")
+    gateway = FakeGateway()
+    gateway.card_queue = -1  # Anki's suspended-card queue.
+
+    status = LearnerProfileService(store, FakeAnalyzer(), gateway, config()).sync()
+
+    assert status["card_count"] == 0
+    assert store.lexical_features() == {}
+
+
 def test_mapping_error_names_model_and_available_fields(tmp_path):
     cfg = AgentProfileConfig(
         (KnowledgeSource("Deck A", "ExampleNote", ("renamed",), ()),),
@@ -118,3 +136,15 @@ def test_mapping_error_names_model_and_available_fields(tmp_path):
         "missing": ["renamed"],
         "available_fields": ["word", "sentence", "answer"],
     }
+
+
+def test_mapping_rejects_missing_source_or_destination_deck(tmp_path):
+    gateway = FakeGateway()
+    gateway.get_deck_names = lambda: ["Deck A"]
+    service = LearnerProfileService(AgentStore(tmp_path / "learner.sqlite3"), FakeAnalyzer(), gateway, config())
+
+    with pytest.raises(AgentMiningError) as raised:
+        service.validate_mapping()
+
+    assert raised.value.code == "deck_mapping_mismatch"
+    assert raised.value.details["missing"] == ["Destination"]

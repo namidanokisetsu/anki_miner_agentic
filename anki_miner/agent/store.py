@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import secrets
 import sqlite3
 from collections.abc import Iterable
 from contextlib import contextmanager
@@ -153,6 +154,13 @@ class AgentStore:
                     selection_json TEXT NOT NULL,
                     error_json TEXT
                 );
+                CREATE TABLE IF NOT EXISTS validated_selections (
+                    validation_token TEXT PRIMARY KEY,
+                    batch_revision TEXT NOT NULL REFERENCES mining_batches(revision_id) ON DELETE CASCADE,
+                    selection_json TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    consumed_job_id TEXT REFERENCES mining_jobs(job_id)
+                );
                 CREATE TABLE IF NOT EXISTS mining_outputs (
                     job_id TEXT NOT NULL REFERENCES mining_jobs(job_id) ON DELETE CASCADE,
                     candidate_id TEXT NOT NULL REFERENCES mining_candidates(candidate_id),
@@ -173,6 +181,27 @@ class AgentStore:
                 );
                 """)
             conn.execute(f"PRAGMA user_version={_SCHEMA_VERSION}")
+
+    def record_validated_selection(self, revision_id: str, selection: dict[str, Any]) -> str:
+        """Persist proof that this exact selection passed a dry run."""
+        token = f"validation_{secrets.token_urlsafe(24)}"
+        with self._transaction() as conn:
+            batch = conn.execute(
+                "SELECT state FROM mining_batches WHERE revision_id=?", (revision_id,)
+            ).fetchone()
+            require(batch is not None, "batch_not_found", "Mining batch does not exist", batch_revision=revision_id)
+            require(
+                batch["state"] == "ready",
+                "batch_not_ready",
+                "Mining batch is no longer available for validation",
+                batch_revision=revision_id,
+                state=batch["state"],
+            )
+            conn.execute(
+                "INSERT INTO validated_selections(validation_token, batch_revision, selection_json) VALUES (?, ?, ?)",
+                (token, revision_id, canonical_json(selection)),
+            )
+        return token
 
     def publish_profile(self, snapshot: dict[str, Any]) -> dict[str, Any]:
         """Atomically replace the published profile after all data is validated."""
@@ -464,6 +493,7 @@ class AgentStore:
         rejected: list[str],
         metadata: dict[str, dict[str, Any]],
         enrichments: dict[str, dict[str, Any]],
+        validation_token: str,
     ) -> tuple[dict[str, Any], bool]:
         selection = {
             "selected": selected,
@@ -475,6 +505,25 @@ class AgentStore:
         with self._transaction() as conn:
             batch = conn.execute("SELECT * FROM mining_batches WHERE revision_id=?", (revision_id,)).fetchone()
             require(batch is not None, "batch_not_found", "Mining batch does not exist", batch_revision=revision_id)
+            validation = conn.execute(
+                "SELECT * FROM validated_selections WHERE validation_token=?", (validation_token,)
+            ).fetchone()
+            require(
+                validation is not None,
+                "dry_run_required",
+                "Live commits require a validation token returned by a successful dry run",
+            )
+            require(
+                validation["batch_revision"] == revision_id
+                and json.loads(validation["selection_json"]) == selection,
+                "validated_selection_changed",
+                "The live selection must exactly match the validated dry-run selection",
+            )
+            require(
+                validation["consumed_job_id"] in (None, job_id),
+                "validation_token_consumed",
+                "This validation token was already used by another commit",
+            )
             if batch["committed_job_id"] is not None:
                 existing = self.job_status(batch["committed_job_id"], conn=conn)
                 require(
@@ -491,6 +540,10 @@ class AgentStore:
             conn.execute(
                 "UPDATE mining_batches SET state='committing', committed_job_id=? WHERE revision_id=?",
                 (job_id, revision_id),
+            )
+            conn.execute(
+                "UPDATE validated_selections SET consumed_job_id=? WHERE validation_token=?",
+                (job_id, validation_token),
             )
             selected_set = set(selected)
             rejected_set = set(rejected)

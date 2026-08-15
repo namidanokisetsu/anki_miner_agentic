@@ -137,7 +137,7 @@ class TestCreateShortcut:
             result = ShortcutService.create_shortcut()
         assert result.success is False
         assert result.error is not None
-        assert "anki_miner_gui" in result.error
+        assert "anki_miner_agentic_gui" in result.error
 
     def test_creates_linux_desktop_file(self, tmp_path, monkeypatch):
         monkeypatch.setattr(Path, "home", lambda: tmp_path)

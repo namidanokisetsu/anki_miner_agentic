@@ -69,8 +69,13 @@ def test_commit_is_selected_only_and_idempotent(tmp_path):
     writer = Writer()
     service = MiningCommitService(store, cfg(), writer)
 
-    first = service.commit("batch_one", ["candidate_one"])
-    second = service.commit("batch_one", ["candidate_one"])
+    dry_run = service.commit("batch_one", ["candidate_one"], dry_run=True)
+    first = service.commit(
+        "batch_one", ["candidate_one"], dry_run=False, validation_token=dry_run["validation_token"]
+    )
+    second = service.commit(
+        "batch_one", ["candidate_one"], dry_run=False, validation_token=dry_run["validation_token"]
+    )
 
     assert first["state"] == "completed"
     assert second["job_id"] == first["job_id"]
@@ -106,11 +111,40 @@ def test_commit_passes_bounded_enrichments_to_writer(tmp_path):
     }
 
     dry_run = service.commit("batch_one", ["candidate_one"], enrichments=enrichments, dry_run=True)
-    result = service.commit("batch_one", ["candidate_one"], enrichments=enrichments)
+    result = service.commit(
+        "batch_one",
+        ["candidate_one"],
+        enrichments=enrichments,
+        dry_run=False,
+        validation_token=dry_run["validation_token"],
+    )
 
     assert dry_run["enriched_count"] == 1
     assert result["selection"]["enrichments"] == enrichments
     assert writer.candidates[0]["enrichment"] == enrichments["candidate_one"]
+
+
+def test_live_commit_requires_matching_dry_run_token(tmp_path):
+    store = AgentStore(tmp_path / "db.sqlite3")
+    make_batch(store, tmp_path)
+    writer = Writer()
+    service = MiningCommitService(store, cfg(), writer)
+
+    with pytest.raises(AgentMiningError) as missing:
+        service.commit("batch_one", ["candidate_one"], dry_run=False)
+    assert missing.value.code == "dry_run_required"
+
+    dry_run = service.commit("batch_one", ["candidate_one"], dry_run=True)
+    with pytest.raises(AgentMiningError) as changed:
+        service.commit(
+            "batch_one",
+            ["candidate_one"],
+            metadata={"candidate_one": {"score": 0.5}},
+            dry_run=False,
+            validation_token=dry_run["validation_token"],
+        )
+    assert changed.value.code == "validated_selection_changed"
+    assert writer.calls == 0
 
 
 @pytest.mark.parametrize(

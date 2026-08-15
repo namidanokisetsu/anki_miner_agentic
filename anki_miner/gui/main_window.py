@@ -334,7 +334,7 @@ class MainWindow(ScreenIssueHost, QMainWindow):
 
     def _setup_ui(self) -> None:
         """Set up the user interface."""
-        self.setWindowTitle("Anki Miner")
+        self.setWindowTitle("Anki Miner Agentic")
         self.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
         self.resize(WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT)
         # Before anything is restored: the floor decides what a restore can

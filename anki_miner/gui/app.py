@@ -650,11 +650,11 @@ def _confirm_second_instance(parent: QWidget | None = None) -> bool:
     """Production ``on_conflict``: warn and let the user decide."""
     box = QMessageBox(parent)
     box.setIcon(QMessageBox.Icon.Warning)
-    box.setWindowTitle(QCoreApplication.translate("App", "Anki Miner Is Already Running"))
+    box.setWindowTitle(QCoreApplication.translate("App", "Anki Miner Agentic Is Already Running"))
     box.setText(
         QCoreApplication.translate(
             "App",
-            "Another copy of Anki Miner appears to be running. Running two copies at once "
+            "Another copy of Anki Miner Agentic appears to be running. Running two copies at once "
             "can corrupt the known-words and statistics databases.\n\n"
             "Continue anyway?",
         )
@@ -1091,7 +1091,7 @@ def _install_excepthook(app: QApplication, *, fail_fast: bool = False) -> None:
             log_path = get_effective_log_path()
             box = QMessageBox(app.activeWindow())
             box.setIcon(QMessageBox.Icon.Critical)
-            box.setWindowTitle(QCoreApplication.translate("app", "Anki Miner — Unexpected Error"))
+            box.setWindowTitle(QCoreApplication.translate("app", "Anki Miner Agentic — Unexpected Error"))
             box.setTextFormat(Qt.TextFormat.PlainText)
             box.setText(
                 tr_format(
@@ -1693,7 +1693,7 @@ def main():
 
     # Create application
     app = QApplication(sys.argv)
-    app.setApplicationName("Anki Miner")
+    app.setApplicationName("Anki Miner Agentic")
     app.setOrganizationName("AnkiMiner")
 
     # Install the crash net before any widget is built so exceptions escaping a

@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from anki_miner.agent.errors import AgentMiningError
-from anki_miner.agent.models import AgentProfileConfig, KnowledgeSource, LocalEpisodeInput, WriteTarget
+from anki_miner.agent.models import AgentProfileConfig, KnowledgeSource, LocalEpisodeInput, WriteTarget, YouTubeInput
 
 
 def test_japanese_audio_is_the_profile_default(tmp_path):
@@ -48,3 +48,8 @@ def test_local_subtitle_offset_is_numeric_and_source_specific(tmp_path):
         LocalEpisodeInput(video, subtitle, subtitle_offset=True)
     with pytest.raises(AgentMiningError):
         LocalEpisodeInput(video, subtitle, subtitle_offset=301)
+
+
+def test_youtube_permission_flags_require_json_booleans():
+    with pytest.raises(AgentMiningError, match="allow_asr must be boolean"):
+        YouTubeInput.from_dict({"url": "https://www.youtube.com/watch?v=fixture", "allow_asr": "false"})

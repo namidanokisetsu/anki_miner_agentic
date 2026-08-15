@@ -144,7 +144,7 @@ class UpdateChecker:
     to determine if an update is available.
     """
 
-    GITHUB_API_URL = "https://api.github.com/repos/0xzerolight/anki_miner/releases/latest"
+    GITHUB_API_URL = "https://api.github.com/repos/namidanokisetsu/anki_miner_agentic/releases/latest"
 
     def __init__(self, current_version: str):
         """Initialize the update checker.
@@ -172,7 +172,10 @@ class UpdateChecker:
                     "Accept": "application/vnd.github.v3+json",
                     # GitHub requires a User-Agent header for abuse triage; omitting
                     # it occasionally yields 403 from anonymous unauthenticated calls.
-                    "User-Agent": (f"anki-miner/{self.current_version} (+https://github.com/0xzerolight/anki_miner)"),
+                    "User-Agent": (
+                        f"anki-miner-agentic/{self.current_version} "
+                        "(+https://github.com/namidanokisetsu/anki_miner_agentic)"
+                    ),
                 },
             )
             with urllib.request.urlopen(request, timeout=5) as response:

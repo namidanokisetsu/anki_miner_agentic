@@ -3,9 +3,9 @@ requires = ["setuptools>=77.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "anki-miner"
+name = "anki-miner-agentic"
 dynamic = ["version"]
-description = "Automated Japanese vocabulary mining from media with Anki integration"
+description = "Agent-first Japanese vocabulary mining with guarded Anki integration"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "GPL-3.0-or-later"
@@ -14,9 +14,9 @@ license = "GPL-3.0-or-later"
 # without its licence would breach the OFL.
 license-files = ["LICENSE", "anki_miner/gui/resources/fonts/OFL.txt", "licenses/local-audio-yomichan/LICENSE"]
 authors = [
-    {name = "Anki Miner Contributors"}
+    {name = "Anki Miner Agentic Contributors"}
 ]
-keywords = ["anki", "japanese", "vocabulary", "anime", "subtitles", "language-learning"]
+keywords = ["anki", "agents", "mcp", "japanese", "vocabulary", "anime", "subtitles", "language-learning"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Education",
@@ -120,14 +120,20 @@ mcp = [
 ]
 
 [project.scripts]
+# Canonical Agentic entry points. The legacy names remain temporarily because
+# the inherited desktop shortcut and release tooling still resolve them.
+anki_miner_agentic_gui = "anki_miner.gui.launch:main"
+anki_miner_agentic_agent = "anki_miner.headless.cli:main"
+anki_miner_agentic_mcp = "anki_miner.mcp_server.server:main"
 anki_miner_gui = "anki_miner.gui.launch:main"
 anki_miner_agent = "anki_miner.headless.cli:main"
 anki_miner_mcp = "anki_miner.mcp_server.server:main"
 
 [project.urls]
-Homepage = "https://github.com/0xzerolight/anki_miner"
-Documentation = "https://github.com/0xzerolight/anki_miner/blob/main/README.md"
-"Bug Tracker" = "https://github.com/0xzerolight/anki_miner/issues"
+Homepage = "https://github.com/namidanokisetsu/anki_miner_agentic"
+Documentation = "https://github.com/namidanokisetsu/anki_miner_agentic/blob/main/agentic-docs/agent-mining.md"
+"Bug Tracker" = "https://github.com/namidanokisetsu/anki_miner_agentic/issues"
+"Upstream Project" = "https://github.com/0xzerolight/anki_miner"
 
 [tool.setuptools]
 include-package-data = true

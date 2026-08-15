@@ -82,7 +82,17 @@ def load_agent_config(path: Path) -> tuple[Path, AgentProfileConfig, AnkiMinerCo
         raise AgentMiningError("invalid_config", f"Cannot read agent configuration: {exc}") from exc
     if not isinstance(raw, dict):
         raise AgentMiningError("invalid_config", "Agent configuration root must be an object")
-    profile = AgentProfileConfig.from_dict(raw.get("agent", raw))
+    root_fields = {"storage_path", "agent", "mining"}
+    if "agent" in raw:
+        unknown = sorted(set(raw) - root_fields)
+        if unknown:
+            raise AgentMiningError("invalid_config", "Unknown configuration fields", {"fields": unknown})
+        profile_raw = raw["agent"]
+    else:
+        profile_raw = {key: value for key, value in raw.items() if key not in {"storage_path", "mining"}}
+    if not isinstance(profile_raw, dict):
+        raise AgentMiningError("invalid_config", "agent configuration must be an object")
+    profile = AgentProfileConfig.from_dict(profile_raw)
     # GUI settings are the shared mining defaults. Explicit values in the
     # agent file remain deliberate per-agent overrides.
     mining = _mining_config(raw.get("mining", {}), defaults=GUIConfigManager.load_config())

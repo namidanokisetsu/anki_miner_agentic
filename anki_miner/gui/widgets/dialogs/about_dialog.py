@@ -20,7 +20,7 @@ from anki_miner.gui.utils.keyboard_shortcuts import SHORTCUT_HELP
 from anki_miner.gui.widgets.base import EnhancedDialog
 from anki_miner.utils.i18n import tr_format
 
-GITHUB_URL = "https://github.com/0xzerolight/anki_miner"
+GITHUB_URL = "https://github.com/namidanokisetsu/anki_miner_agentic"
 
 ABOUT_BLURB = QT_TRANSLATE_NOOP(
     "AboutDialog",
@@ -38,7 +38,7 @@ class AboutDialog(EnhancedDialog):
 
     def __init__(self, version: str, parent=None):
         """Build the dialog for the given version string."""
-        super().__init__(parent, title=self.tr("About Anki Miner"))
+        super().__init__(parent, title=self.tr("About Anki Miner Agentic"))
         self.setMinimumWidth(440)
         self._build(version)
 
@@ -68,7 +68,7 @@ class AboutDialog(EnhancedDialog):
         text_layout.setContentsMargins(0, 0, 0, 0)
         text_layout.setSpacing(SPACING.xxs)
 
-        name = QLabel("Anki Miner")
+        name = QLabel("Anki Miner Agentic")
         name.setObjectName("heading1")
 
         ver = QLabel(tr_format(self.tr("Version %1"), version))

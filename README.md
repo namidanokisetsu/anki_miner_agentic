@@ -1,48 +1,43 @@
-# Agent mining workflow
+# Anki Miner Agentic
 
-This fork builds a learner profile from selected Anki fields and review data. Agents can review sentence candidates through a CLI or five-tool MCP server, but Anki Miner keeps control of filtering, dictionaries, media, note construction, and writes.
+An agent-first Japanese sentence-mining application with guarded Anki writes. It builds a learner profile from explicitly mapped Anki fields, prepares bounded candidates from local media or YouTube, and lets an agent select useful cards through a JSON CLI or five-tool MCP server.
 
-## Set up with Hermes
+The agent never receives a generic Anki write tool. Anki Miner Agentic retains control of filtering, dictionaries, media, note construction, limits, and receipts. Live commits require both an enabled write target and a validation token proving that the exact selection passed a dry run.
 
-Keep Anki open with AnkiConnect installed. Give Hermes terminal and filesystem access to this checkout, then paste:
+This project is an independent fork of [Anki Miner](https://github.com/0xzerolight/anki_miner). The original project and its contributors built the GUI and mining pipeline on which this agent-first product is based. This distribution is maintained and released separately and is not an official upstream Anki Miner release.
 
-```text
-Set up Anki Miner's agent workflow in this checkout. Read agentic-docs/agent-mining.md and skills/anki-miner-agent/SKILL.md, then install it with `python -m pip install -e ".[mcp]"`.
+## Install from source
 
-Use the existing GUI config, installed dictionaries, mining settings, and live Anki schema. Do not guess deck, note-type, or field names. Put the agent config outside the repo and leave `write_target.enabled` false so setup cannot create cards. Run `anki_miner_agent --config <config> profile-validate`, `profile-sync`, and `profile-status`.
+Python 3.11 or newer, Anki with [AnkiConnect](https://ankiweb.net/shared/info/2055492159), and ffmpeg are required. Keep Anki open during setup.
 
-Register `anki_miner_mcp --config <absolute-config-path>` as a stdio MCP server and verify its five tools. Fix routine setup errors, but never create cards until I approve the exact count after a dry run. Enabling the write target is a separate opt-in and does not replace explicit approval for a commit.
+```bash
+git clone https://github.com/namidanokisetsu/anki_miner_agentic.git
+cd anki_miner_agentic
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+python -m pip install -e ".[mcp]"
+anki_miner_agentic_gui
 ```
 
-See the [agent mining guide](agentic-docs/agent-mining.md) for manual setup and the [MCP contract](skills/anki-miner-agent/references/mcp-contract.md) for tool payloads.
+Use a dedicated virtual environment. This fork has a distinct distribution name, but still inherits the internal `anki_miner` Python namespace from upstream and must not be installed into the same environment as `anki-miner`.
 
----
+Use **Tools → Download Recommended Resources** once to install the default dictionary, frequency, and pitch data. The current headless configuration can reuse those resources, but does not install them by itself.
 
-# Original Anki Miner README
+## Set up an agent
 
-<h1 align="center">
-  <img src="https://raw.githubusercontent.com/0xzerolight/anki_miner/main/anki_miner/gui/resources/icons/anki_miner.svg" height="76" align="absmiddle" alt=""> Anki Miner
-</h1>
+Give your agent terminal and filesystem access to this checkout, then paste:
 
-<p align="center">
-<a href="https://pypi.org/project/anki-miner/"><img src="https://img.shields.io/pypi/v/anki-miner.svg" alt="PyPI version"></a>
-<a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python 3.11+"></a>
-<a href="https://www.gnu.org/licenses/gpl-3.0"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a>
-<a href="https://github.com/0xzerolight/anki_miner/releases/latest"><img src="https://img.shields.io/github/downloads/0xzerolight/anki_miner/total.svg" alt="GitHub downloads"></a>
-<a href="https://github.com/0xzerolight/anki_miner/stargazers"><img src="https://img.shields.io/github/stars/0xzerolight/anki_miner?style=social" alt="GitHub stars"></a>
-<a href="https://discord.com/invite/aDtQyZzUVP"><img src="https://img.shields.io/discord/1517634859110240326?logo=discord&logoColor=white&label=Discord&color=5865F2" alt="Discord community"></a>
-</p>
+```text
+Set up Anki Miner Agentic in this checkout. Read agentic-docs/agent-mining.md and skills/anki-miner-agent/SKILL.md, then install it with `python -m pip install -e ".[mcp]"`.
 
-<p align="center">
-Turn native Japanese content into Anki vocabulary cards.
-</p>
+Use the existing GUI config, installed dictionaries, mining settings, and live Anki schema. Do not guess deck, note-type, or field names. Put the agent config outside the repo and leave `write_target.enabled` false so setup cannot create cards. Run `anki_miner_agentic_agent --config <config> profile-validate`, `profile-sync`, and `profile-status`.
 
-<p align="center">
-Please leave a ⭐ star if Anki Miner helped you - it helps others find it :).
-</p>
+Register `anki_miner_agentic_mcp --config <absolute-config-path>` as a stdio MCP server and verify its five tools. Fix routine setup errors, but never create cards until I approve the exact count after a dry run. Preserve the returned validation token and use it only with the unchanged live selection. Enabling the write target is a separate opt-in and does not replace explicit approval for a commit.
+```
 
+See the [agent mining guide](https://github.com/namidanokisetsu/anki_miner_agentic/blob/main/agentic-docs/agent-mining.md) for manual setup and the [MCP contract](https://github.com/namidanokisetsu/anki_miner_agentic/blob/main/skills/anki-miner-agent/references/mcp-contract.md) for tool payloads.
 
-# <p align="center">Mining Demo</p>
+## Mining demo
 
 ![Anki Miner Showcase](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/demo.gif)
 
@@ -53,55 +48,6 @@ Please leave a ⭐ star if Anki Miner helped you - it helps others find it :).
 | ![ホント](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/ホント.gif) | ![いちゃいちゃ](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/いちゃいちゃ.gif) | ![代](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/代.gif) |
 |:--:|:--:|:--:|
 | ⬇️ [MP4 (sound)](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/ホント.mp4) | ⬇️ [MP4 (sound)](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/いちゃいちゃ.mp4) | ⬇️ [MP4 (sound)](https://raw.githubusercontent.com/0xzerolight/anki_miner/main/gifs/代.mp4) |
-
-## Installation
-
-### Requirements
-
-- **Anki** with the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) add-on (code `2055492159`)
-- **ffmpeg** + **libmpv** (video preview only) - needed only when installing via pip/pipx or source.
-
-Grab the download for your platform from the [latest release](https://github.com/0xzerolight/anki_miner/releases/latest):
-
-| Platform | Download |
-|----------|----------|
-| Windows | `AnkiMiner-*-Setup.exe` |
-| macOS (Apple Silicon / M1-M4) | `AnkiMiner-macOS-arm64.tar.gz` |
-| macOS (Intel) | `AnkiMiner-macOS-x86_64.tar.gz` ¹ |
-| Linux (Debian/Ubuntu) | `anki-miner_*_amd64.deb` |
-| Linux (other) | `AnkiMiner-*-Linux-x86_64.AppImage` |
-
-¹ Excludes local Whisper subtitle generation and AVIF screenshots. For full functionality: `pipx install "anki-miner[asr]"`.
-
-### First-run notes (unsigned builds)
-
-- **macOS**: Gatekeeper blocks the app. Extract first, then `xattr -dr com.apple.quarantine AnkiMiner/`
-- **Windows SmartScreen**: **More info** -> **Run anyway**.
-- **Windows Defender false positive**: restore from **Protection history** or [report to Microsoft](https://www.microsoft.com/en-us/wdsi/filesubmission).
-
-<details>
-<summary><strong>Install from PyPI (Python 3.11+)</strong></summary>
-
-```bash
-pipx install anki-miner   # or: pip install anki-miner
-anki_miner_gui
-```
-
-</details>
-
-<details>
-<summary><strong>Install from source</strong></summary>
-
-```bash
-git clone https://github.com/0xzerolight/anki_miner.git
-cd anki_miner
-pip install -e .
-anki_miner_gui
-```
-
-For full development setup, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-</details>
 
 ## Tabs
 
@@ -198,8 +144,8 @@ Uses bundled name wordsets derived from [JMnedict](https://www.edrdg.org/enamdic
 ## Roadmap
 
 List of ideas for future versions of Anki Miner. Not in priority order. Feature requests take precedence.
-- Suggest a feature - [Open an issue](https://github.com/0xzerolight/anki_miner/issues).
-- Discuss the roadmap - [Discussions](https://github.com/0xzerolight/anki_miner/discussions).
+- Suggest a feature in the [Agentic issue tracker](https://github.com/namidanokisetsu/anki_miner_agentic/issues).
+- Discuss the roadmap in [Agentic discussions](https://github.com/namidanokisetsu/anki_miner_agentic/discussions).
 
 - **Features**:
   - [x] UI language selection.
@@ -226,8 +172,8 @@ If you want to support the project, please share it with others who may benefit 
 - Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 - Security: [SECURITY.md](SECURITY.md).
 
-Bug reports and feature requests -> [Issues](https://github.com/0xzerolight/anki_miner/issues).
-General questions and discussion -> [Discussions](https://github.com/0xzerolight/anki_miner/discussions) or [Discord](https://discord.com/invite/aDtQyZzUVP).
+Bug reports and feature requests → [Agentic issues](https://github.com/namidanokisetsu/anki_miner_agentic/issues).
+General questions and discussion → [Agentic discussions](https://github.com/namidanokisetsu/anki_miner_agentic/discussions). For questions about the original application, use the [upstream project](https://github.com/0xzerolight/anki_miner).
 
 ## Special Thanks
 

@@ -1,11 +1,11 @@
 ---
 name: anki-miner-agent
-description: Operate Anki Miner's learner-aware CLI and MCP workflow. Use when configuring agent automation, synchronizing an Anki learner profile, preparing local or YouTube mining candidates, selecting cards, committing a batch, inspecting receipts, or troubleshooting the agent workflow.
+description: Operate Anki Miner Agentic's learner-aware CLI and MCP workflow. Use when configuring agent automation, synchronizing an Anki learner profile, preparing local or YouTube mining candidates, selecting cards, committing a batch, inspecting receipts, or troubleshooting the agent workflow.
 ---
 
-# Anki Miner agent
+# Anki Miner Agentic
 
-Follow this procedure in order. Anki Miner owns filtering, lookup data, media, note construction, and Anki writes. The agent only chooses candidates and optional text enrichments.
+Follow this procedure in order. Anki Miner Agentic owns filtering, lookup data, media, note construction, and Anki writes. The agent only chooses candidates and optional text enrichments.
 
 ## Before calling tools
 
@@ -22,8 +22,8 @@ Follow this procedure in order. Anki Miner owns filtering, lookup data, media, n
 3. Call `list_mining_candidates` repeatedly with the same batch revision. Start at `offset=0`; use each returned `next_offset`; stop when it is null. Keep only `eligible=true` candidates.
 4. Stay within both the user's limit and the batch `max_cards`. Prefer clear, useful sentences for weak or unseen vocabulary. Avoid severe quality flags and ambiguous context.
 5. Build one batch-wide selection. Use returned candidate IDs unchanged. Put scores/rationales in `metadata`; put card text only in `enrichments`.
-6. Call `commit_mining_selection` with `dry_run=true`. If validation fails, apply the recovery rule in the reference and dry-run again.
-7. Call the identical selection with `dry_run=false` only after the user explicitly authorizes that exact live write. An enabled write target is not permission.
+6. Call `commit_mining_selection` with `dry_run=true`. If validation fails, apply the recovery rule in the reference and dry-run again. Save the returned `validation_token`.
+7. Call the identical selection with `dry_run=false` and that `validation_token` only after the user explicitly authorizes that exact live write. An enabled write target is not permission. A changed selection requires a new dry run.
 8. Treat the operation as successful only when the receipt reports `created` or `duplicate_skipped`. Use `get_mining_job` for an incomplete job.
 
 ## Enrichment rules

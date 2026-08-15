@@ -26,7 +26,9 @@ def _json_file(path: str) -> dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="anki-miner-agent", description="Learner-aware anime sentence mining")
+    parser = argparse.ArgumentParser(
+        prog="anki-miner-agentic-agent", description="Guarded agent-first Japanese sentence mining"
+    )
     parser.add_argument("--config", type=Path, required=True, help="Agent JSON configuration")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("profile-validate")

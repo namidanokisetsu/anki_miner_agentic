@@ -13,6 +13,21 @@ from .errors import AgentMiningError, require
 PUBLIC_SCHEMA_VERSION = 1
 
 
+def _reject_unknown(value: dict[str, Any], allowed: set[str], context: str) -> None:
+    unknown = sorted(set(value) - allowed)
+    require(not unknown, "invalid_config", f"Unknown {context} fields", fields=unknown)
+
+
+def _string_tuple(value: Any, field_name: str) -> tuple[str, ...]:
+    require(isinstance(value, (list, tuple)), "invalid_config", f"{field_name} must be an array")
+    require(
+        all(isinstance(item, str) for item in value),
+        "invalid_config",
+        f"{field_name} entries must be strings",
+    )
+    return tuple(value)
+
+
 def _is_audio_track(value: object, *, allow_none: bool) -> bool:
     return (allow_none and value is None) or value == "japanese" or (type(value) is int and value >= 0)
 
@@ -65,12 +80,17 @@ class KnowledgeSource:
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> KnowledgeSource:
+        _reject_unknown(
+            value,
+            {"deck", "note_type", "word_fields", "text_fields", "ignored_fields"},
+            "knowledge source",
+        )
         return cls(
             deck=str(value.get("deck", "")),
             note_type=str(value.get("note_type", "")),
-            word_fields=tuple(value.get("word_fields", ())),
-            text_fields=tuple(value.get("text_fields", ())),
-            ignored_fields=tuple(value.get("ignored_fields", ())),
+            word_fields=_string_tuple(value.get("word_fields", ()), "word_fields"),
+            text_fields=_string_tuple(value.get("text_fields", ()), "text_fields"),
+            ignored_fields=_string_tuple(value.get("ignored_fields", ()), "ignored_fields"),
         )
 
 
@@ -83,13 +103,15 @@ class WriteTarget:
     def __post_init__(self) -> None:
         require(bool(self.deck.strip()), "invalid_write_target", "Write-target deck cannot be empty")
         require(bool(self.note_type.strip()), "invalid_write_target", "Write-target note type cannot be empty")
+        require(type(self.enabled) is bool, "invalid_config", "write_target.enabled must be boolean")
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> WriteTarget:
+        _reject_unknown(value, {"deck", "note_type", "enabled"}, "write target")
         return cls(
             deck=str(value.get("deck", "")),
             note_type=str(value.get("note_type", "")),
-            enabled=bool(value.get("enabled", False)),
+            enabled=value.get("enabled", False),
         )
 
 
@@ -127,6 +149,8 @@ class AgentProfileConfig:
             if isinstance(value, list):
                 object.__setattr__(self, name, tuple(value))
         require(bool(self.knowledge_sources), "invalid_config", "At least one knowledge source is required")
+        for name in ("exclude_katakana_only", "exclude_names", "exclude_known"):
+            require(type(getattr(self, name)) is bool, "invalid_config", f"{name} must be boolean")
         require(self.mature_interval_days >= 1, "invalid_config", "mature_interval_days must be positive")
         require(self.max_cards >= 1, "invalid_config", "max_cards must be positive")
         require(
@@ -183,6 +207,30 @@ class AgentProfileConfig:
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> AgentProfileConfig:
+        allowed = {
+            "knowledge_sources",
+            "write_target",
+            "mature_interval_days",
+            "max_cards",
+            "review_pool_size",
+            "page_size",
+            "max_payload_bytes",
+            "max_variants",
+            "max_rationale_chars",
+            "max_definition_options",
+            "max_definition_option_chars",
+            "max_chosen_definition_chars",
+            "max_sentence_translation_chars",
+            "chosen_definition_field",
+            "sentence_translation_field",
+            "exclude_katakana_only",
+            "exclude_names",
+            "exclude_known",
+            "blacklist",
+            "whitelist",
+            "audio_track",
+        }
+        _reject_unknown(value, allowed, "agent configuration")
         try:
             sources = tuple(KnowledgeSource.from_dict(item) for item in value["knowledge_sources"])
             target = WriteTarget.from_dict(value["write_target"])
@@ -290,6 +338,10 @@ class YouTubeInput:
         url = str(value.get("url", "")).strip()
         require(bool(url), "invalid_input", "YouTube input requires a URL")
         audio_track = value.get("audio_track")
+        allow_automatic = value.get("allow_automatic", True)
+        allow_asr = value.get("allow_asr", False)
+        require(type(allow_automatic) is bool, "invalid_input", "allow_automatic must be boolean")
+        require(type(allow_asr) is bool, "invalid_input", "allow_asr must be boolean")
         require(
             _is_audio_track(audio_track, allow_none=True),
             "invalid_input",
@@ -297,8 +349,8 @@ class YouTubeInput:
         )
         return cls(
             url=url,
-            allow_automatic=bool(value.get("allow_automatic", True)),
-            allow_asr=bool(value.get("allow_asr", False)),
+            allow_automatic=allow_automatic,
+            allow_asr=allow_asr,
             episode_id=value.get("episode_id"),
             audio_track=audio_track,
         )

@@ -81,9 +81,11 @@ If `next_offset` is a number, call again with that number as `offset`. Stop when
 
 Replace every placeholder with data for that exact candidate. Omit any enrichment key not present in the candidate's `allowed_enrichments`. Omit the entire candidate entry when it has no enrichments.
 
+The successful response contains a `validation_token`. Save it with the selection.
+
 ## 5. Live commit and receipt
 
-After explicit user authorization, resend the validated payload unchanged except set `dry_run` to false. Do not change IDs, metadata, or enrichments between dry-run and commit.
+After explicit user authorization, resend the validated payload unchanged except set `dry_run` to false and add the returned `validation_token`. Do not change IDs, metadata, or enrichments between dry-run and commit. The server rejects a missing token or any selection that differs from the dry run.
 
 If the response is a job without final outputs, call `get_mining_job` with its `job_id`. Report each output as `created`, `duplicate_skipped`, or `failed`.
 
@@ -97,5 +99,7 @@ If the response is a job without final outputs, call `get_mining_job` with its `
 | `unmapped_enrichment` | Remove that enrichment or configure its field; dry-run again. |
 | `stale_source` | Prepare a new batch from the current source files. |
 | `writes_disabled` | Keep dry-run mode unless the user deliberately enables writes. |
+| `dry_run_required` | Dry-run the exact selection and use its returned validation token. |
+| `validated_selection_changed` | Do not commit. Dry-run the changed selection and ask for authorization again. |
 | `batch_already_committed` | Inspect the existing job; never submit a different selection. |
 | failed or partial job | Call `get_mining_job` and report the per-candidate errors. |

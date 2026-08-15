@@ -20,7 +20,7 @@ from anki_miner.utils.subprocess_utils import no_window_kwargs
 
 logger = logging.getLogger(__name__)
 
-APP_NAME = "Anki Miner"
+APP_NAME = "Anki Miner Agentic"
 APP_ID = "anki-miner"
 APP_COMMENT = "Japanese vocabulary mining from media"
 ICON_FILENAME = "anki_miner.svg"
@@ -108,15 +108,16 @@ class ShortcutService:
         if getattr(sys, "frozen", False):
             return Path(sys.executable).resolve()
 
-        exe = shutil.which("anki_miner_gui")
-        if exe:
-            return Path(exe).resolve()
+        for executable in ("anki_miner_agentic_gui", "anki_miner_gui"):
+            exe = shutil.which(executable)
+            if exe:
+                return Path(exe).resolve()
 
         venv_dir = Path(sys.prefix)
         if sys.platform == "win32":
-            candidate = venv_dir / "Scripts" / "anki_miner_gui.exe"
+            candidate = venv_dir / "Scripts" / "anki_miner_agentic_gui.exe"
         else:
-            candidate = venv_dir / "bin" / "anki_miner_gui"
+            candidate = venv_dir / "bin" / "anki_miner_agentic_gui"
 
         if candidate.exists():
             return candidate.resolve()
@@ -135,8 +136,8 @@ class ShortcutService:
         exe_path = cls.resolve_executable()
         if exe_path is None:
             result.error = (
-                "Could not find 'anki_miner_gui' executable. "
-                "Make sure Anki Miner is installed (pip install .) and try again."
+                "Could not find 'anki_miner_agentic_gui' executable. "
+                "Make sure Anki Miner Agentic is installed (pip install .) and try again."
             )
             return result
 

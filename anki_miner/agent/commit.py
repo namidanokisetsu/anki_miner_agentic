@@ -119,7 +119,8 @@ class MiningCommitService:
         rejected_candidate_ids: list[str] | None = None,
         metadata: dict[str, dict[str, Any]] | None = None,
         enrichments: dict[str, dict[str, Any]] | None = None,
-        dry_run: bool = False,
+        dry_run: bool = True,
+        validation_token: str | None = None,
     ) -> dict[str, Any]:
         rejected = rejected_candidate_ids or []
         metadata = metadata or {}
@@ -169,14 +170,33 @@ class MiningCommitService:
             "enriched_count": len(enrichments),
             "max_cards": batch["max_cards"],
         }
+        selection = {
+            "selected": candidate_ids,
+            "rejected": rejected,
+            "metadata": metadata,
+            "enrichments": enrichments,
+        }
         if dry_run:
-            return validation | {"dry_run": True}
+            token = self.store.record_validated_selection(batch_revision, selection)
+            return validation | {"dry_run": True, "validation_token": token}
         require(
             self.config.write_target.enabled,
             "writes_disabled",
             "Autonomous Anki writes are disabled for this profile; validate with dry_run or enable the write target",
         )
-        job, created = self.store.reserve_commit(batch_revision, candidate_ids, rejected, metadata, enrichments)
+        require(
+            isinstance(validation_token, str) and bool(validation_token),
+            "dry_run_required",
+            "Live commits require a validation token returned by a successful dry run",
+        )
+        job, created = self.store.reserve_commit(
+            batch_revision,
+            candidate_ids,
+            rejected,
+            metadata,
+            enrichments,
+            validation_token,
+        )
         if not created and job["state"] == "completed":
             return job
         completed = {output["candidate_id"] for output in job["outputs"] if output["outcome"] != "failed"}

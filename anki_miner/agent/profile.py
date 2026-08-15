@@ -16,6 +16,10 @@ from .store import AgentStore
 
 
 class ProfileAnkiGateway(Protocol):
+    def get_deck_names(self) -> list[str]: ...
+
+    def get_model_names(self) -> list[str]: ...
+
     def ordered_note_type_field_names(self, note_type: str) -> list[str]: ...
 
     def find_notes(self, query: str) -> list[int]: ...
@@ -49,6 +53,28 @@ class LearnerProfileService:
     def validate_mapping(self) -> dict[str, Any]:
         validated: list[dict[str, Any]] = []
         fields_by_model: dict[str, list[str]] = {}
+        available_decks = self.gateway.get_deck_names()
+        configured_decks = {source.deck for source in self.config.knowledge_sources}
+        configured_decks.add(self.config.write_target.deck)
+        missing_decks = sorted(configured_decks - set(available_decks))
+        require(
+            not missing_decks,
+            "deck_mapping_mismatch",
+            "Configured Anki decks do not exist",
+            missing=missing_decks,
+            available_decks=available_decks,
+        )
+        available_models = self.gateway.get_model_names()
+        configured_models = {source.note_type for source in self.config.knowledge_sources}
+        configured_models.add(self.config.write_target.note_type)
+        missing_models = sorted(configured_models - set(available_models))
+        require(
+            not missing_models,
+            "note_type_mapping_mismatch",
+            "Configured Anki note types do not exist",
+            missing=missing_models,
+            available_note_types=available_models,
+        )
         for source in self.config.knowledge_sources:
             available = fields_by_model.setdefault(
                 source.note_type,
@@ -124,6 +150,7 @@ class LearnerProfileService:
                     source_notes[note_id] = note
 
         cards: list[dict[str, Any]] = []
+        suspended_only_note_ids: set[int] = set()
         cards_available = True
         card_ids = sorted(
             {
@@ -148,7 +175,13 @@ class LearnerProfileService:
             cards_available = False
             cards = []
 
-        lexical_state = self._aggregate(source_notes, cards, cards_available)
+        if cards_available:
+            suspended_note_ids = {card["note_id"] for card in cards if card["queue"] == -1}
+            active_note_ids = {card["note_id"] for card in cards if card["queue"] != -1}
+            suspended_only_note_ids = suspended_note_ids - active_note_ids
+            cards = [card for card in cards if card["queue"] != -1]
+
+        lexical_state = self._aggregate(source_notes, cards, cards_available, suspended_only_note_ids)
         revision_material = {
             "analyzer": asdict(self.analyzer.identity),
             "config_hash": self.config.material_hash(),
@@ -223,6 +256,7 @@ class LearnerProfileService:
     def _normalize_cards(
         self, raw_cards: list[dict[str, Any]], notes: dict[int, dict[str, Any]]
     ) -> list[dict[str, Any]]:
+        """Normalize Anki card rows before applying learner-evidence policy."""
         result: list[dict[str, Any]] = []
         for raw in raw_cards:
             card_id = raw.get("cardId", raw.get("card_id"))
@@ -254,6 +288,7 @@ class LearnerProfileService:
                 reps=reps,
                 lapses=lapses,
             )
+            queue = raw.get("queue")
             result.append(
                 {
                     "card_id": card_id,
@@ -262,19 +297,28 @@ class LearnerProfileService:
                     "interval_days": interval,
                     "reps": reps,
                     "lapses": lapses,
-                    "queue": raw.get("queue"),
+                    "queue": queue,
                     "card_type": raw.get("type"),
                 }
             )
         return result
 
     def _aggregate(
-        self, notes: dict[int, dict[str, Any]], cards: list[dict[str, Any]], cards_available: bool
+        self,
+        notes: dict[int, dict[str, Any]],
+        cards: list[dict[str, Any]],
+        cards_available: bool,
+        suspended_only_note_ids: set[int],
     ) -> list[dict[str, Any]]:
         word_fields: dict[str, set[tuple[int, str]]] = defaultdict(set)
         text_fields: dict[str, set[tuple[int, str]]] = defaultdict(set)
         word_lexemes_by_note: dict[int, set[str]] = defaultdict(set)
         for note in notes.values():
+            # A suspended card is an explicit opt-out from knowledge evidence.
+            # If the note has another active card, that card still supplies the
+            # note's target-field evidence.
+            if note["note_id"] in suspended_only_note_ids:
+                continue
             for field in note["fields"]:
                 lexemes = {token["lexical_id"] for token in field["tokens"] if token["lexical_id"]}
                 target = word_fields if field["role"] == "word" else text_fields

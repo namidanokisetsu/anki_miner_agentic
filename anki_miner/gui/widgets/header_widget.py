@@ -117,7 +117,7 @@ class HeaderWidget(QWidget):
         branding_layout.setSpacing(2)
 
         # App title
-        title_label = QLabel("Anki Miner")
+        title_label = QLabel("Anki Miner Agentic")
         title_font = QFont()
         title_font.setPixelSize(FONT_SIZES.h2)
         title_font.setWeight(QFont.Weight.Bold)

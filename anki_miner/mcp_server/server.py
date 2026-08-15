@@ -15,13 +15,16 @@ def create_server(app: AgentMiningApplication) -> Any:
     try:
         from mcp.server.fastmcp import FastMCP
     except ImportError as exc:  # pragma: no cover - depends on optional install
-        raise RuntimeError('The MCP server is optional. Install it with: pip install "anki-miner[mcp]"') from exc
+        raise RuntimeError(
+            'The MCP server is optional. Install it with: pip install "anki-miner-agentic[mcp]"'
+        ) from exc
 
     server = FastMCP(
-        "Anki Miner",
+        "Anki Miner Agentic",
         instructions=(
             "Use tools in this order: sync profile, prepare batch, list every candidate page, dry-run one "
-            "selection, then repeat that exact selection live only after explicit user authorization. Use only "
+            "selection, save its validation token, then repeat that exact selection live with the token only after "
+            "explicit user authorization. Use only "
             "eligible candidates and exact returned IDs/revisions. Use only each candidate's allowed_enrichments; "
             "Anki Miner supplies pitch, frequency, furigana, media, and all other fields."
         ),
@@ -67,7 +70,8 @@ def create_server(app: AgentMiningApplication) -> Any:
         rejected_candidate_ids: list[str] | None = None,
         metadata: dict[str, dict[str, Any]] | None = None,
         enrichments: dict[str, dict[str, Any]] | None = None,
-        dry_run: bool = False,
+        dry_run: bool = True,
+        validation_token: str | None = None,
     ) -> dict[str, Any]:
         """Dry-run first; commit the identical selection live only with explicit user authorization."""
         return app.commit_mining_selection(
@@ -78,6 +82,7 @@ def create_server(app: AgentMiningApplication) -> Any:
                 "metadata": metadata or {},
                 "enrichments": enrichments or {},
                 "dry_run": dry_run,
+                "validation_token": validation_token,
             }
         )
 
@@ -90,7 +95,7 @@ def create_server(app: AgentMiningApplication) -> Any:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="anki-miner-mcp")
+    parser = argparse.ArgumentParser(prog="anki-miner-agentic-mcp")
     parser.add_argument("--config", type=Path, required=True)
     args = parser.parse_args(argv)
     app = None

@@ -1,1 +1,1 @@
-"""Optional stdio MCP adapter for external Hermes clients."""
+"""Optional stdio MCP adapter for agent clients."""

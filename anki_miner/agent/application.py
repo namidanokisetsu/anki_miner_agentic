@@ -86,13 +86,20 @@ class AgentMiningApplication:
         )
 
     def commit_mining_selection(self, request: dict[str, Any]) -> dict[str, Any]:
+        dry_run = request.get("dry_run", True)
+        if type(dry_run) is not bool:
+            raise AgentMiningError("invalid_request", "dry_run must be a boolean")
+        validation_token = request.get("validation_token")
+        if validation_token is not None and not isinstance(validation_token, str):
+            raise AgentMiningError("invalid_request", "validation_token must be a string or null")
         return self.commit_service.commit(
             str(request.get("batch_revision", "")),
             list(request.get("candidate_ids", [])),
             rejected_candidate_ids=list(request.get("rejected_candidate_ids", [])),
             metadata=dict(request.get("metadata", {})),
             enrichments=dict(request.get("enrichments", {})),
-            dry_run=bool(request.get("dry_run", False)),
+            dry_run=dry_run,
+            validation_token=validation_token,
         )
 
     def get_mining_job(self, job_id: str) -> dict[str, Any]:

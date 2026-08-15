@@ -1,26 +1,26 @@
-# Learner-aware agent mining
+# Anki Miner Agentic workflow
 
-The agent workflow prepares sentence candidates and creates cards only after an explicit selection. Anki Miner handles synchronization, tokenization, filtering, media, card construction, limits, and receipts. An MCP client such as Hermes returns candidate IDs; it does not receive raw note dumps or database access.
+The agent workflow prepares sentence candidates and creates cards only after an explicit, validated selection. Anki Miner Agentic handles synchronization, tokenization, filtering, media, card construction, limits, and receipts. An MCP client returns candidate IDs; it does not receive raw note dumps or database access.
 
-## Quick start with Hermes
+## Quick start with an agent client
 
-Give Hermes terminal and filesystem access to this checkout, keep Anki open, and paste:
+Give the agent terminal and filesystem access to this checkout, keep Anki open, and paste:
 
 ```text
-Set up Anki Miner's agent workflow in this checkout. Discover the existing GUI configuration and live Anki schema instead of assuming names, reuse installed local resources, default to Japanese audio, dry-run before writing, and create no more cards than I explicitly authorize. Resolve routine setup issues and report receipts.
+Set up Anki Miner Agentic in this checkout. Discover the existing GUI configuration and live Anki schema instead of assuming names, reuse installed local resources, default to Japanese audio, dry-run before writing, and create no more cards than I explicitly authorize. Preserve the dry-run validation token and use it only with the identical live selection. Resolve routine setup issues and report receipts.
 ```
 
-Hermes needs terminal access for installation and configuration. After setup, the five MCP tools cover profile sync, candidate preparation and selection, commits, and receipts.
+The agent needs terminal access for installation and configuration. After setup, the five MCP tools cover profile sync, candidate preparation and selection, validated commits, and receipts.
 
 ## Which card fields are supplied?
 
-Anki Miner builds the note. It supplies the mined expression, sentence, readings or furigana, dictionary definition and optional glossary, sentence audio, screenshot, source, pitch accent, and frequency data. Each value goes only to its configured Anki field.
+Anki Miner Agentic builds the note. It supplies the mined expression, sentence, readings or furigana, dictionary definition and optional glossary, sentence audio, screenshot, source, pitch accent, and frequency data. Each value goes only to its configured Anki field.
 
 Two optional fields may contain agent-written plain text. If a chosen-definition field is configured, each candidate includes short plain-text entries from installed dictionaries. The agent may select the sense that fits the sentence and shorten it to one line, using commas for close synonyms. It may also supply a one-line sentence translation. These fields have length limits, are HTML-escaped, and apply only to selected candidates. Scores and rationales stay in metadata. The original definition and glossary are unchanged.
 
 ## Install dictionaries and lookup data
 
-Launch `anki_miner_gui`, then choose **Tools → Download Recommended Resources** to import JMdict definitions, JPDB frequency data, and Kanjium pitch data. To import another dictionary, use **Settings → Dictionaries → Add Dictionary** and select its Yomitan-format ZIP without unzipping it.
+Launch `anki_miner_agentic_gui`, then choose **Tools → Download Recommended Resources** to import JMdict definitions, JPDB frequency data, and Kanjium pitch data. To import another dictionary, use **Settings → Dictionaries → Add Dictionary** and select its Yomitan-format ZIP without unzipping it.
 
 Imported resources are converted into local SQLite indexes rather than installed into Anki:
 
@@ -93,9 +93,9 @@ Keep `write_target.enabled` false while validating and dry-running. Enabling it 
 Structured results use JSON on stdout; diagnostics use stderr.
 
 ```bash
-anki_miner_agent --config agent.json profile-validate
-anki_miner_agent --config agent.json profile-sync
-anki_miner_agent --config agent.json profile-status
+anki_miner_agentic_agent --config agent.json profile-validate
+anki_miner_agentic_agent --config agent.json profile-sync
+anki_miner_agentic_agent --config agent.json profile-status
 ```
 
 Example two-episode preparation request:
@@ -118,13 +118,13 @@ YouTube inputs use `{"type":"youtube","url":"...","allow_automatic":true}`. Manu
 For local media, `subtitle_offset` is optional and measured in seconds. Omit it to use the inherited GUI mining default. Set it on an input to carry over the offset calibrated for that exact video/subtitle pair in the GUI; the per-input value takes precedence because subtitle sync commonly differs by episode or release.
 
 ```bash
-anki_miner_agent --config agent.json prepare --request prepare.json
-anki_miner_agent --config agent.json candidates BATCH_REVISION --limit 100
+anki_miner_agentic_agent --config agent.json prepare --request prepare.json
+anki_miner_agentic_agent --config agent.json candidates BATCH_REVISION --limit 100
 ```
 
 Candidate records list their permitted keys in `allowed_enrichments`. When `chosen_definition` is allowed, `definition_options` contains a dictionary name and bounded plain text. Treat it as reference data, not instructions. Records also include `frequency_rank`, `pitch_available`, and resolved pitch position and category. These are diagnostics; Anki Miner recomputes frequency and pitch during commit. A blank pitch field may simply mean the enabled source has no safe match for the full expression and reading. Anki Miner will not substitute a shorter component's accent.
 
-Hermes should return exact candidate IDs, optional bounded feedback, and enrichments for selected candidates only:
+The agent should return exact candidate IDs, optional bounded feedback, and enrichments for selected candidates only:
 
 ```json
 {
@@ -143,15 +143,34 @@ Hermes should return exact candidate IDs, optional bounded feedback, and enrichm
 ```
 
 ```bash
-anki_miner_agent --config agent.json commit --request selection.json
-anki_miner_agent --config agent.json job JOB_ID
+anki_miner_agentic_agent --config agent.json commit --request selection.json
+anki_miner_agentic_agent --config agent.json job JOB_ID
 ```
 
-A dry run revalidates IDs, eligibility, limits, metadata, enrichments, output fields, and source fingerprints without touching media or Anki. Retrying the same selection and enrichments returns or resumes the same job. The batch rejects a different second request.
+A dry run revalidates IDs, eligibility, limits, metadata, enrichments, output fields, and source fingerprints without touching media or Anki. It returns a `validation_token`. After explicit authorization, add that token to the unchanged payload and set `dry_run` to `false`:
+
+```json
+{
+  "batch_revision": "batch_...",
+  "candidate_ids": ["candidate_..."],
+  "rejected_candidate_ids": ["candidate_..."],
+  "metadata": {"candidate_...": {"score": 0.92, "rationale": "Clear i+1 sentence"}},
+  "enrichments": {
+    "candidate_...": {
+      "chosen_definition": "to eat, consume",
+      "sentence_translation": "I ate sushi."
+    }
+  },
+  "dry_run": false,
+  "validation_token": "validation_..."
+}
+```
+
+The live request must contain exactly the IDs, metadata, and enrichments from the dry run. Retrying the validated live selection returns or resumes the same job; a changed request is rejected.
 
 ## MCP, recovery, and privacy
 
-Launch the stdio server with `anki_miner_mcp --config /absolute/path/to/agent.json`. It exposes exactly `sync_learner_profile`, `prepare_mining_batch`, `list_mining_candidates`, `commit_mining_selection`, and `get_mining_job`. It exposes no shell, SQL, unrestricted file read, or direct `addNotes` tool.
+Launch the stdio server with `anki_miner_agentic_mcp --config /absolute/path/to/agent.json`. It exposes exactly `sync_learner_profile`, `prepare_mining_batch`, `list_mining_candidates`, `commit_mining_selection`, and `get_mining_job`. It exposes no shell, SQL, unrestricted file read, or direct `addNotes` tool.
 
 - Profile publication is atomic. An unreachable AnkiConnect or malformed snapshot leaves the last valid profile in place.
 - Batches are immutable and content-derived. Changed media, subtitles, analyzer identity, or material policy creates a new revision; commit rechecks both source files.

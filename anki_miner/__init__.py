@@ -1,5 +1,5 @@
 """
-Anki Miner - Automated Japanese Vocabulary Mining Tool
+Anki Miner Agentic - Guarded Agent-First Japanese Vocabulary Mining
 
 A unified tool for extracting Japanese vocabulary from video subtitles
 and creating Anki flashcards with audio, screenshots, and definitions.
@@ -10,5 +10,5 @@ and creating Anki flashcards with audio, screenshots, and definitions.
 # Do NOT switch back to importlib.metadata.version() — frozen builds can pick
 # up orphan dist-info dirs from prior installs and report the wrong version
 # (Issue #10).
-__version__ = "2.10.0"
-__author__ = "Anki Miner Contributors"
+__version__ = "0.1.0.dev0"
+__author__ = "Anki Miner Agentic Contributors"
