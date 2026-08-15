@@ -12,7 +12,8 @@ Follow this procedure in order. Anki Miner owns filtering, lookup data, media, n
 - Get the media source, its calibrated subtitle offset (if any), the card limit, and whether the user authorizes a live Anki write.
 - Confirm these five tools exist: `sync_learner_profile`, `prepare_mining_batch`, `list_mining_candidates`, `commit_mining_selection`, `get_mining_job`.
 - Never guess deck, note-type, field, path, candidate, batch, or job values.
-- For first-time setup or configuration errors, read `agentic-docs/agent-mining.md`. For exact tool payloads and error recovery, read [references/mcp-contract.md](references/mcp-contract.md).
+- Before syncing, compare configured learner sources with the live Anki deck list. If a configured deck was deleted, remove that source from `~/.anki_miner/agent.json`; do not treat a missing source as an empty learner deck or silently revive it. Only add a replacement after the user identifies it.
+- For first-time setup, configuration errors, exact tool payloads, and recovery, read `agentic-docs/agent-mining.md`.
 
 ## Required workflow
 
