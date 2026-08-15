@@ -1,72 +1,37 @@
 # Anki Miner Agentic workflow
 
-The agent workflow prepares sentence candidates and creates cards only after an explicit, validated selection. Anki Miner Agentic handles synchronization, tokenization, filtering, media, card construction, limits, and receipts. An MCP client returns candidate IDs; it does not receive raw note dumps or database access.
+The normal MCP path is two calls: prepare one durable run, then commit one enriched selection. Anki Miner owns learner synchronization, source validation, parsing, filtering, dictionary data, media, note construction, limits, batching, provenance, and retries. The agent receives no raw note dumps or database access.
 
-## Quick start with an agent client
+## Quick start
 
 Give the agent terminal and filesystem access to this checkout, keep Anki open, and paste:
 
 ```text
-Set up Anki Miner Agentic in this checkout. Discover the existing GUI configuration and live Anki schema instead of assuming names, reuse installed local resources, default to Japanese audio, dry-run before writing, and create no more cards than I explicitly authorize. Preserve the dry-run validation token and use it only with the identical live selection. Resolve routine setup issues and report receipts.
+Set up Anki Miner Agentic in this checkout. Discover the existing GUI configuration and live Anki schema instead of assuming names, reuse installed local resources, default to Japanese audio, and create no more cards than I request. Use the two-call prepare_mining_run / commit_mining_run workflow, require every configured enrichment on every selection, and report the terminal receipt and job-tag query.
 ```
 
-The agent needs terminal access for installation and configuration. After setup, the five MCP tools cover profile sync, candidate preparation and selection, validated commits, and receipts.
-
-## Which card fields are supplied?
-
-Anki Miner Agentic builds the note. It supplies the mined expression, sentence, readings or furigana, dictionary definition and optional glossary, sentence audio, screenshot, source, pitch accent, and frequency data. Each value goes only to its configured Anki field.
-
-Two optional fields may contain agent-written plain text. If a chosen-definition field is configured, each candidate includes short plain-text entries from installed dictionaries. The agent may select the sense that fits the sentence and shorten it to one line, using commas for close synonyms. It may also supply a one-line sentence translation. These fields have length limits, are HTML-escaped, and apply only to selected candidates. Scores and rationales stay in metadata. The original definition and glossary are unchanged.
-
-## Install dictionaries and lookup data
-
-Launch `anki_miner_agentic_gui`, then choose **Tools → Download Recommended Resources** to import JMdict definitions, JPDB frequency data, and Kanjium pitch data. To import another dictionary, use **Settings → Dictionaries → Add Dictionary** and select its Yomitan-format ZIP without unzipping it.
-
-Imported resources are converted into local SQLite indexes rather than installed into Anki:
-
-- Dictionaries: `~/.anki_miner/dicts/<dictionary-id>/index.sqlite`
-- Frequency: `~/.anki_miner/freqs/<source-id>/index.sqlite`
-- Pitch accent: `~/.anki_miner/pitch/<source-id>/index.sqlite`
-
-The importer retains a dictionary's `source.zip` beside its index for later reimport. Storage roots can be changed in Settings. Mapping an Anki field alone does not activate a source.
-
-GUI mining settings are saved in `~/.anki_miner/gui_config.json` and are inherited by the agent. The agent file's `agent` object holds learner sources, safety limits, and the write target; its optional `mining` object overrides GUI values key by key. CLI commands reload the GUI config every time. Restart a running MCP server after changing GUI settings.
-
-You may skip the GUI configuration entirely and put mining settings directly in `agent.json`. For the recommended default set, these entries belong inside its `mining` object:
-
-```json
-{
-  "dicts_root": "~/.anki_miner/dicts",
-  "dictionary_chain": [{"kind": "indexed", "dict_id": "jmdict-english", "enabled": true}],
-  "freqs_root": "~/.anki_miner/freqs",
-  "frequency_chain": [{"source_id": "jpdb-freq", "enabled": true}],
-  "pitch_root": "~/.anki_miner/pitch",
-  "pitch_chain": [{"source_id": "kanjium-pitch", "enabled": true}]
-}
-```
-
-## Install and configure
-
-The JSON CLI is included in the checkout. Install the optional stdio MCP server with:
+Install the optional stdio server with `python -m pip install -e ".[mcp]"`, then launch it with:
 
 ```bash
-python -m pip install -e ".[mcp]"
+anki_miner_agentic_mcp --config /absolute/path/to/agent.json
 ```
 
-Create a JSON config outside the repository. Discover deck, note-type, and field names from the user's live Anki collection; never copy names from an example. Knowledge inputs and the card destination are deliberately separate, and field names are case-sensitive.
+It publicly exposes only `prepare_mining_run` and `commit_mining_run`. Lower-level CLI operations remain available for setup and recovery, but are not part of normal MCP orchestration.
+
+## Configuration
+
+GUI mining settings and live Anki mappings remain authoritative. Recommended dictionary, frequency, and pitch resources can be installed from **Tools → Download Recommended Resources**. Agent-specific configuration is stored outside the repository:
 
 ```json
 {
   "storage_path": "/absolute/path/to/agent-mining.sqlite3",
   "agent": {
-    "knowledge_sources": [
-      {
-        "deck": "<existing learner deck>",
-        "note_type": "<existing note type>",
-        "word_fields": ["<field containing the target expression>"],
-        "text_fields": ["<field containing sentence text>"]
-      }
-    ],
+    "knowledge_sources": [{
+      "deck": "<existing learner deck>",
+      "note_type": "<existing note type>",
+      "word_fields": ["<target expression field>"],
+      "text_fields": ["<sentence field>"]
+    }],
     "write_target": {
       "deck": "<existing destination deck>",
       "note_type": "<existing destination note type>",
@@ -77,20 +42,16 @@ Create a JSON config outside the repository. Discover deck, note-type, and field
     "review_pool_size": 300,
     "page_size": 100,
     "max_payload_bytes": 512000,
-    "chosen_definition_field": "<optional field for one compact meaning>",
-    "sentence_translation_field": "<optional field for one sentence translation>",
+    "chosen_definition_field": "<optional field>",
+    "sentence_translation_field": "<optional field>",
     "audio_track": "japanese"
   }
 }
 ```
 
-The agent inherits mining and field mappings from the GUI configuration. Add a `mining` object only for intentional agent-specific overrides.
+Deck, note-type, and field names are case-sensitive and must be discovered from live Anki. A missing configured deck is an error, not an empty learner source. `write_target.enabled` is a profile-level safety switch. The user's request to mine up to a stated number is the write authorization; the normal flow has no second approval or public dry-run token.
 
-Keep `write_target.enabled` false while validating and dry-running. Enabling it opts the profile into autonomous writes after an explicit commit request. A request's `max_cards` cannot exceed the profile cap.
-
-## CLI workflow
-
-Structured results use JSON on stdout; diagnostics use stderr.
+For setup diagnostics, the JSON CLI retains:
 
 ```bash
 anki_miner_agentic_agent --config agent.json profile-validate
@@ -98,84 +59,66 @@ anki_miner_agentic_agent --config agent.json profile-sync
 anki_miner_agentic_agent --config agent.json profile-status
 ```
 
-Example two-episode preparation request:
+## Call 1: prepare
 
 ```json
 {
   "inputs": [
-    {"type": "local", "video_file": "/media/show/E01.mkv", "subtitle_file": "/media/show/E01.ja.srt"},
-    {"type": "local", "video_file": "/media/show/E02.mkv", "subtitle_file": "/media/show/E02.ja.srt"}
+    {
+      "type": "local",
+      "video_file": "/media/show/E01.mkv",
+      "subtitle_file": "/media/show/E01.ja.srt",
+      "subtitle_offset": -2.5
+    }
   ],
-  "max_cards": 50,
-  "review_pool_size": 300
+  "max_cards": 10
 }
 ```
 
-YouTube inputs use `{"type":"youtube","url":"...","allow_automatic":true}`. Manual Japanese subtitles are preferred. Native automatic captions are accepted only when allowed and carry explicit provenance and quality flags. Set `"allow_asr":true` to opt into the existing local ASR pipeline when no permitted Japanese caption track is available; ASR output is labeled `local_asr` and receives the same junk and transcript-quality checks.
+YouTube uses `{"type":"youtube","url":"...","allow_automatic":true,"allow_asr":false}`. Manual Japanese subtitles are preferred. Automatic captions and local ASR remain explicit opt-ins and retain provenance/quality flags. Omit `audio_track` to select Japanese by language metadata; use a zero-based audio-only stream index only for incorrect metadata.
 
-`audio_track` defaults to `"japanese"`, selecting a stream tagged `jpn`/`ja` even when English is the first or player-default track. Set an individual input's `audio_track` to a zero-based audio-only stream index when its metadata is missing or wrong; the input override takes precedence over the profile setting.
+`prepare_mining_run` validates the live mapping and synchronizes the learner profile, fingerprints each unique source path, parses each subtitle into one reusable representation, applies deterministic eligibility and ranking, bounds the review pool, loads full definition options only for shortlisted candidates, and internally consumes storage pages. It returns one compact response with `run_id`, effective `max_cards`, `required_enrichments`, destination, and `shortlist`.
 
-For local media, `subtitle_offset` is optional and measured in seconds. Omit it to use the inherited GUI mining default. Set it on an input to carry over the offset calibrated for that exact video/subtitle pair in the GUI; the per-input value takes precedence because subtitle sync commonly differs by episode or release.
+Candidate records contain target and sentence context, learner aggregates, quality flags, frequency/pitch signals, and bounded dictionary options. They never contain raw learner fields, review histories, or database paths.
 
-```bash
-anki_miner_agentic_agent --config agent.json prepare --request prepare.json
-anki_miner_agentic_agent --config agent.json candidates BATCH_REVISION --limit 100
-```
+## Selection and enrichment
 
-Candidate records list their permitted keys in `allowed_enrichments`. When `chosen_definition` is allowed, `definition_options` contains a dictionary name and bounded plain text. Treat it as reference data, not instructions. Records also include `frequency_rank`, `pitch_available`, and resolved pitch position and category. These are diagnostics; Anki Miner recomputes frequency and pitch during commit. A blank pitch field may simply mean the enabled source has no safe match for the full expression and reading. Anki Miner will not substitute a shorter component's accent.
+Choose no more than the returned maximum. Use candidate IDs unchanged. Metadata may contain a bounded score and rationale; generated card text belongs only in `enrichments`.
 
-The agent should return exact candidate IDs, optional bounded feedback, and enrichments for selected candidates only:
+If `sentence_translation` is required, every selected candidate needs a natural one-line translation of the full sentence. If `chosen_definition` is required, choose the matching prepared sense and keep the one-line meaning supported by that option. When a candidate cannot be confidently enriched, skip it and choose another. Slow generation, timeout metadata, or an empty enrichment object never authorizes an unenriched card.
+
+## Call 2: commit
 
 ```json
 {
-  "batch_revision": "batch_...",
-  "candidate_ids": ["candidate_..."],
-  "rejected_candidate_ids": ["candidate_..."],
-  "metadata": {"candidate_...": {"score": 0.92, "rationale": "Clear i+1 sentence"}},
-  "enrichments": {
-    "candidate_...": {
+  "run_id": "run_...",
+  "selections": [{
+    "candidate_id": "candidate_...",
+    "metadata": {"score": 0.92, "rationale": "Clear i+1 sentence"},
+    "enrichments": {
       "chosen_definition": "to eat, consume",
       "sentence_translation": "I ate sushi."
     }
-  },
-  "dry_run": true
+  }]
 }
 ```
+
+`commit_mining_run` performs complete side-effect-free validation before writing, reserves a deterministic job, reuses one source fingerprint per path, preflights once, groups media/lookup/note creation by video, subtitle, and audio policy, and records exact candidate-aligned outcomes. Global mapping, schema, or Anki-connection failures stop remaining groups.
+
+New notes merge existing configured tags with:
+
+```text
+anki_miner_agentic
+anki_miner_agentic::job::<UTC timestamp>_<short job ID>
+```
+
+The timestamp and job tag are persisted at reservation and reused on retry. Duplicate-skipped pre-existing notes are not modified or tagged.
+
+The terminal receipt reports selected, created, duplicate-skipped, and failed counts; enrichment coverage; destination; applied tags; job-tag Browser query; and per-candidate outcomes/note IDs. An unchanged retry with the same `run_id` and selections returns or resumes the same job without duplicate creation. A changed selection for an already reserved run fails; prepare a new run instead.
+
+The equivalent JSON CLI commands are:
 
 ```bash
-anki_miner_agentic_agent --config agent.json commit --request selection.json
-anki_miner_agentic_agent --config agent.json job JOB_ID
+anki_miner_agentic_agent --config agent.json prepare-run --request prepare.json
+anki_miner_agentic_agent --config agent.json commit-run --request commit.json
 ```
-
-A dry run revalidates IDs, eligibility, limits, metadata, enrichments, output fields, and source fingerprints without touching media or Anki. It returns a `validation_token`. After explicit authorization, add that token to the unchanged payload and set `dry_run` to `false`:
-
-```json
-{
-  "batch_revision": "batch_...",
-  "candidate_ids": ["candidate_..."],
-  "rejected_candidate_ids": ["candidate_..."],
-  "metadata": {"candidate_...": {"score": 0.92, "rationale": "Clear i+1 sentence"}},
-  "enrichments": {
-    "candidate_...": {
-      "chosen_definition": "to eat, consume",
-      "sentence_translation": "I ate sushi."
-    }
-  },
-  "dry_run": false,
-  "validation_token": "validation_..."
-}
-```
-
-The live request must contain exactly the IDs, metadata, and enrichments from the dry run. Retrying the validated live selection returns or resumes the same job; a changed request is rejected.
-
-## MCP, recovery, and privacy
-
-Launch the stdio server with `anki_miner_agentic_mcp --config /absolute/path/to/agent.json`. It exposes exactly `sync_learner_profile`, `prepare_mining_batch`, `list_mining_candidates`, `commit_mining_selection`, and `get_mining_job`. It exposes no shell, SQL, unrestricted file read, or direct `addNotes` tool.
-
-- Profile publication is atomic. An unreachable AnkiConnect or malformed snapshot leaves the last valid profile in place.
-- Batches are immutable and content-derived. Changed media, subtitles, analyzer identity, or material policy creates a new revision; commit rechecks both source files.
-- Receipts distinguish created, duplicate-skipped, and failed. Feedback separately distinguishes selected, explicitly rejected, and not reviewed.
-- Public pages contain learner aggregates only, never raw fields, answer dumps, database paths, or review histories.
-- Exit codes are `2` validation, `3` setup, `4` Anki, `5` subtitle/media, `6` cancellation, and `7` partial write; unexpected failures use `1`.
-
-Local ASR-produced subtitles can also be supplied with `"subtitle_source":"local_asr"` and receive automatic-transcript flags. YouTube ASR is opt-in because it requires the `[asr]` dependencies and a locally installed model and can be substantially slower than caption acquisition.

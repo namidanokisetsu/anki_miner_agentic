@@ -46,6 +46,10 @@ def build_parser() -> argparse.ArgumentParser:
     commit.add_argument("--request", required=True, help="Selection request JSON path, or - for stdin")
     job = commands.add_parser("job")
     job.add_argument("job_id")
+    run_prepare = commands.add_parser("prepare-run")
+    run_prepare.add_argument("--request", required=True, help="Run preparation JSON path, or - for stdin")
+    run_commit = commands.add_parser("commit-run")
+    run_commit.add_argument("--request", required=True, help="Run selection JSON path, or - for stdin")
     return parser
 
 
@@ -70,6 +74,11 @@ def _dispatch(args: argparse.Namespace, app: AgentMiningApplication) -> dict[str
         return app.commit_mining_selection(_json_file(args.request))
     if args.command == "job":
         return app.get_mining_job(args.job_id)
+    if args.command == "prepare-run":
+        return app.prepare_mining_run(_json_file(args.request))
+    if args.command == "commit-run":
+        request = _json_file(args.request)
+        return app.commit_mining_run(str(request.get("run_id", "")), list(request.get("selections", [])))
     raise AgentMiningError("invalid_command", "Unknown command")
 
 

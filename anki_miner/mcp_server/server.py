@@ -1,6 +1,4 @@
-"""Five-tool bounded MCP surface over the typed application facade."""
-
-from __future__ import annotations
+"""Two-call bounded MCP surface over the typed application facade."""
 
 import argparse
 import sys
@@ -13,7 +11,7 @@ from anki_miner.runtime import build_agent_application
 
 def create_server(app: AgentMiningApplication) -> Any:
     try:
-        from mcp.server.fastmcp import FastMCP
+        from mcp.server.fastmcp import Context, FastMCP
     except ImportError as exc:  # pragma: no cover - depends on optional install
         raise RuntimeError(
             'The MCP server is optional. Install it with: pip install "anki-miner-agentic[mcp]"'
@@ -22,74 +20,38 @@ def create_server(app: AgentMiningApplication) -> Any:
     server = FastMCP(
         "Anki Miner Agentic",
         instructions=(
-            "Use tools in this order: sync profile, prepare batch, list every candidate page, dry-run one "
-            "selection, save its validation token, then repeat that exact selection live with the token only after "
-            "explicit user authorization. Use only "
-            "eligible candidates and exact returned IDs/revisions. Use only each candidate's allowed_enrichments; "
-            "Anki Miner supplies pitch, frequency, furigana, media, and all other fields."
+            "Use prepare_mining_run once, choose no more than its max_cards from the returned shortlist, provide "
+            "every required enrichment for every selection, then call commit_mining_run once. The user's stated "
+            "maximum authorizes that write. Anki Miner supplies pitch, frequency, furigana, media, and other fields."
         ),
     )
 
     @server.tool()
-    def sync_learner_profile() -> dict[str, Any]:
-        """Synchronize configured Anki knowledge sources into the local learner profile."""
-        return app.sync_learner_profile()
-
-    @server.tool()
-    def prepare_mining_batch(
+    async def prepare_mining_run(
         inputs: list[dict[str, Any]],
-        max_cards: int | None = None,
+        max_cards: int,
+        ctx: Context,
         review_pool_size: int | None = None,
     ) -> dict[str, Any]:
-        """Prepare an immutable local/YouTube batch; save its returned batch_revision and max_cards."""
-        return app.prepare_mining_batch(
+        """Synchronize and return one durable, bounded candidate shortlist."""
+        await ctx.report_progress(0, 2, "Synchronizing profile and preparing shortlist")
+        result = app.prepare_mining_run(
             {"inputs": inputs, "max_cards": max_cards, "review_pool_size": review_pool_size}
         )
+        await ctx.report_progress(2, 2, "Mining run prepared")
+        return result
 
     @server.tool()
-    def list_mining_candidates(
-        batch_revision: str,
-        offset: int = 0,
-        limit: int | None = None,
-        include_ineligible: bool = False,
-        schema_version: int = 1,
+    async def commit_mining_run(
+        run_id: str,
+        selections: list[dict[str, Any]],
+        ctx: Context,
     ) -> dict[str, Any]:
-        """List one candidate page; repeat with next_offset until it is null."""
-        return app.list_mining_candidates(
-            batch_revision,
-            offset=offset,
-            limit=limit,
-            include_ineligible=include_ineligible,
-            schema_version=schema_version,
-        )
-
-    @server.tool()
-    def commit_mining_selection(
-        batch_revision: str,
-        candidate_ids: list[str],
-        rejected_candidate_ids: list[str] | None = None,
-        metadata: dict[str, dict[str, Any]] | None = None,
-        enrichments: dict[str, dict[str, Any]] | None = None,
-        dry_run: bool = True,
-        validation_token: str | None = None,
-    ) -> dict[str, Any]:
-        """Dry-run first; commit the identical selection live only with explicit user authorization."""
-        return app.commit_mining_selection(
-            {
-                "batch_revision": batch_revision,
-                "candidate_ids": candidate_ids,
-                "rejected_candidate_ids": rejected_candidate_ids or [],
-                "metadata": metadata or {},
-                "enrichments": enrichments or {},
-                "dry_run": dry_run,
-                "validation_token": validation_token,
-            }
-        )
-
-    @server.tool()
-    def get_mining_job(job_id: str) -> dict[str, Any]:
-        """Inspect a durable commit job and its per-candidate receipts."""
-        return app.get_mining_job(job_id)
+        """Validate and synchronously commit an enriched selection; unchanged retries are idempotent."""
+        await ctx.report_progress(0, 2, "Validating selection and processing source groups")
+        result = app.commit_mining_run(run_id, selections)
+        await ctx.report_progress(2, 2, "Terminal mining receipt ready")
+        return result
 
     return server
 

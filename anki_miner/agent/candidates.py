@@ -158,6 +158,12 @@ class CandidateBatchService:
         )
         effective_max_cards = self.config.max_cards if max_cards is None else max_cards
         effective_pool = self.config.review_pool_size if review_pool_size is None else review_pool_size
+        require(type(effective_max_cards) is int, "invalid_limit", "max_cards must be an integer")
+        require(
+            effective_pool is None or type(effective_pool) is int,
+            "invalid_limit",
+            "review_pool_size must be an integer or null",
+        )
         require(1 <= effective_max_cards <= self.config.max_cards, "invalid_limit", "max_cards exceeds the profile cap")
         require(
             effective_pool is None or effective_pool >= 1, "invalid_limit", "review_pool_size must be positive or null"
@@ -165,18 +171,37 @@ class CandidateBatchService:
 
         resolved = [self._resolve_input(item) for item in inputs]
         episode_parsers = [self._parser_for_episode(item) for item in resolved]
-        sources = [self._source_record(item, parser) for item, parser in zip(resolved, episode_parsers, strict=True)]
+        fingerprint_cache: dict[Path, dict[str, Any]] = {}
+        raw_entries_cache: dict[tuple[Path, int], list[tuple[float, float, str]]] = {}
+        parsed_episodes: list[
+            tuple[list[TokenizedWord], Any, Counter[str], list[tuple[float, float, str]]]
+        ] = []
+        for episode, parser in zip(resolved, episode_parsers, strict=True):
+            unified = getattr(parser, "parse_mining_episode", None)
+            if callable(unified):
+                words, line_index, counts, entries = unified(episode.subtitle_file)
+            else:
+                words, line_index = parser.parse_subtitle_file_with_index(episode.subtitle_file)
+                counts = parser.count_lemmas(episode.subtitle_file)
+                entries = parser.parse_raw_entries(episode.subtitle_file)
+            raw_entries_cache[(episode.subtitle_file, id(parser))] = entries
+            parsed_episodes.append((words, line_index, counts, entries))
+        sources = [
+            self._source_record(item, parser, fingerprint_cache, raw_entries_cache)
+            for item, parser in zip(resolved, episode_parsers, strict=True)
+        ]
         known = self.store.lexical_features()
         occurrences: Counter[str] = Counter()
         variants: dict[str, list[tuple[TokenizedWord, dict[str, Any], tuple[str, ...]]]] = defaultdict(list)
 
-        for episode, source, parser in zip(resolved, sources, episode_parsers, strict=True):
-            words, line_index = parser.parse_subtitle_file_with_index(episode.subtitle_file)
-            counts = parser.count_lemmas(episode.subtitle_file)
+        for episode, source, parser, parsed in zip(
+            resolved, sources, episode_parsers, parsed_episodes, strict=True
+        ):
+            words, line_index, counts, _entries = parsed
             self._attach_frequency(words)
             self.word_filter.attach_occurrence_counts(words, counts)
             self.word_filter.attach_sentence_candidates(words, line_index, max_candidates=self.config.max_variants)
-            cue_flags = self._cue_flags(episode, parser)
+            cue_flags = self._cue_flags(episode, parser, raw_entries_cache)
             for word in words:
                 word.video_file = episode.video_file
                 occurrences[word.mined_form] += max(1, word.occurrence_count)
@@ -187,19 +212,8 @@ class CandidateBatchService:
         definition_terms = sorted(variants)
         definition_map = self.definition_probe(definition_terms) if self.definition_probe else None
         pitch_map = self._lookup_pitch(variants)
-        definition_options: dict[str, list[dict[str, str]]] = {}
-        if self.definition_options_lookup is not None and self.config.chosen_definition_field:
-            for term in definition_terms:
-                if definition_map is not None and not definition_map.get(term, False):
-                    continue
-                definition_options[term] = _compact_definition_options(
-                    self.definition_options_lookup(term),
-                    max_options=self.config.max_definition_options,
-                    max_chars=self.config.max_definition_option_chars,
-                )
         lookup_material = {
             "definitions": sorted(definition_map.items()) if definition_map is not None else None,
-            "definition_options": sorted(definition_options.items()) if definition_options else None,
             "pitch": sorted(pitch_map.items()) if pitch_map is not None else None,
             "frequency": sorted(
                 (
@@ -390,7 +404,7 @@ class CandidateBatchService:
                 "pitch": (
                     pitch_map.get(lexical_id, {"position": None, "category": None}) if pitch_map is not None else None
                 ),
-                "definition_options": definition_options.get(lexical_id, []),
+                "definition_options": [],
                 "allowed_enrichments": allowed_enrichments,
                 "flags": list(quality_flags),
                 "eligible": not reasons,
@@ -423,6 +437,42 @@ class CandidateBatchService:
                 item["public"]["candidate_id"],
             )
         )
+        # Full definition text is the largest and slowest candidate enrichment.
+        # Eligibility and deterministic ranking therefore run first, and only
+        # the bounded public shortlist is hydrated.
+        shortlist_size = effective_pool if effective_pool is not None else max(effective_max_cards * 3, effective_max_cards)
+        shortlist = [item for item in candidates if item["public"]["eligible"]][:shortlist_size]
+        definition_options: dict[str, list[dict[str, str]]] = {}
+        if self.definition_options_lookup is not None and self.config.chosen_definition_field:
+            for item in shortlist:
+                term = item["lexical_id"]
+                options = _compact_definition_options(
+                    self.definition_options_lookup(term),
+                    max_options=self.config.max_definition_options,
+                    max_chars=self.config.max_definition_option_chars,
+                )
+                item["public"]["definition_options"] = options
+                definition_options[term] = options
+        request_material["lookup_material"]["definition_options"] = (
+            sorted(definition_options.items()) if definition_options else None
+        )
+        # Definition options participate in the immutable batch identity.
+        request_hash = hashlib.sha256(canonical_json(request_material).encode("utf-8")).hexdigest()
+        final_revision_id = content_id("batch", request_material)
+        if final_revision_id != revision_id:
+            revision_id = final_revision_id
+            for item in candidates:
+                item["public"]["batch_revision"] = revision_id
+                item["public"]["candidate_id"] = content_id(
+                    "candidate",
+                    {
+                        "batch_revision": revision_id,
+                        "lexical_id": item["lexical_id"],
+                        "source": item["public"]["episode"]["id"],
+                        "start_ms": item["public"]["episode"]["start_ms"],
+                        "sentence": item["public"]["sentence"]["text"],
+                    },
+                )
         batch = {
             "revision_id": revision_id,
             "profile_revision_id": profile["revision_id"],
@@ -629,11 +679,21 @@ class CandidateBatchService:
             item.audio_track,
         )
 
-    def _cue_flags(self, episode: LocalEpisodeInput, parser: Any) -> dict[tuple[float, float, str], tuple[str, ...]]:
+    def _cue_flags(
+        self,
+        episode: LocalEpisodeInput,
+        parser: Any,
+        raw_entries_cache: dict[tuple[Path, int], list[tuple[float, float, str]]] | None = None,
+    ) -> dict[tuple[float, float, str], tuple[str, ...]]:
         from .quality import assess_subtitle_cue
 
         result: dict[tuple[float, float, str], tuple[str, ...]] = {}
-        for start, end, text in parser.parse_raw_entries(episode.subtitle_file):
+        cache = raw_entries_cache if raw_entries_cache is not None else {}
+        key = (episode.subtitle_file, id(parser))
+        if key not in cache:
+            cache[key] = parser.parse_raw_entries(episode.subtitle_file)
+        entries = cache[key]
+        for start, end, text in entries:
             quality = assess_subtitle_cue(text, start, end, episode.subtitle_source)
             require(
                 quality.severe_error is None,
@@ -646,10 +706,25 @@ class CandidateBatchService:
             result[(round(start, 3), round(end, 3), text)] = quality.flags
         return result
 
-    def _source_record(self, episode: LocalEpisodeInput, parser: Any) -> dict[str, Any]:
-        video = file_fingerprint(episode.video_file)
-        subtitle = file_fingerprint(episode.subtitle_file)
-        entries = parser.parse_raw_entries(episode.subtitle_file)
+    def _source_record(
+        self,
+        episode: LocalEpisodeInput,
+        parser: Any,
+        fingerprint_cache: dict[Path, dict[str, Any]] | None = None,
+        raw_entries_cache: dict[tuple[Path, int], list[tuple[float, float, str]]] | None = None,
+    ) -> dict[str, Any]:
+        fingerprints = fingerprint_cache if fingerprint_cache is not None else {}
+        if episode.video_file not in fingerprints:
+            fingerprints[episode.video_file] = file_fingerprint(episode.video_file)
+        if episode.subtitle_file not in fingerprints:
+            fingerprints[episode.subtitle_file] = file_fingerprint(episode.subtitle_file)
+        video = fingerprints[episode.video_file]
+        subtitle = fingerprints[episode.subtitle_file]
+        raw_cache = raw_entries_cache if raw_entries_cache is not None else {}
+        raw_key = (episode.subtitle_file, id(parser))
+        if raw_key not in raw_cache:
+            raw_cache[raw_key] = parser.parse_raw_entries(episode.subtitle_file)
+        entries = raw_cache[raw_key]
         cue_indexes = {
             f"{round(start, 3)}:{round(end, 3)}:{text}": index for index, (start, end, text) in enumerate(entries)
         }

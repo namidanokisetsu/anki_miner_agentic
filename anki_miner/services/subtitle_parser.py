@@ -1374,6 +1374,30 @@ class SubtitleParserService:
 
         return all_words, line_index
 
+    def parse_mining_episode(
+        self, subtitle_file: Path
+    ) -> tuple[list[TokenizedWord], list[LineLemmas], collections.Counter[str], list[tuple[float, float, str]]]:
+        """Build every agent-mining subtitle view in one parsed-line pass."""
+        self._reset_caches()
+        all_words: list[TokenizedWord] = []
+        line_index: list[LineLemmas] = []
+        counts: collections.Counter[str] = collections.Counter()
+        raw_entries: list[tuple[float, float, str]] = []
+        seen_mined_forms: set[str] = set()
+        for line_state in self._iter_parsed_lines(subtitle_file):
+            text, _raw_tokens, merged_tokens, start_time, end_time, _duration = line_state
+            raw_entries.append((start_time, end_time, text))
+            for token, tok_start, tok_end in self._iter_token_spans(text, merged_tokens):
+                if self._mine_token(token, text, tok_start, tok_end, merged_tokens):
+                    counts[self._extract_lemma(token)] += 1
+            line_words, line_lemmas_entry = self._emit_line_words_and_index(
+                line_state, seen_mined_forms, collect_index=True
+            )
+            all_words.extend(line_words)
+            if line_lemmas_entry is not None:
+                line_index.append(line_lemmas_entry)
+        return all_words, line_index, counts, raw_entries
+
     def parse_text_units(
         self,
         units: Sequence[ReadingUnit],

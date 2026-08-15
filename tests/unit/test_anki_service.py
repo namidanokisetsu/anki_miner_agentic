@@ -740,6 +740,13 @@ class TestCreateCardsBatch:
 
         assert result == [100, 102, 104]
         assert service.last_created_lemmas == ["word_0", "word_2", "word_4"]
+        assert service.last_candidate_outcomes == [
+            {"outcome": "created", "note_id": 100},
+            {"outcome": "duplicate_skipped", "note_id": None},
+            {"outcome": "created", "note_id": 102},
+            {"outcome": "duplicate_skipped", "note_id": None},
+            {"outcome": "created", "note_id": 104},
+        ]
 
     def test_duplicate_in_second_note_chunk_never_uploads_its_media(self, test_config, make_tokenized_word):
         service = AnkiService(test_config)

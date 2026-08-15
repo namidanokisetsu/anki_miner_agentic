@@ -329,3 +329,90 @@ def test_captionless_youtube_can_opt_into_local_asr(tmp_path):
     candidate = page["candidates"][0]
     assert candidate["episode"]["subtitle_source"] == "local_asr"
     assert candidate["episode"]["audio_track"] == "japanese"
+
+
+def test_prepare_uses_one_reusable_subtitle_parse(tmp_path):
+    class UnifiedParser(Parser):
+        def __init__(self):
+            super().__init__()
+            self.calls = 0
+
+        def parse_mining_episode(self, path):
+            self.calls += 1
+            words, line_index = super().parse_subtitle_file_with_index(path)
+            return words, line_index, super().count_lemmas(path), super().parse_raw_entries(path)
+
+        def parse_subtitle_file_with_index(self, path):  # pragma: no cover - must not be called directly
+            raise AssertionError("legacy parse path used")
+
+        def count_lemmas(self, path):  # pragma: no cover - must not be called directly
+            raise AssertionError("legacy count path used")
+
+        def parse_raw_entries(self, path):  # pragma: no cover - must not be called directly
+            raise AssertionError("legacy raw-entry path used")
+
+    video = tmp_path / "episode.mp4"
+    subtitle = tmp_path / "episode.srt"
+    video.write_bytes(b"video")
+    subtitle.write_text("fixture", encoding="utf-8")
+    store = AgentStore(tmp_path / "agent.sqlite3")
+    publish_empty_profile(store)
+    parser = UnifiedParser()
+    service = CandidateBatchService(
+        store,
+        Analyzer(),
+        parser,
+        Filter(),
+        cfg(),
+        definition_probe=lambda terms: dict.fromkeys(terms, True),
+    )
+
+    service.prepare([LocalEpisodeInput(video, subtitle)])
+
+    assert parser.calls == 1
+
+
+def test_definition_options_load_only_after_eligibility_and_shortlist_bounds(tmp_path):
+    class TwoWordParser(Parser):
+        def parse_subtitle_file_with_index(self, path):
+            first, index = super().parse_subtitle_file_with_index(path)
+            excluded = TokenizedWord(
+                surface="除外",
+                lemma="除外",
+                reading="ジョガイ",
+                sentence="除外する。",
+                start_time=3.0,
+                end_time=4.0,
+                duration=1.0,
+                orth_base="除外",
+                expression_reading="じょがい",
+                pos="名詞",
+            )
+            return [*first, excluded], index
+
+        def count_lemmas(self, path):
+            return Counter({"食べる": 2, "除外": 1})
+
+        def parse_raw_entries(self, path):
+            return [*super().parse_raw_entries(path), (3.0, 4.0, "除外する。")]
+
+    video = tmp_path / "episode.mp4"
+    subtitle = tmp_path / "episode.srt"
+    video.write_bytes(b"video")
+    subtitle.write_text("fixture", encoding="utf-8")
+    store = AgentStore(tmp_path / "agent.sqlite3")
+    publish_empty_profile(store)
+    calls = []
+    service = CandidateBatchService(
+        store,
+        Analyzer(),
+        TwoWordParser(),
+        Filter(),
+        cfg(chosen_definition_field="Chosen", blacklist=("除外",), review_pool_size=1),
+        definition_probe=lambda terms: dict.fromkeys(terms, True),
+        definition_options_lookup=lambda term: calls.append(term) or [("D", "meaning")],
+    )
+
+    service.prepare([LocalEpisodeInput(video, subtitle)])
+
+    assert calls == ["食べる"]

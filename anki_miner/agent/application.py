@@ -8,7 +8,7 @@ from typing import Any
 from .candidates import CandidateBatchService
 from .commit import MiningCommitService
 from .errors import AgentMiningError
-from .models import AgentProfileConfig, LocalEpisodeInput, YouTubeInput
+from .models import AgentProfileConfig, LocalEpisodeInput, YouTubeInput, canonical_json
 from .profile import LearnerProfileService
 from .store import AgentStore
 
@@ -60,6 +60,47 @@ class AgentMiningApplication:
             review_pool_size=request.get("review_pool_size"),
         )
 
+    def prepare_mining_run(self, request: dict[str, Any]) -> dict[str, Any]:
+        """Synchronize, prepare, internally page, and publish one durable shortlist."""
+        self.sync_learner_profile()
+        batch = self.prepare_mining_batch(request)
+        shortlist: list[dict[str, Any]] = []
+        offset = 0
+        while True:
+            page = self.list_mining_candidates(
+                batch["batch_revision"], offset=offset, limit=self.config.page_size, include_ineligible=False
+            )
+            shortlist.extend(page["candidates"])
+            if page["next_offset"] is None:
+                break
+            offset = page["next_offset"]
+        # Keep the single response within the configured transport bound. The
+        # deterministic ordering was established before definition hydration.
+        required = [
+            key
+            for key, field in (
+                ("chosen_definition", self.config.chosen_definition_field),
+                ("sentence_translation", self.config.sentence_translation_field),
+            )
+            if field
+        ]
+        base = {
+            "schema_version": 1,
+            "max_cards": batch["max_cards"],
+            "required_enrichments": required,
+            "destination": {
+                "deck": self.config.write_target.deck,
+                "note_type": self.config.write_target.note_type,
+            },
+        }
+        while shortlist and len(canonical_json(base | {"shortlist": shortlist}).encode("utf-8")) > self.config.max_payload_bytes:
+            shortlist.pop()
+        run = self.store.create_run(batch["batch_revision"], shortlist)
+        result = base | {"run_id": run["run_id"], "shortlist": run["shortlist"]}
+        if len(canonical_json(result).encode("utf-8")) > self.config.max_payload_bytes:
+            raise AgentMiningError("payload_too_large", "The minimum run response exceeds the configured payload bound")
+        return result
+
     def list_mining_candidates(
         self,
         batch_revision: str,
@@ -101,6 +142,9 @@ class AgentMiningApplication:
             dry_run=dry_run,
             validation_token=validation_token,
         )
+
+    def commit_mining_run(self, run_id: str, selections: list[dict[str, Any]]) -> dict[str, Any]:
+        return self.commit_service.commit_run(run_id, selections)
 
     def get_mining_job(self, job_id: str) -> dict[str, Any]:
         return self.store.job_status(job_id)

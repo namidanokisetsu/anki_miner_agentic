@@ -8,30 +8,15 @@ from anki_miner.mcp_server.server import create_server
 
 
 class FakeApplication:
-    def sync_learner_profile(self):
-        return {}
-
-    def prepare_mining_batch(self, request):
+    def prepare_mining_run(self, request):
         return request
 
-    def list_mining_candidates(self, *args, **kwargs):
-        return {}
-
-    def commit_mining_selection(self, request):
-        return request
-
-    def get_mining_job(self, job_id):
-        return {"job_id": job_id}
+    def commit_mining_run(self, run_id, selections):
+        return {"run_id": run_id, "selections": selections}
 
 
-def test_mcp_exposes_only_the_five_orchestration_tools():
+def test_mcp_exposes_only_the_two_call_workflow():
     pytest.importorskip("mcp")
     server = create_server(FakeApplication())
     tools = asyncio.run(server.list_tools())
-    assert [tool.name for tool in tools] == [
-        "sync_learner_profile",
-        "prepare_mining_batch",
-        "list_mining_candidates",
-        "commit_mining_selection",
-        "get_mining_job",
-    ]
+    assert [tool.name for tool in tools] == ["prepare_mining_run", "commit_mining_run"]

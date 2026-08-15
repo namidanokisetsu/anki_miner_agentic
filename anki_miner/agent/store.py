@@ -7,13 +7,14 @@ import secrets
 import sqlite3
 from collections.abc import Iterable
 from contextlib import contextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Iterator
 
 from .errors import AgentMiningError, require
 from .models import PUBLIC_SCHEMA_VERSION, canonical_json, content_id
 
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
 
 
 class AgentStore:
@@ -46,7 +47,7 @@ class AgentStore:
     def _initialize(self) -> None:
         with self._transaction() as conn:
             version = int(conn.execute("PRAGMA user_version").fetchone()[0])
-            if version not in (0, _SCHEMA_VERSION):
+            if version not in (0, 1, _SCHEMA_VERSION):
                 raise AgentMiningError(
                     "unsupported_database",
                     f"Agent database schema {version} is not supported by this build",
@@ -152,7 +153,15 @@ class AgentStore:
                     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     state TEXT NOT NULL CHECK (state IN ('reserved', 'running', 'completed', 'partial', 'failed', 'cancelled')),
                     selection_json TEXT NOT NULL,
+                    job_timestamp TEXT,
+                    job_tag TEXT,
                     error_json TEXT
+                );
+                CREATE TABLE IF NOT EXISTS mining_runs (
+                    run_id TEXT PRIMARY KEY,
+                    batch_revision TEXT NOT NULL UNIQUE REFERENCES mining_batches(revision_id),
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    shortlist_json TEXT NOT NULL
                 );
                 CREATE TABLE IF NOT EXISTS validated_selections (
                     validation_token TEXT PRIMARY KEY,
@@ -180,7 +189,50 @@ class AgentStore:
                     PRIMARY KEY(batch_revision, candidate_id)
                 );
                 """)
+            if version == 1:
+                columns = {row[1] for row in conn.execute("PRAGMA table_info(mining_jobs)")}
+                if "job_timestamp" not in columns:
+                    conn.execute("ALTER TABLE mining_jobs ADD COLUMN job_timestamp TEXT")
+                if "job_tag" not in columns:
+                    conn.execute("ALTER TABLE mining_jobs ADD COLUMN job_tag TEXT")
             conn.execute(f"PRAGMA user_version={_SCHEMA_VERSION}")
+
+    def create_run(self, revision_id: str, shortlist: list[dict[str, Any]]) -> dict[str, Any]:
+        run_id = content_id("run", {"batch_revision": revision_id})
+        with self._transaction() as conn:
+            batch = conn.execute("SELECT * FROM mining_batches WHERE revision_id=?", (revision_id,)).fetchone()
+            require(batch is not None, "batch_not_found", "Mining batch does not exist", batch_revision=revision_id)
+            conn.execute(
+                "INSERT OR IGNORE INTO mining_runs(run_id, batch_revision, shortlist_json) VALUES (?, ?, ?)",
+                (run_id, revision_id, canonical_json(shortlist)),
+            )
+        return self.run_status(run_id)
+
+    def run_status(self, run_id: str, *, conn: sqlite3.Connection | None = None) -> dict[str, Any]:
+        owns = conn is None
+        connection = conn or self._connect()
+        try:
+            row = connection.execute(
+                """SELECT r.*, b.max_cards, b.state, b.profile_revision_id, b.committed_job_id
+                   FROM mining_runs r JOIN mining_batches b ON b.revision_id=r.batch_revision
+                   WHERE r.run_id=?""",
+                (run_id,),
+            ).fetchone()
+            require(row is not None, "run_not_found", "Mining run does not exist", run_id=run_id)
+            return {
+                "schema_version": PUBLIC_SCHEMA_VERSION,
+                "run_id": row["run_id"],
+                "batch_revision": row["batch_revision"],
+                "created_at": row["created_at"],
+                "profile_revision_id": row["profile_revision_id"],
+                "state": row["state"],
+                "max_cards": row["max_cards"],
+                "committed_job_id": row["committed_job_id"],
+                "shortlist": json.loads(row["shortlist_json"]),
+            }
+        finally:
+            if owns:
+                connection.close()
 
     def record_validated_selection(self, revision_id: str, selection: dict[str, Any]) -> str:
         """Persist proof that this exact selection passed a dry run."""
@@ -563,6 +615,54 @@ class AgentStore:
                 )
         return self.job_status(job_id), True
 
+    def reserve_run_commit(
+        self,
+        run_id: str,
+        selected: list[str],
+        metadata: dict[str, dict[str, Any]],
+        enrichments: dict[str, dict[str, Any]],
+    ) -> tuple[dict[str, Any], bool]:
+        selection = {"selected": selected, "rejected": [], "metadata": metadata, "enrichments": enrichments}
+        with self._transaction() as conn:
+            run = self.run_status(run_id, conn=conn)
+            revision_id = run["batch_revision"]
+            job_id = content_id("job", {"run_id": run_id, "selection": selection})
+            if run["committed_job_id"] is not None:
+                require(
+                    run["committed_job_id"] == job_id,
+                    "run_selection_changed",
+                    "This run already has a different commit selection",
+                    job_id=run["committed_job_id"],
+                )
+                return self.job_status(job_id, conn=conn), False
+            timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+            job_tag = f"anki_miner_agentic::job::{timestamp}_{job_id.removeprefix('job_')[:8]}"
+            conn.execute(
+                """INSERT INTO mining_jobs
+                   (job_id, batch_revision, state, selection_json, job_timestamp, job_tag)
+                   VALUES (?, ?, 'reserved', ?, ?, ?)""",
+                (job_id, revision_id, canonical_json(selection), timestamp, job_tag),
+            )
+            conn.execute(
+                "UPDATE mining_batches SET state='committing', committed_job_id=? WHERE revision_id=?",
+                (job_id, revision_id),
+            )
+            selected_set = set(selected)
+            for row in conn.execute(
+                "SELECT candidate_id FROM mining_candidates WHERE batch_revision=? ORDER BY position", (revision_id,)
+            ):
+                candidate_id = row["candidate_id"]
+                conn.execute(
+                    "INSERT INTO candidate_feedback VALUES (?, ?, ?, ?, NULL)",
+                    (
+                        revision_id,
+                        candidate_id,
+                        "selected" if candidate_id in selected_set else "not_reviewed",
+                        canonical_json(metadata.get(candidate_id, {})),
+                    ),
+                )
+        return self.job_status(job_id), True
+
     def set_job_running(self, job_id: str) -> None:
         with self._transaction() as conn:
             conn.execute(
@@ -642,8 +742,8 @@ class AgentStore:
         try:
             job = connection.execute("SELECT * FROM mining_jobs WHERE job_id=?", (job_id,)).fetchone()
             require(job is not None, "job_not_found", "Mining job does not exist", job_id=job_id)
-            outputs = [
-                {
+            output_by_id = {
+                row["candidate_id"]: {
                     "candidate_id": row["candidate_id"],
                     "outcome": row["outcome"],
                     "note_id": row["note_id"],
@@ -651,10 +751,14 @@ class AgentStore:
                     "error": json.loads(row["error_json"]) if row["error_json"] else None,
                     "review_state": json.loads(row["review_json"]),
                 }
-                for row in connection.execute(
-                    "SELECT * FROM mining_outputs WHERE job_id=? ORDER BY candidate_id", (job_id,)
-                )
-            ]
+                for row in connection.execute("SELECT * FROM mining_outputs WHERE job_id=?", (job_id,))
+            }
+            selection = json.loads(job["selection_json"])
+            outputs = [output_by_id[candidate_id] for candidate_id in selection["selected"] if candidate_id in output_by_id]
+            counts = {"selected": len(selection["selected"]), "created": 0, "duplicate_skipped": 0, "failed": 0}
+            for output in outputs:
+                counts[output["outcome"]] += 1
+            job_tag = job["job_tag"]
             return {
                 "schema_version": PUBLIC_SCHEMA_VERSION,
                 "job_id": job["job_id"],
@@ -662,8 +766,12 @@ class AgentStore:
                 "state": job["state"],
                 "created_at": job["created_at"],
                 "updated_at": job["updated_at"],
-                "selection": json.loads(job["selection_json"]),
+                "selection": selection,
                 "outputs": outputs,
+                "counts": counts,
+                "job_timestamp": job["job_timestamp"],
+                "tags": ["anki_miner_agentic", job_tag] if job_tag else [],
+                "job_tag_query": f'tag:"{job_tag}"' if job_tag else None,
             }
         finally:
             if owns:

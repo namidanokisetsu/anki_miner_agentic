@@ -155,6 +155,10 @@ class AnkiService:
         #     folded in so a created-vs-submitted gap is never silent
         # Read by the pipeline to report skips.
         self.last_skipped_duplicates: int = 0
+        # Positionally aligned outcome for each payload in the most recent
+        # batch. Agentic grouped writes use this instead of inferring identity
+        # from aggregate counts.
+        self.last_candidate_outcomes: list[dict[str, object]] = []
         # Number of media files (screenshots/audio) that could not be stored in
         # Anki during the last create_cards_batch call. Read by the pipeline to
         # warn the user when cards land with empty media fields. Mirrored from
@@ -723,6 +727,7 @@ class AnkiService:
             self.last_created_lemmas = []
             self.last_skipped_duplicates = 0
             self.last_media_store_failures = 0
+            self.last_candidate_outcomes = []
             log_summary(
                 logger,
                 "Anki create cards done",
@@ -741,6 +746,7 @@ class AnkiService:
         self.last_created_lemmas = []
         self.last_skipped_duplicates = 0
         self.last_media_store_failures = 0
+        candidate_outcomes: list[dict[str, object] | None] = [None] * len(word_data_list)
         skipped_duplicates = 0
         probed_duplicates = 0
         all_created_ids: list[int] = []
@@ -762,8 +768,8 @@ class AnkiService:
             # best-effort filtering preview.
             existing = self.get_existing_vocabulary(allow_degraded=False)
             seen: set[str] = set()
-            candidate_payloads: list[CardPayload] = []
-            for item in word_data_list:
+            indexed_payloads: list[tuple[int, CardPayload]] = []
+            for original_index, item in enumerate(word_data_list):
                 note = build_note(item, self.config, set()).note
                 fields = note.get("fields") or {}
                 first_value = next(iter(fields.values()), "")
@@ -771,12 +777,13 @@ class AnkiService:
                 duplicate = bool(key and (key in existing or key in seen))
                 if duplicate:
                     skipped_duplicates += 1
+                    candidate_outcomes[original_index] = {"outcome": "duplicate_skipped", "note_id": None}
                 else:
-                    candidate_payloads.append(item)
+                    indexed_payloads.append((original_index, item))
                 if key:
                     seen.add(key)
         else:
-            candidate_payloads = list(word_data_list)
+            indexed_payloads = list(enumerate(word_data_list))
         probed_duplicates = skipped_duplicates
 
         # Create surviving notes in batches. AnkiConnect accepts arbitrary array
@@ -805,12 +812,13 @@ class AnkiService:
         # vocab cache before the error propagates — otherwise those cards are
         # orphaned with no record. The `finally` runs on success AND failure.
         try:
-            for i in range(0, len(candidate_payloads), batch_size):
+            for i in range(0, len(indexed_payloads), batch_size):
                 if self._cancelled_check is not None and self._cancelled_check():
                     cancelled_between_batches = True
                     break
 
-                candidate_batch = candidate_payloads[i : i + batch_size]
+                indexed_batch = indexed_payloads[i : i + batch_size]
+                candidate_batch = [item for _index, item in indexed_batch]
                 # Probe each chunk only after the prior chunk's addNotes response.
                 # A repeated first field crossing the 100-note boundary then sees
                 # the first note in Anki and is rejected before any of its media is
@@ -821,11 +829,20 @@ class AnkiService:
                 if excluded_deck_admission:
                     self._validate_notes_addible(probe_notes)
                     batch = candidate_batch
+                    batch_indexes = [index for index, _item in indexed_batch]
                 else:
                     is_duplicate = self._probe_duplicates(probe_notes)
                     batch = [
                         item for item, duplicate in zip(candidate_batch, is_duplicate, strict=True) if not duplicate
                     ]
+                    batch_indexes = [
+                        index
+                        for (index, _item), duplicate in zip(indexed_batch, is_duplicate, strict=True)
+                        if not duplicate
+                    ]
+                    for (index, _item), duplicate in zip(indexed_batch, is_duplicate, strict=True):
+                        if duplicate:
+                            candidate_outcomes[index] = {"outcome": "duplicate_skipped", "note_id": None}
                     batch_duplicates = sum(is_duplicate)
                     skipped_duplicates += batch_duplicates
                     probed_duplicates += batch_duplicates
@@ -903,6 +920,12 @@ class AnkiService:
                 skipped_duplicates += len(submit_notes) - batch_created
                 total_created += batch_created
                 all_created_ids.extend(nid for nid in note_ids if nid is not None)
+                for original_index, note_id in zip(batch_indexes, note_ids, strict=True):
+                    candidate_outcomes[original_index] = (
+                        {"outcome": "created", "note_id": note_id}
+                        if note_id is not None
+                        else {"outcome": "duplicate_skipped", "note_id": None}
+                    )
                 # note_ids align positionally with `submit_payloads` (both derive
                 # from the same probe partition and addNotes is length-checked by
                 # _expect_list), so only the submitted, created words are merged.
@@ -936,6 +959,16 @@ class AnkiService:
             self.last_created_lemmas = created_lemmas
             self.last_skipped_duplicates = skipped_duplicates
             self.last_media_store_failures = media_store_failures
+            self.last_candidate_outcomes = [
+                outcome
+                if outcome is not None
+                else {
+                    "outcome": "failed",
+                    "note_id": None,
+                    "error": {"code": "not_processed", "message": "Candidate was not processed"},
+                }
+                for outcome in candidate_outcomes
+            ]
             # Incremental merge: if the cache is already populated, union the
             # mined_forms of cards actually CREATED this run into it so subsequent
             # episodes (within the same batch run or the same manual-pair session)
