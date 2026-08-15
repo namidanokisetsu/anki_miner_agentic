@@ -2,7 +2,7 @@
 
 Anki Miner already handles the fiddly parts of sentence mining: subtitles, dictionaries, screenshots, audio, and Anki notes. This fork lets an agent decide what is worth learning and carry those choices all the way into Anki, removing the manual selection and card-creation steps while keeping the final write guarded.
 
-The agent works from a limited set of candidates instead of getting open-ended access to your Anki collection. It can use your learning history and local dictionary data to pick useful sentences, choose the right meaning, and add a short translation. Anki Miner still builds the cards, enforces the limits, and decides what may be written.
+The agent reviews sentence candidates prepared from your source media. To judge what suits you, it gets a compact learner profile built from the Anki fields you choose, but it cannot browse or edit your raw notes. It can use that learning history and local dictionary data to pick useful sentences, choose the right meaning, and add a short translation. Anki Miner still builds the cards, enforces the limits, and decides what may be written.
 
 This is an independent fork of [Anki Miner](https://github.com/0xzerolight/anki_miner), maintained and released separately. The original project and its contributors built the desktop app and mining pipeline underneath it.
 
