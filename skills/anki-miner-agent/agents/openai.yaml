@@ -1,0 +1,4 @@
+interface:
+  display_name: "Anki Miner Agent"
+  short_description: "Run the safe Anki mining workflow step by step"
+  default_prompt: "Use $anki-miner-agent to sync, prepare, review, dry-run, and only then commit the exact number of cards I authorize."

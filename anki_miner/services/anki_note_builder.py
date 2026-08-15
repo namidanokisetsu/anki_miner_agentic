@@ -35,6 +35,8 @@ OPTIONAL_FIELD_KEYS = {
     "frequency_sort",
     "source",
     "expression_audio",
+    "chosen_definition",
+    "sentence_translation",
 }
 
 

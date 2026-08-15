@@ -92,8 +92,15 @@ class _FakeExtractor:
         self._cancel = cancel
         self.calls: list[dict] = []
 
-    def extract_full_audio(self, video_file, out_wav, *, cancel_event=None):
-        self.calls.append({"video_file": video_file, "out_wav": out_wav, "cancel_event": cancel_event})
+    def extract_full_audio(self, video_file, out_wav, *, track_override=None, cancel_event=None):
+        self.calls.append(
+            {
+                "video_file": video_file,
+                "out_wav": out_wav,
+                "track_override": track_override,
+                "cancel_event": cancel_event,
+            }
+        )
         out_wav.write_bytes(b"")
         if self._cancel and cancel_event is not None:
             cancel_event.set()
@@ -139,6 +146,25 @@ def test_success_writes_srt_and_cleans_temp(tmp_path, monkeypatch):
     assert result.out_srt == out_srt
     assert out_srt.read_text() == "SRT"
     assert list(config.media_temp_folder.glob("asr_*.wav")) == []
+
+
+def test_explicit_audio_track_is_forwarded_to_asr_extraction(tmp_path, monkeypatch):
+    config = _make_config(tmp_path)
+    video = tmp_path / "dual-audio.mkv"
+    video.write_bytes(b"")
+    extractor = _FakeExtractor()
+    _patch_pipeline(monkeypatch)
+
+    result = generate_subtitle_one(
+        config,
+        extractor,
+        video,
+        tmp_path / "dual-audio.srt",
+        audio_track_override=1,
+    )
+
+    assert result.status is SubtitleGenStatus.SUCCESS
+    assert extractor.calls[0]["track_override"] == 1
 
 
 def test_no_speech_surfaced_no_srt(tmp_path, monkeypatch):

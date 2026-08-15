@@ -1,6 +1,7 @@
 """Service for parsing subtitles and extracting vocabulary."""
 
 import collections
+import dataclasses
 import logging
 import re
 from collections.abc import Callable, Iterator, Sequence
@@ -380,6 +381,7 @@ class SubtitleParserService:
         """
         self.config = config
         self._reading_lookup = reading_lookup
+        self._name_lookup = name_lookup
         # Shared process-wide tagger (see services/tagger.py for the single-flight
         # invariant). __init__ may block ~2-3s on the lazy build if a user triggers
         # the first SubtitleParserService before the background prewarm worker
@@ -490,6 +492,20 @@ class SubtitleParserService:
         # rejected in one line (すみません) and recovered in another (すみます). Same
         # clear-on-cap bounding as the caches above.
         self._kana_window_cache: dict[str, bool] = {}
+
+    def with_subtitle_offset(self, subtitle_offset: float) -> "SubtitleParserService":
+        """Return an equivalent parser with a source-specific timing offset."""
+        if subtitle_offset == self.config.subtitle_offset:
+            return self
+        return type(self)(
+            dataclasses.replace(self.config, subtitle_offset=subtitle_offset),
+            term_lookup=self._term_lookup,
+            name_lookup=self._name_lookup,
+            reading_lookup=self._reading_lookup,
+            kana_attest_lookup=self._kana_attest_lookup,
+            term_common_lookup=self._term_common_lookup,
+            term_rules_lookup=self._term_rules_lookup,
+        )
 
     # ------------------------------------------------------------------
     # Per-parse memoization helpers

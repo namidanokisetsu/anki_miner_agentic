@@ -115,9 +115,14 @@ dev = [
 i18n = [
     "pyside6-essentials>=6.6.0",
 ]
+mcp = [
+    "mcp>=1.19,<2",
+]
 
 [project.scripts]
 anki_miner_gui = "anki_miner.gui.launch:main"
+anki_miner_agent = "anki_miner.headless.cli:main"
+anki_miner_mcp = "anki_miner.mcp_server.server:main"
 
 [project.urls]
 Homepage = "https://github.com/0xzerolight/anki_miner"

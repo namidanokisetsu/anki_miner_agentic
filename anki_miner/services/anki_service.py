@@ -430,6 +430,29 @@ class AnkiService:
         logger.debug("Anki notes info done: notes=%d", len(notes))
         return notes
 
+    def find_cards(self, query: str) -> list[int]:
+        """Return card IDs matching an Anki search query (``findCards``)."""
+        logger.debug("Anki find cards: query=%s", query)
+        card_ids = _expect_list(
+            post_action(self.config.ankiconnect_url, "findCards", params={"query": query}, timeout=30) or [],
+            "findCards",
+            elem_type=int,
+        )
+        logger.debug("Anki find cards done: cards=%d", len(card_ids))
+        return card_ids
+
+    def cards_info(self, card_ids: list[int]) -> list[dict]:
+        """Return validated ``cardsInfo`` rows; ``[]`` for an empty input."""
+        if not card_ids:
+            return []
+        cards = _expect_list(
+            post_action(self.config.ankiconnect_url, "cardsInfo", params={"cards": card_ids}, timeout=60) or [],
+            "cardsInfo",
+            elem_type=dict,
+        )
+        logger.debug("Anki cards info done: cards=%d", len(cards))
+        return cards
+
     def update_notes_fields(self, updates: list[tuple[int, dict[str, str]]]) -> list[int]:
         """Overwrite fields on many notes in one batch (``updateNoteFields`` via ``post_multi``).
 

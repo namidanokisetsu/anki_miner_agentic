@@ -1,3 +1,25 @@
+# Agent mining workflow
+
+This fork builds a learner profile from selected Anki fields and review data. Agents can review sentence candidates through a CLI or five-tool MCP server, but Anki Miner keeps control of filtering, dictionaries, media, note construction, and writes.
+
+## Set up with Hermes
+
+Keep Anki open with AnkiConnect installed. Give Hermes terminal and filesystem access to this checkout, then paste:
+
+```text
+Set up Anki Miner's agent workflow in this checkout. Read agentic-docs/agent-mining.md and skills/anki-miner-agent/SKILL.md, then install it with `python -m pip install -e ".[mcp]"`.
+
+Use the existing GUI config, installed dictionaries, mining settings, and live Anki schema. Do not guess deck, note-type, or field names. Put the agent config outside the repo and leave `write_target.enabled` false so setup cannot create cards. Run `anki_miner_agent --config <config> profile-validate`, `profile-sync`, and `profile-status`.
+
+Register `anki_miner_mcp --config <absolute-config-path>` as a stdio MCP server and verify its five tools. Fix routine setup errors, but never create cards until I approve the exact count after a dry run. Enabling the write target is a separate opt-in and does not replace explicit approval for a commit.
+```
+
+See the [agent mining guide](agentic-docs/agent-mining.md) for manual setup and the [MCP contract](skills/anki-miner-agent/references/mcp-contract.md) for tool payloads.
+
+---
+
+# Original Anki Miner README
+
 <h1 align="center">
   <img src="https://raw.githubusercontent.com/0xzerolight/anki_miner/main/anki_miner/gui/resources/icons/anki_miner.svg" height="76" align="absmiddle" alt=""> Anki Miner
 </h1>

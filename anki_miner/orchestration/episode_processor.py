@@ -1430,6 +1430,7 @@ class EpisodeProcessor:
         glossaries: list[str | None],
         pitch_data: list[tuple[str | None, str | None]],
         progress_callback: ProgressCallback | None,
+        card_extra_fields: list[dict[str, str]] | None = None,
     ) -> tuple[int, list[int], list[str]]:
         """Phase 5: build CardPayloads and submit them to Anki.
 
@@ -1462,8 +1463,10 @@ class EpisodeProcessor:
         definition_mapped = bool(self.config.anki_fields.get("definition"))
         styling_on = glossary_mapped or definition_mapped
         episode_dict_css_entries = collect_dictionary_css_entries(self.config) if styling_on else []
-        for (word, media), definition, glossary, (pitch_position, pitch_category) in zip(
-            media_results, definitions, glossaries, pitch_data, strict=True
+        if card_extra_fields is not None and len(card_extra_fields) != len(media_results):
+            raise ValueError("card_extra_fields must align with media_results")
+        for index, ((word, media), definition, glossary, (pitch_position, pitch_category)) in enumerate(
+            zip(media_results, definitions, glossaries, pitch_data, strict=True)
         ):
             if not definition:
                 continue
@@ -1531,6 +1534,13 @@ class EpisodeProcessor:
                 extra_fields["source"] = f"{ctx.source_label} @ {unit_label}"
             else:
                 extra_fields["source"] = f"{ctx.source_label} @ {_format_timestamp(word.start_time)}"
+
+            if card_extra_fields is not None:
+                allowed_agent_fields = {"chosen_definition", "sentence_translation"}
+                unsupported = sorted(set(card_extra_fields[index]) - allowed_agent_fields)
+                if unsupported:
+                    raise ValueError(f"Unsupported card extra fields: {', '.join(unsupported)}")
+                extra_fields.update(card_extra_fields[index])
 
             # Per-field self-containment: the definition field carries its OWN
             # trailing block whenever it's mapped — regardless of the glossary

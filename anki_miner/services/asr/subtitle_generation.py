@@ -62,6 +62,7 @@ def generate_subtitle_one(
     transcribe_progress_cb: Callable[[float], None] | None = None,
     cancel_event: threading.Event | None = None,
     ct2_model_session: Ct2ModelSession | None = None,
+    audio_track_override: int | None = None,
 ) -> SubtitleGenResult:
     """Transcribe one video to an SRT at *out_srt*.
 
@@ -83,6 +84,8 @@ def generate_subtitle_one(
             ``progress_cb`` (called with a 0.0–1.0 fraction).
         cancel_event: Cooperative cancel, forwarded to extractor + transcriber.
         ct2_model_session: Optional queue-owned faster-whisper model state.
+        audio_track_override: Optional zero-based audio-only stream index. When
+            omitted, the media extractor selects Japanese by language metadata.
 
     Unexpected exceptions propagate to the caller (the worker isolates them
     per-file); only the temp-WAV cleanup is guaranteed here.
@@ -105,7 +108,15 @@ def generate_subtitle_one(
         if on_extract_start is not None:
             on_extract_start()
 
-        ok = extractor.extract_full_audio(video_path, tmp_wav, cancel_event=cancel_event)
+        if audio_track_override is None:
+            ok = extractor.extract_full_audio(video_path, tmp_wav, cancel_event=cancel_event)
+        else:
+            ok = extractor.extract_full_audio(
+                video_path,
+                tmp_wav,
+                track_override=audio_track_override,
+                cancel_event=cancel_event,
+            )
         if _is_cancelled(cancel_event):
             return SubtitleGenResult(SubtitleGenStatus.CANCELLED)
         if not ok:
