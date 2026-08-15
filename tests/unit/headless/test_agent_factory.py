@@ -3,9 +3,9 @@ from dataclasses import replace
 
 import pytest
 
-from anki_miner.config import AnkiMinerConfig, ChainEntry, FreqEntry, PitchSourceEntry
 from anki_miner.agent.errors import AgentMiningError
 from anki_miner.agent.models import AgentProfileConfig
+from anki_miner.config import AnkiMinerConfig, ChainEntry, FreqEntry, PitchSourceEntry
 from anki_miner.gui.utils.config_manager import GUIConfigManager
 from anki_miner.runtime.agent_factory import _mining_config, load_agent_config
 

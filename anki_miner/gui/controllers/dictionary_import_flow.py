@@ -24,6 +24,8 @@ from anki_miner.gui.controllers.import_flow_common import (
     _log_import_persist,
     _log_import_picker_enter,
     _log_import_picker_return,
+    _OnceCallback,
+    format_batch_summary,
 )
 from anki_miner.gui.utils import file_dialogs
 from anki_miner.gui.utils.dialog_paths import resolve_start_dir
@@ -203,6 +205,15 @@ class DictionaryImportFlow(ModalImportFlowMixin):
             if len(jobs) == 1 and result.cancelled and not result.successes and not result.failures:
                 return
 
+            # A failed single pick keeps the pre-batch contract: a banner, not a
+            # success box with a "Failed:" section buried in it.
+            if len(jobs) == 1 and result.failures and not result.successes:
+                self._report_import_issue(
+                    QCoreApplication.translate("DictionaryImportFlow", "The dictionary could not be imported."),
+                    result.failures[0][1],
+                )
+                return
+
             if len(result.successes) == 1 and not result.failures and not result.cancelled:
                 _job, dict_id, meta = result.successes[0]
                 QMessageBox.information(
@@ -217,30 +228,31 @@ class DictionaryImportFlow(ModalImportFlowMixin):
                 )
                 return
 
-            lines: list[str] = []
-            if imported:
-                lines.append(
-                    tr_format(
-                        QCoreApplication.translate("DictionaryImportFlow", "Imported %1 dictionaries:"),
-                        len(imported),
-                    )
-                )
-                lines.extend(f"  • {dict_id}" for dict_id in imported)
-            if result.failures:
-                if lines:
-                    lines.append("")
-                lines.append(QCoreApplication.translate("DictionaryImportFlow", "Failed:"))
-                lines.extend(f"  • {job.name}: {message}" for job, message in result.failures)
-            if result.cancelled:
-                if lines:
-                    lines.append("")
-                lines.append(
+            summary = format_batch_summary(
+                [
+                    (
+                        tr_format(
+                            QCoreApplication.translate("DictionaryImportFlow", "Imported %1 dictionaries:"),
+                            len(imported),
+                        ),
+                        [f"  • {dict_id}" for dict_id in imported],
+                    ),
+                    (
+                        QCoreApplication.translate("DictionaryImportFlow", "Failed:"),
+                        [f"  • {job.name}: {message}" for job, message in result.failures],
+                    ),
+                ],
+                cancelled_note=(
                     QCoreApplication.translate("DictionaryImportFlow", "Cancelled before remaining dictionaries.")
-                )
+                    if result.cancelled
+                    else None
+                ),
+                empty=QCoreApplication.translate("DictionaryImportFlow", "Done."),
+            )
             QMessageBox.information(
                 self._parent,
                 QCoreApplication.translate("DictionaryImportFlow", "Dictionaries added"),
-                "\n".join(lines) or QCoreApplication.translate("DictionaryImportFlow", "Done."),
+                summary,
             )
 
         def on_finished_error(exc: Exception, _result: _ChainedImportResult[Path]) -> None:
@@ -513,6 +525,7 @@ class DictionaryImportFlow(ModalImportFlowMixin):
         self,
         *,
         only_ids: frozenset[str] | None = None,
+        on_complete: Callable[[], None] | None = None,
         _scan_result: tuple[list[tuple[str, str, str, Path]], list[str]] | None = None,
         _trace_id: str | None = None,
     ) -> None:
@@ -536,10 +549,16 @@ class DictionaryImportFlow(ModalImportFlowMixin):
         Per-dict failures accumulate into ``errors`` and don't abort the
         loop. ``config_changed`` is emitted once at the end so cached
         DefinitionService instances rebuild a single time.
+
+        ``on_complete`` fires exactly once on every terminal path, including the
+        refusals and the nothing-to-do case, so the startup prompt can run the
+        frequency and pitch batches after this one instead of racing them.
         """
+        done = _OnceCallback(on_complete)
         trace_id = _trace_id or _begin_import_trace("dictionary reimport all")
         if _scan_result is None:
             if not self._begin_mutation("reimport-all"):
+                done()
                 return
             config = self._get_config()
             chain = self._panel.get_chain()
@@ -580,7 +599,12 @@ class DictionaryImportFlow(ModalImportFlowMixin):
 
             def _on_done(result: object) -> None:
                 assert isinstance(result, tuple)
-                self.reimport_all(only_ids=only_ids, _scan_result=result, _trace_id=trace_id)
+                self.reimport_all(
+                    only_ids=only_ids,
+                    on_complete=on_complete,
+                    _scan_result=result,
+                    _trace_id=trace_id,
+                )
 
             def _on_error(message: str) -> None:
                 self._set_import_buttons_enabled(True)
@@ -588,6 +612,7 @@ class DictionaryImportFlow(ModalImportFlowMixin):
                     QCoreApplication.translate("DictionaryImportFlow", "That folder could not be scanned."),
                     message,
                 )
+                done()
 
             self._run_latest_scan(_scan, _on_done, _on_error)
             return
@@ -607,6 +632,7 @@ class DictionaryImportFlow(ModalImportFlowMixin):
                 self._parent, QCoreApplication.translate("DictionaryImportFlow", "Nothing to reimport"), body
             )
             self._set_import_buttons_enabled(True)
+            done()
             return
 
         # Drop sqlite handles before any worker touches the dict folders.
@@ -622,6 +648,7 @@ class DictionaryImportFlow(ModalImportFlowMixin):
                 ),
             )
             self._set_import_buttons_enabled(True)
+            done()
             return
 
         def make_worker(job: tuple[str, str, str, Path]) -> ImportWorker:
@@ -663,42 +690,43 @@ class DictionaryImportFlow(ModalImportFlowMixin):
             reimported = [job[2] for job, _dict_id, _meta in result.successes]
             errors = [(job[2], message) for job, message in result.failures]
 
-            lines: list[str] = []
-            if reimported:
-                lines.append(
-                    tr_format(
-                        QCoreApplication.translate("DictionaryImportFlow", "Reimported %1 dictionary/dictionaries:"),
-                        len(reimported),
-                    )
-                )
-                lines.extend(f"  • {n}" for n in reimported)
-            if missing_legacy:
-                if lines:
-                    lines.append("")
-                lines.append(
-                    QCoreApplication.translate(
-                        "DictionaryImportFlow",
-                        "Skipped (not eligible for automatic repair; use per-row Re-import…):",
-                    )
-                )
-                lines.extend(f"  • {n}" for n in missing_legacy)
-            if errors:
-                if lines:
-                    lines.append("")
-                lines.append(QCoreApplication.translate("DictionaryImportFlow", "Failed:"))
-                lines.extend(f"  • {name}: {msg}" for name, msg in errors)
-            if result.cancelled:
-                if lines:
-                    lines.append("")
-                lines.append(
+            summary = format_batch_summary(
+                [
+                    (
+                        tr_format(
+                            QCoreApplication.translate(
+                                "DictionaryImportFlow", "Reimported %1 dictionary/dictionaries:"
+                            ),
+                            len(reimported),
+                        ),
+                        [f"  • {n}" for n in reimported],
+                    ),
+                    (
+                        QCoreApplication.translate(
+                            "DictionaryImportFlow",
+                            "Skipped (not eligible for automatic repair; use per-row Re-import…):",
+                        ),
+                        [f"  • {n}" for n in missing_legacy],
+                    ),
+                    (
+                        QCoreApplication.translate("DictionaryImportFlow", "Failed:"),
+                        [f"  • {name}: {msg}" for name, msg in errors],
+                    ),
+                ],
+                cancelled_note=(
                     QCoreApplication.translate("DictionaryImportFlow", "Cancelled before remaining dictionaries.")
-                )
+                    if result.cancelled
+                    else None
+                ),
+                empty=QCoreApplication.translate("DictionaryImportFlow", "Done."),
+            )
 
             QMessageBox.information(
                 self._parent,
                 QCoreApplication.translate("DictionaryImportFlow", "Reimport All"),
-                "\n".join(lines) or QCoreApplication.translate("DictionaryImportFlow", "Done."),
+                summary,
             )
+            done()
 
         def on_finished_error(
             exc: Exception,
@@ -711,6 +739,7 @@ class DictionaryImportFlow(ModalImportFlowMixin):
                 ),
                 str(exc),
             )
+            done()
 
         self._run_chained_imports(
             jobs=jobs,
