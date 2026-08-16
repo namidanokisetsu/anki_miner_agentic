@@ -122,7 +122,6 @@ class AgentProfileConfig:
     mature_interval_days: int = 21
     max_cards: int = 20
     review_pool_size: int | None = None
-    page_size: int = 100
     max_payload_bytes: int = 512_000
     max_variants: int = 4
     max_rationale_chars: int = 500
@@ -132,11 +131,6 @@ class AgentProfileConfig:
     max_sentence_translation_chars: int = 500
     chosen_definition_field: str = ""
     sentence_translation_field: str = ""
-    exclude_katakana_only: bool = True
-    exclude_names: bool = True
-    exclude_known: bool = True
-    blacklist: tuple[str, ...] = ()
-    whitelist: tuple[str, ...] = ()
     # "japanese" uses the existing language-tag auto-detection. An integer is
     # a zero-based index within audio-only streams, matching the GUI override.
     audio_track: Literal["japanese"] | int = "japanese"
@@ -144,13 +138,7 @@ class AgentProfileConfig:
     def __post_init__(self) -> None:
         if isinstance(self.knowledge_sources, list):
             object.__setattr__(self, "knowledge_sources", tuple(self.knowledge_sources))
-        for name in ("blacklist", "whitelist"):
-            value = getattr(self, name)
-            if isinstance(value, list):
-                object.__setattr__(self, name, tuple(value))
         require(bool(self.knowledge_sources), "invalid_config", "At least one knowledge source is required")
-        for name in ("exclude_katakana_only", "exclude_names", "exclude_known"):
-            require(type(getattr(self, name)) is bool, "invalid_config", f"{name} must be boolean")
         require(self.mature_interval_days >= 1, "invalid_config", "mature_interval_days must be positive")
         require(self.max_cards >= 1, "invalid_config", "max_cards must be positive")
         require(
@@ -158,7 +146,6 @@ class AgentProfileConfig:
             "invalid_config",
             "review_pool_size must be positive or null",
         )
-        require(1 <= self.page_size <= 1000, "invalid_config", "page_size must be between 1 and 1000")
         require(self.max_payload_bytes >= 1024, "invalid_config", "max_payload_bytes must be at least 1024")
         require(1 <= self.max_variants <= 20, "invalid_config", "max_variants must be between 1 and 20")
         require(
@@ -213,7 +200,6 @@ class AgentProfileConfig:
             "mature_interval_days",
             "max_cards",
             "review_pool_size",
-            "page_size",
             "max_payload_bytes",
             "max_variants",
             "max_rationale_chars",
@@ -223,11 +209,6 @@ class AgentProfileConfig:
             "max_sentence_translation_chars",
             "chosen_definition_field",
             "sentence_translation_field",
-            "exclude_katakana_only",
-            "exclude_names",
-            "exclude_known",
-            "blacklist",
-            "whitelist",
             "audio_track",
         }
         _reject_unknown(value, allowed, "agent configuration")
@@ -242,7 +223,6 @@ class AgentProfileConfig:
                 "mature_interval_days",
                 "max_cards",
                 "review_pool_size",
-                "page_size",
                 "max_payload_bytes",
                 "max_variants",
                 "max_rationale_chars",
@@ -252,11 +232,6 @@ class AgentProfileConfig:
                 "max_sentence_translation_chars",
                 "chosen_definition_field",
                 "sentence_translation_field",
-                "exclude_katakana_only",
-                "exclude_names",
-                "exclude_known",
-                "blacklist",
-                "whitelist",
                 "audio_track",
             )
             if name in value
@@ -265,7 +240,6 @@ class AgentProfileConfig:
 
     def material_hash(self) -> str:
         value = asdict(self)
-        value.pop("page_size", None)
         value.pop("max_payload_bytes", None)
         return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
 

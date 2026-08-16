@@ -403,12 +403,24 @@ def test_definition_options_load_only_after_eligibility_and_shortlist_bounds(tmp
     store = AgentStore(tmp_path / "agent.sqlite3")
     publish_empty_profile(store)
     calls = []
+
+    class WordLists:
+        def is_available(self):
+            return True
+
+        def is_whitelisted(self, word):
+            return False
+
+        def is_blacklisted(self, word):
+            return word == "除外"
+
     service = CandidateBatchService(
         store,
         Analyzer(),
         TwoWordParser(),
         Filter(),
-        cfg(chosen_definition_field="Chosen", blacklist=("除外",), review_pool_size=1),
+        cfg(chosen_definition_field="Chosen", review_pool_size=1),
+        word_list_service=WordLists(),
         definition_probe=lambda terms: dict.fromkeys(terms, True),
         definition_options_lookup=lambda term: calls.append(term) or [("D", "meaning")],
     )
