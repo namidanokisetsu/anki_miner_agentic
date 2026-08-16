@@ -14,6 +14,30 @@ from anki_miner.exceptions import AnkiConnectionError, OperationCancelled, Setup
 from anki_miner.runtime import build_agent_application
 
 
+_HELP = {
+    "settings": """settings
+  agent: knowledge_sources, write_target, mature_interval_days
+         max_cards, review_pool_size, payload/enrichment limits and fields
+  GUI profile: dictionaries, filters, word lists, ranking, media and card policy
+  runtime_overrides: ffmpeg/ffprobe/alass/yt-dlp paths only""",
+    "workflow": """workflow
+  prepare_mining_run -> select and enrich returned candidates -> commit_mining_run
+  Stay within max_cards; every selected candidate needs every required enrichment.""",
+    "commands": """commands
+  profile-validate | profile-sync | profile-status
+  prepare-run --request FILE | commit-run --request FILE
+  Lower-level recovery: prepare, candidates, commit, job""",
+}
+
+
+def _help_text(topic: str | None) -> str:
+    if topic:
+        return _HELP[topic]
+    return "help [settings|workflow|commands]\n" + "\n".join(
+        f"  {name:<8} {text.splitlines()[1].strip()}" for name, text in _HELP.items()
+    )
+
+
 def _json_file(path: str) -> dict[str, Any]:
     try:
         text = sys.stdin.read() if path == "-" else Path(path).read_text(encoding="utf-8")
@@ -29,8 +53,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="anki-miner-agentic-agent", description="Guarded agent-first Japanese sentence mining"
     )
-    parser.add_argument("--config", type=Path, required=True, help="Agent JSON configuration")
+    parser.add_argument("--config", type=Path, help="Agent JSON configuration")
     commands = parser.add_subparsers(dest="command", required=True)
+    help_command = commands.add_parser("help", help="Show compact agent help")
+    help_command.add_argument("topic", nargs="?", choices=tuple(_HELP))
     commands.add_parser("profile-validate")
     commands.add_parser("profile-sync")
     commands.add_parser("profile-status")
@@ -97,7 +123,13 @@ def _exit_code(exc: BaseException) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.command == "help":
+        print(_help_text(args.topic))
+        return 0
+    if args.config is None:
+        parser.error("--config is required for this command")
     app = None
     try:
         app = build_agent_application(args.config)

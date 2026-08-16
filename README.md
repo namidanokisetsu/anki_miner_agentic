@@ -14,7 +14,7 @@ A fork of [Anki Miner](https://github.com/0xzerolight/anki_miner) that lets an a
 flowchart TB
     U["You provide source media and a card limit"]
     D["Anki Miner · deterministic<br/>Finds candidate sentences"]
-    A["Agentic step<br/>Agent chooses best sentences and optionally selects meaning or translation"]
+    A["Agent chooses specified number of best sentences and optionally selects meaning or translation"]
     W["Anki Miner · deterministic<br/>Creates cards using your settings"]
     K[("Your Anki deck")]
 

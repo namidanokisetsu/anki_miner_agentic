@@ -12,6 +12,8 @@ from .models import AgentProfileConfig, LocalEpisodeInput, YouTubeInput, canonic
 from .profile import LearnerProfileService
 from .store import AgentStore
 
+_CANDIDATE_PAGE_SIZE = 100
+
 
 class AgentMiningApplication:
     def __init__(
@@ -22,6 +24,7 @@ class AgentMiningApplication:
         candidate_service: CandidateBatchService,
         commit_service: MiningCommitService,
         *,
+        mining_policy_info: dict[str, str] | None = None,
         close_callback: Callable[[], None] | None = None,
     ) -> None:
         self.store = store
@@ -29,6 +32,7 @@ class AgentMiningApplication:
         self.profile_service = profile_service
         self.candidate_service = candidate_service
         self.commit_service = commit_service
+        self.mining_policy_info = mining_policy_info
         self._close_callback = close_callback
 
     def close(self) -> None:
@@ -43,7 +47,10 @@ class AgentMiningApplication:
         return self.profile_service.sync()
 
     def get_learner_profile(self) -> dict[str, Any]:
-        return self.store.profile_status()
+        result = self.store.profile_status()
+        if self.mining_policy_info is not None:
+            result["mining_policy"] = self.mining_policy_info
+        return result
 
     def prepare_mining_batch(self, request: dict[str, Any]) -> dict[str, Any]:
         parsed: list[LocalEpisodeInput | YouTubeInput] = []
@@ -68,7 +75,7 @@ class AgentMiningApplication:
         offset = 0
         while True:
             page = self.list_mining_candidates(
-                batch["batch_revision"], offset=offset, limit=self.config.page_size, include_ineligible=False
+                batch["batch_revision"], offset=offset, limit=_CANDIDATE_PAGE_SIZE, include_ineligible=False
             )
             shortlist.extend(page["candidates"])
             if page["next_offset"] is None:
@@ -93,6 +100,8 @@ class AgentMiningApplication:
                 "note_type": self.config.write_target.note_type,
             },
         }
+        if self.mining_policy_info is not None:
+            base["mining_policy"] = self.mining_policy_info
         while shortlist and len(canonical_json(base | {"shortlist": shortlist}).encode("utf-8")) > self.config.max_payload_bytes:
             shortlist.pop()
         run = self.store.create_run(batch["batch_revision"], shortlist)
@@ -110,12 +119,12 @@ class AgentMiningApplication:
         include_ineligible: bool = False,
         schema_version: int = 1,
     ) -> dict[str, Any]:
-        effective_limit = self.config.page_size if limit is None else limit
-        if effective_limit > self.config.page_size:
+        effective_limit = _CANDIDATE_PAGE_SIZE if limit is None else limit
+        if effective_limit > _CANDIDATE_PAGE_SIZE:
             raise AgentMiningError(
                 "invalid_page",
                 "Requested page exceeds the configured page-size limit",
-                {"requested": effective_limit, "maximum": self.config.page_size},
+                {"requested": effective_limit, "maximum": _CANDIDATE_PAGE_SIZE},
             )
         return self.store.list_candidates(
             batch_revision,

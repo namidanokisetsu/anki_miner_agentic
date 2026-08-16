@@ -20,7 +20,7 @@ It publicly exposes only `prepare_mining_run` and `commit_mining_run`. Lower-lev
 
 ## Configuration
 
-GUI mining settings and live Anki mappings remain authoritative. Recommended dictionary, frequency, and pitch resources can be installed from **Tools → Download Recommended Resources**. Agent-specific configuration is stored outside the repository:
+The active GUI profile is the single source of mining policy: dictionaries, filters, word lists, ranking, media, and card behavior. Recommended dictionary, frequency, and pitch resources can be installed from **Tools → Download Recommended Resources**. Agent-specific safety and learner configuration is stored outside the repository:
 
 ```json
 {
@@ -40,13 +40,25 @@ GUI mining settings and live Anki mappings remain authoritative. Recommended dic
     "mature_interval_days": 21,
     "max_cards": 50,
     "review_pool_size": 300,
-    "page_size": 100,
     "max_payload_bytes": 512000,
     "chosen_definition_field": "<optional field>",
     "sentence_translation_field": "<optional field>",
     "audio_track": "japanese"
   }
 }
+```
+
+An optional top-level `runtime_overrides` object may set only executable paths: `ffmpeg_location`, `ffprobe_location`, `alass_location`, `youtube_ffmpeg_location`, and `ytdlp_location`. Mining-policy overrides belong in the active GUI profile.
+
+Legacy `page_size` is ignored. Legacy exclusion flags are translated in memory; non-empty inline word lists and policy fields under `mining` must be moved to the GUI profile. Prepared runs and profile status include the effective policy fingerprint.
+
+Compact CLI help is available without a config or Anki connection:
+
+```bash
+anki_miner_agentic_agent help
+anki_miner_agentic_agent help settings
+anki_miner_agentic_agent help workflow
+anki_miner_agentic_agent help commands
 ```
 
 Deck, note-type, and field names are case-sensitive and must be discovered from live Anki. A missing configured deck is an error, not an empty learner source. `write_target.enabled` is a profile-level safety switch. The user's request to mine up to a stated number is the write authorization; the normal flow has no second approval or public dry-run token.

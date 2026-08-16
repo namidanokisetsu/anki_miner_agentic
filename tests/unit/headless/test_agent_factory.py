@@ -5,23 +5,17 @@ import pytest
 
 from anki_miner.agent.errors import AgentMiningError
 from anki_miner.agent.models import AgentProfileConfig
-from anki_miner.config import AnkiMinerConfig, ChainEntry, FreqEntry, PitchSourceEntry
+from anki_miner.config import AnkiMinerConfig, ChainEntry, FreqEntry
 from anki_miner.gui.utils.config_manager import GUIConfigManager
 from anki_miner.runtime.agent_factory import _mining_config, load_agent_config
 
 
-def test_agent_json_rehydrates_local_resource_chains():
-    config = _mining_config(
-        {
-            "dictionary_chain": [{"kind": "indexed", "dict_id": "jmdict-english", "enabled": True}],
-            "frequency_chain": [{"source_id": "jpdb-freq", "enabled": True}],
-            "pitch_chain": [{"source_id": "kanjium-pitch", "enabled": True}],
-        }
-    )
+def test_runtime_overrides_are_narrow_and_path_typed(tmp_path):
+    config = _mining_config({"ffmpeg_location": str(tmp_path / "ffmpeg")})
+    assert config.ffmpeg_location == tmp_path / "ffmpeg"
 
-    assert config.dictionary_chain == (ChainEntry("indexed", "jmdict-english"),)
-    assert config.frequency_chain == (FreqEntry("jpdb-freq"),)
-    assert config.pitch_chain == (PitchSourceEntry("kanjium-pitch"),)
+    with pytest.raises(AgentMiningError, match="Unknown mining configuration fields"):
+        _mining_config({"audio_padding": 0.25})
 
 
 def test_agent_config_rejects_string_boolean_and_unknown_fields():
@@ -40,7 +34,7 @@ def test_agent_config_rejects_string_boolean_and_unknown_fields():
         AgentProfileConfig.from_dict(base)
 
 
-def test_agent_inherits_gui_mining_settings_and_explicit_overrides_win(tmp_path, monkeypatch):
+def test_agent_inherits_gui_mining_settings_and_runtime_overrides_win(tmp_path, monkeypatch):
     gui_config = replace(
         AnkiMinerConfig(),
         audio_padding=0.75,
@@ -69,7 +63,7 @@ def test_agent_inherits_gui_mining_settings_and_explicit_overrides_win(tmp_path,
                     "chosen_definition_field": "Chosen",
                     "sentence_translation_field": "Translation",
                 },
-                "mining": {"audio_padding": 0.25},
+                "runtime_overrides": {"ffmpeg_location": str(tmp_path / "ffmpeg")},
             }
         ),
         encoding="utf-8",
@@ -77,7 +71,8 @@ def test_agent_inherits_gui_mining_settings_and_explicit_overrides_win(tmp_path,
 
     _storage, _profile, mining = load_agent_config(path)
 
-    assert mining.audio_padding == 0.25
+    assert mining.audio_padding == 0.75
+    assert mining.ffmpeg_location == tmp_path / "ffmpeg"
     assert mining.dictionary_chain == (
         ChainEntry("indexed", "gui-jmdict"),
         ChainEntry("indexed", "gui-kokugo"),
@@ -88,7 +83,7 @@ def test_agent_inherits_gui_mining_settings_and_explicit_overrides_win(tmp_path,
     assert mining.anki_fields["sentence_translation"] == "Translation"
 
 
-def test_agent_can_explicitly_override_gui_dictionary_chain_and_subtitle_offset(tmp_path, monkeypatch):
+def test_agent_rejects_mining_policy_overrides(tmp_path, monkeypatch):
     gui_config = replace(
         AnkiMinerConfig(),
         dictionary_chain=(ChainEntry("indexed", "gui-dictionary"),),
@@ -119,7 +114,34 @@ def test_agent_can_explicitly_override_gui_dictionary_chain_and_subtitle_offset(
         encoding="utf-8",
     )
 
-    _storage, _profile, mining = load_agent_config(path)
+    with pytest.raises(AgentMiningError, match="Mining policy now comes from the active GUI profile"):
+        load_agent_config(path)
 
-    assert mining.dictionary_chain == (ChainEntry("indexed", "agent-dictionary"),)
-    assert mining.subtitle_offset == 1.25
+
+def test_legacy_page_size_is_ignored_and_policy_flags_are_migrated(tmp_path, monkeypatch):
+    monkeypatch.setattr(GUIConfigManager, "load_config", classmethod(lambda cls: AnkiMinerConfig()))
+    path = tmp_path / "agent.json"
+    path.write_text(
+        json.dumps(
+            {
+                "agent": {
+                    "knowledge_sources": [
+                        {"deck": "Known", "note_type": "ExampleNote", "word_fields": ["word"]}
+                    ],
+                    "write_target": {"deck": "Mining", "note_type": "ExampleNote"},
+                    "page_size": 1,
+                    "exclude_katakana_only": True,
+                    "exclude_names": False,
+                    "exclude_known": False,
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _storage, profile, mining = load_agent_config(path)
+
+    assert not hasattr(profile, "page_size")
+    assert mining.exclude_katakana_only_words is True
+    assert mining.excluded_wordsets == ()
+    assert mining.include_known_words is True

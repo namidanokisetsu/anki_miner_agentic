@@ -166,7 +166,8 @@ def test_commit_fingerprints_each_unique_path_once(monkeypatch, tmp_path):
     assert len(set(calls)) == 2
 
 
-def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path):
+def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path, monkeypatch):
+    monkeypatch.setattr("anki_miner.agent.application._CANDIDATE_PAGE_SIZE", 1)
     store = AgentStore(tmp_path / "agent.sqlite3")
     events = []
 
@@ -206,7 +207,6 @@ def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path):
             (KnowledgeSource("Known", "Note", ("Expression",), ()),),
             WriteTarget("Mining", "Note"),
             max_cards=3,
-            page_size=1,
             max_payload_bytes=10_000,
         ),
         Profile(),

@@ -118,12 +118,14 @@ class CandidateBatchService:
         *,
         youtube_fetcher: Any = None,
         wordset_service: Any = None,
+        word_list_service: Any = None,
         definition_probe: DefinitionProbe | None = None,
         definition_options_lookup: DefinitionOptionsLookup | None = None,
         asr_generator: AsrGenerator | None = None,
         frequency_service: Any = None,
         pitch_service: Any = None,
         mining_policy: Any = None,
+        mining_policy_hash: str = "",
     ) -> None:
         self.store = store
         self.analyzer = analyzer
@@ -132,12 +134,14 @@ class CandidateBatchService:
         self.config = config
         self.youtube_fetcher = youtube_fetcher
         self.wordset_service = wordset_service
+        self.word_list_service = word_list_service
         self.definition_probe = definition_probe
         self.definition_options_lookup = definition_options_lookup
         self.asr_generator = asr_generator
         self.frequency_service = frequency_service
         self.pitch_service = pitch_service
         self.mining_policy = mining_policy
+        self.mining_policy_hash = mining_policy_hash
 
     def prepare(
         self,
@@ -230,6 +234,7 @@ class CandidateBatchService:
             "profile_revision_id": profile["revision_id"],
             "analyzer_key": self.analyzer.identity.key,
             "config_hash": self.config.material_hash(),
+            "mining_policy_hash": self.mining_policy_hash,
             "lookup_material": lookup_material,
             "max_cards": effective_max_cards,
             "review_pool_size": effective_pool,
@@ -261,14 +266,27 @@ class CandidateBatchService:
                 },
             )
             reasons: list[dict[str, str]] = []
-            whitelisted = lexical_id in self.config.whitelist or primary.lemma in self.config.whitelist
-            if not whitelisted and (lexical_id in self.config.blacklist or primary.lemma in self.config.blacklist):
+            word_lists = self.word_list_service
+            lists_available = word_lists is not None and word_lists.is_available()
+            whitelisted = lists_available and (
+                word_lists.is_whitelisted(lexical_id) or word_lists.is_whitelisted(primary.lemma)
+            )
+            if not whitelisted and lists_available and (
+                word_lists.is_blacklisted(lexical_id) or word_lists.is_blacklisted(primary.lemma)
+            ):
                 reasons.append({"code": "blacklisted", "message": "Target is on the configured blacklist"})
-            if not whitelisted and self.config.exclude_katakana_only and is_katakana_only(lexical_id):
+            policy = self.mining_policy
+            if (
+                not whitelisted
+                and policy is not None
+                and bool(getattr(policy, "exclude_katakana_only_words", False))
+                and is_katakana_only(lexical_id)
+            ):
                 reasons.append({"code": "katakana_only", "message": "Target is written only in katakana"})
             if (
                 not whitelisted
-                and self.config.exclude_names
+                and policy is not None
+                and bool(getattr(policy, "excluded_wordsets", ()))
                 and self.wordset_service is not None
                 and self.wordset_service.is_available()
                 and self.wordset_service.is_excluded(lexical_id)
@@ -276,7 +294,7 @@ class CandidateBatchService:
                 reasons.append({"code": "known_name", "message": "Target matches an enabled name wordset"})
             if (
                 not whitelisted
-                and self.config.exclude_known
+                and not bool(getattr(policy, "include_known_words", False))
                 and (learner["word_exposures"] > 0 or learner["word_card_count"] > 0)
             ):
                 reasons.append({"code": "already_known", "message": "Target has explicit word-field or card evidence"})
@@ -284,7 +302,6 @@ class CandidateBatchService:
             if definition_map is not None and not definition_available:
                 reasons.append({"code": "no_definition", "message": "No offline dictionary definition is available"})
 
-            policy = self.mining_policy
             if not whitelisted and policy is not None:
                 low = int(getattr(policy, "min_frequency_rank", 0) or 0)
                 high = int(getattr(policy, "max_frequency_rank", 0) or 0)
@@ -477,7 +494,9 @@ class CandidateBatchService:
             "revision_id": revision_id,
             "profile_revision_id": profile["revision_id"],
             "analyzer_key": self.analyzer.identity.key,
-            "config_hash": self.config.material_hash(),
+            "config_hash": hashlib.sha256(
+                f"{self.config.material_hash()}:{self.mining_policy_hash}".encode("utf-8")
+            ).hexdigest(),
             "request_hash": request_hash,
             "sources": sources,
             "max_cards": effective_max_cards,
