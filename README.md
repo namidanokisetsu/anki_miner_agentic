@@ -8,6 +8,8 @@ A fork of [Anki Miner](https://github.com/0xzerolight/anki_miner) that lets an a
 - Builds a learner profile from the Anki decks and fields you choose.
 - Lets an agent rank prepared candidates, pick a dictionary meaning, and add a short translation.
 
+See the [benchmark results](agentic-docs/benchmark_results.md) for a small comparison on clean subtitles and noisy ASR.
+
 ## How it works
 
 ```mermaid

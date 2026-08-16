@@ -108,3 +108,6 @@ plan_request.md
 plan.md
 .humanize
 sample
+
+# Private benchmark media, local Anki/Hermes configuration, and study outputs
+/benchmark-study/
