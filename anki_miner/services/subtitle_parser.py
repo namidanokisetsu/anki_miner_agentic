@@ -832,6 +832,19 @@ class SubtitleParserService:
             word_token.surface,
             pronunciation=pronunciation,
         )
+        # A dictionary-attested compound may have been recovered through the
+        # matcher's conservative kana-noun -> kanji-lemma alternate
+        # (むちゃ振り -> 無茶振り). In that case the exact attested headword is the
+        # corrected card target; ``surface`` still retains the source spelling
+        # for sentence offsets and bolding. Existing raw-spelling compounds have
+        # lemma == surface, while inflecting compounds already select their
+        # dictionary form through the normal verb/adjective branch above.
+        if (
+            getattr(word_token, "compound", False) is True
+            and word_token.feature.pos1 not in ("動詞", "形容詞")
+            and lemma != word_token.surface
+        ):
+            mined = lemma
         return lemma, resolved_front, mined, front_overridden
 
     def _apply_single_token_sentence_attestation(
@@ -1117,6 +1130,13 @@ class SubtitleParserService:
             surface=surface,
             lemma=lemma,
             orth_base=orth_base,
+            mined_form_override=(
+                mined
+                if getattr(word_token, "compound", False) is True
+                and word_token.feature.pos1 not in ("動詞", "形容詞")
+                and mined != surface
+                else ""
+            ),
             reading=reading,
             sentence=text,
             start_time=start_time,
@@ -1842,6 +1862,8 @@ class SubtitleParserService:
         ``should_include``-then-recover order so the two never diverge.
         """
         if self._inclusion_rule.should_include(word_token):
+            if self._rejected_by_attested_ambiguous_form(word_token, text, tok_start, tok_end, tokens):
+                return False
             if self._is_katakana_run_fragment(word_token, text, tok_start, tok_end):
                 return False
             return not self._is_ellipsis_truncation_fragment(word_token, text, tok_start, tok_end)
@@ -1850,6 +1872,50 @@ class SubtitleParserService:
         if self._rejected_by_lexicalized_window(word_token, tokens):
             return False
         return not self._is_ellipsis_truncation_fragment(word_token, text, tok_start, tok_end)
+
+    def _rejected_by_attested_ambiguous_form(
+        self,
+        word_token,
+        text: str,
+        tok_start: int,
+        tok_end: int,
+        tokens: list,
+    ) -> bool:
+        """Reject an uninflected verb stem that is also an attested lexical item.
+
+        UniDic sometimes tags a noun-like source span as a verb continuative form
+        (``差し入れ`` → ``差し入れる``), or strips an honorific prefix from a
+        lexicalized expression (``ご存じ`` → ``存ずる``). Exporting that derived
+        verb silently changes the learner's target boundary or lexical identity.
+
+        Fail closed only when all evidence is present: an offline exact-term
+        lookup is wired, the token is a non-synthetic verb in 連用形, its card front
+        differs from the source surface, no inflectional continuation extends the
+        highlight, and either the exact surface or a functional-neighbor window is
+        itself a dictionary headword. Genuine forms such as ``差し入れた`` and
+        ``存じません`` survive because their validated highlight extends beyond the
+        stem. Without a dictionary this guard is inert.
+        """
+        if self._attest is None or isinstance(word_token, SyntheticToken):
+            return False
+        feature = getattr(word_token, "feature", None)
+        if getattr(feature, "pos1", None) != "動詞":
+            return False
+        c_form = getattr(feature, "cForm", None)
+        if not isinstance(c_form, str) or not c_form.startswith("連用形"):
+            return False
+        surface = getattr(word_token, "surface", None)
+        if not isinstance(surface, str) or not surface:
+            return False
+        if self._mining_base(word_token) == surface:
+            return False
+        if self._find_highlight_end(text, tokens, tok_start, tok_end, word_token) > tok_end:
+            return False
+        idx = next((i for i, token in enumerate(tokens) if token is word_token), None)
+        if idx is None:
+            return False
+        candidates = [surface, *self._lexicalized_window_surfaces(tokens, idx)]
+        return bool(self._attest(list(dict.fromkeys(candidates))))
 
     def _rejected_by_lexicalized_window(self, word_token, tokens: list) -> bool:
         """Whether a recovered kana fragment sits inside an attested lexicalized expression.

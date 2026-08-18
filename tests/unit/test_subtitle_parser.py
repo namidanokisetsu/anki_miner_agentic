@@ -1649,6 +1649,114 @@ class TestKanaRecoveryLexicalizedWindow:
         assert any("超かわいい" in call for call in lookup.calls)  # non-お 接頭辞 joined the window
 
 
+class TestAttestedAmbiguousDictionaryFormReject:
+    """Fail closed when a bare continuative form is independently lexicalized."""
+
+    @staticmethod
+    def _parse(test_config, tmp_path, text, *attested, kana_attested=()):
+        srt = _write_srt(tmp_path, "target-boundary.srt", text)
+        terms = set(attested)
+        service = SubtitleParserService(
+            test_config,
+            term_lookup=lambda candidates: set(candidates) & terms,
+            kana_attest_lookup=_attest_lookup(*kana_attested) if kana_attested else None,
+        )
+        return service.parse_subtitle_file(srt)
+
+    def test_rejects_same_span_verb_when_surface_is_attested_noun(self, test_config, tmp_path):
+        words = self._parse(
+            test_config,
+            tmp_path,
+            "これ 差し入れ みんなで食べてよ",
+            "差し入れ",
+            "差し入れる",
+            "食べる",
+        )
+
+        assert "差し入れる" not in {word.mined_form for word in words}
+        assert "食べる" in {word.mined_form for word in words}
+
+    def test_rejects_prefix_window_lexeme_instead_of_stripped_verb(self, test_config, tmp_path):
+        words = self._parse(
+            test_config,
+            tmp_path,
+            "本当は どんな仕事か ご存じですか？",
+            "ご存じ",
+            "存じる",
+            "存ずる",
+        )
+
+        assert not {"存じる", "存ずる"} & {word.mined_form for word in words}
+        assert {"本当", "仕事"} <= {word.mined_form for word in words}
+
+    def test_keeps_true_inflectional_continuations(self, test_config, tmp_path):
+        inserted = self._parse(
+            test_config,
+            tmp_path,
+            "ケーキを差し入れた",
+            "差し入れ",
+            "差し入れる",
+        )
+        knew = self._parse(
+            test_config,
+            tmp_path,
+            "事情は存じません",
+            "存じ",
+            "存じる",
+            "存ずる",
+        )
+
+        assert "差し入れる" in {word.mined_form for word in inserted}
+        assert {word.mined_form for word in knew} & {"存じる", "存ずる"}
+
+    def test_keeps_noun_and_unattested_prefix_controls(self, test_config, tmp_path):
+        noun = self._parse(
+            test_config,
+            tmp_path,
+            "差し入れをいただきました",
+            "差し入れ",
+            "差し入れる",
+        )
+        polite = self._parse(
+            test_config,
+            tmp_path,
+            "おわかりですか",
+            "分かる",
+            kana_attested=("わかる",),
+        )
+
+        assert "差し入れ" in {word.mined_form for word in noun}
+        assert "わかる" in {word.mined_form for word in polite}
+
+    def test_rejection_is_identical_across_all_parse_entrypoints(self, test_config, tmp_path):
+        text = "これ 差し入れ みんなで食べてよ"
+        srt = _write_srt(tmp_path, "target-boundary-parity.srt", text)
+        terms = {"差し入れ", "差し入れる", "食べる"}
+
+        def parser():
+            return SubtitleParserService(
+                test_config,
+                term_lookup=lambda candidates: set(candidates) & terms,
+            )
+
+        words = parser().parse_subtitle_file(srt)
+        indexed_words, line_index = parser().parse_subtitle_file_with_index(srt)
+        counts = parser().count_lemmas(srt)
+        text_words, text_index, text_counts = parser().parse_text_units(
+            [ReadingUnit(text=text, index=0, location_label="target-boundary")],
+            want_line_index=True,
+        )
+
+        assert "差し入れる" not in {word.mined_form for word in words}
+        assert "差し入れる" not in {word.mined_form for word in indexed_words}
+        assert "差し入れる" not in {lemma for line in line_index for lemma in line.lemmas}
+        assert "差し入れる" not in counts
+        assert "差し入れる" not in {word.mined_form for word in text_words}
+        assert text_index is not None
+        assert "差し入れる" not in {lemma for line in text_index for lemma in line.lemmas}
+        assert "差し入れる" not in text_counts
+
+
 class TestExtractLemma:
     """Tests for _extract_lemma method."""
 

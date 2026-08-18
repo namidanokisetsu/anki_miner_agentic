@@ -120,9 +120,16 @@ class TokenizedWord:
     # 良し→良い; see morphology.mining_base for the reading trigger and the
     # suffix-pair guard that keeps kanji/okurigana/じる-ずる variants
     # unfolded). Card-front source of truth for verbs/adjectives; empty when
-    # the token had no orthBase (synthetic merged compounds, OOV) —
+    # token had no orthBase (synthetic merged compounds, OOV) —
     # mined_form then falls back to lemma.
     orth_base: str = ""
+    # Exact dictionary headword selected by a dictionary-attested compound
+    # merge when it intentionally differs from the source span's spelling
+    # (むちゃ振り -> 無茶振り). Empty for ordinary words. Keeping this explicit
+    # avoids globally trusting UniDic's lemma for nouns, which can cross
+    # homographs (豪腕 -> 剛腕), while allowing the compound matcher to carry its
+    # stronger whole-span attestation through serialization and Agentic commit.
+    mined_form_override: str = ""
     expression_furigana: str = ""  # Furigana for expression, e.g. "食べる[たべる]"
     expression_reading: str = ""  # Plain kana reading of expression, e.g. "たべる"
     lemma_reading: str = ""  # Plain kana reading of the lemma, for audio retry
@@ -248,7 +255,12 @@ class TokenizedWord:
         lemma plus a short colloquial vowel-elongation tail (``手ぇ`` → ``手``,
         ``気い`` → ``気``) folds to the lemma when its spelling or UniDic
         pronunciation proves elongation — see ``select_mined_form`` for the guards.
+        A non-empty ``mined_form_override`` is a narrower second carve-out: it
+        is emitted only by the dictionary-attested compound matcher after an
+        exact whole-headword hit, so it does not generalize noun lemma trust.
         """
+        if self.mined_form_override:
+            return self.mined_form_override
         return select_mined_form(
             self.pos,
             self.orth_base,
