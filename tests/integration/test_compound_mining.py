@@ -68,6 +68,12 @@ def _build_service(tmp_path: Path) -> tuple[SubtitleParserService, DefinitionSer
             DictRow(
                 term="応急処置", reading="おうきゅうしょち", content='<li class="gloss-item">first aid</li>', sequence=2
             ),
+            DictRow(
+                term="無茶振り",
+                reading="むちゃぶり",
+                content='<li class="gloss-item">unreasonable request</li>',
+                sequence=3,
+            ),
         ],
     )
     config = replace(
@@ -92,7 +98,11 @@ def _write_srt(tmp_path: Path) -> Path:
         "\n"
         "2\n"
         "00:00:04,000 --> 00:00:06,000\n"
-        "応急処置が必要だ。\n",
+        "応急処置が必要だ。\n"
+        "\n"
+        "3\n"
+        "00:00:07,000 --> 00:00:09,000\n"
+        "またむちゃ振りされたのか。\n",
         encoding="utf-8",
     )
     return srt_file
@@ -114,15 +124,19 @@ def test_full_parse_mines_compounds_not_fragments(tmp_path: Path) -> None:
 
     assert "走り出す" in lemmas
     assert "応急処置" in lemmas
+    assert "無茶振り" in lemmas
     # The original fragment bugs: components must not surface as cards.
     assert "走る" not in lemmas
     assert "出す" not in lemmas
     assert "応急" not in lemmas
     assert "処置" not in lemmas
+    assert "振り" not in lemmas
 
     by_lemma = {w.lemma: w for w in words}
     assert by_lemma["走り出す"].mined_form == "走り出す"
     assert by_lemma["応急処置"].mined_form == "応急処置"
+    assert by_lemma["無茶振り"].surface == "むちゃ振り"
+    assert by_lemma["無茶振り"].mined_form == "無茶振り"
 
 
 def test_count_lemmas_agrees_with_parse(tmp_path: Path) -> None:

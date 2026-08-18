@@ -110,6 +110,37 @@ class TestNounNounMerge:
         assert merged.feature.pos1 == "名詞"  # → mined_form = surface = headword
         assert merged.feature.pos2 == "普通名詞"
 
+    def test_kana_noun_component_uses_attested_kanji_lemma(self):
+        tokens = [
+            _tok("むちゃ", "名詞", "普通名詞", lemma="無茶", kana="ムチャ"),
+            _tok("振り", "名詞", "普通名詞", kana="フリ"),
+        ]
+
+        out = _matcher({"無茶振り"}).merge_line("むちゃ振り", tokens)
+
+        assert [token.surface for token in out] == ["むちゃ振り"]
+        assert out[0].feature.lemma == "無茶振り"
+
+    def test_kanji_noun_component_does_not_trust_different_lemma(self):
+        tokens = [
+            _tok("豪腕", "名詞", "普通名詞", lemma="剛腕", kana="ゴウワン"),
+            _tok("投手", "名詞", "普通名詞", kana="トウシュ"),
+        ]
+
+        out = _matcher({"剛腕投手"}).merge_line("豪腕投手", tokens)
+
+        assert out == tokens
+
+    def test_kana_noun_component_requires_same_contextual_reading(self):
+        tokens = [
+            _tok("はし", "名詞", "普通名詞", lemma="橋", kana="ハシラ"),
+            _tok("渡し", "名詞", "普通名詞", kana="ワタシ"),
+        ]
+
+        out = _matcher({"橋渡し"}).merge_line("はし渡し", tokens)
+
+        assert out == tokens
+
 
 class TestVerbHeadedNounMerge:
     def test_kind_b_inherits_tail_noun_pos(self):

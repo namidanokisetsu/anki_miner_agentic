@@ -28,10 +28,13 @@ from typing import Callable
 from anki_miner.services.morphology import (
     SyntheticToken,
     TokenInclusionRule,
+    extract_lemma,
     extract_orth_base,
     extract_reading,
     iter_token_spans,
 )
+from anki_miner.utils.ja_normalize import is_cjk_ideograph
+from anki_miner.utils.text_utils import is_kana_only, katakana_to_hiragana
 
 # Batch existence probe: returns the subset of the input strings that exist as
 # exact dictionary headwords (DefinitionService.offline_terms_exist).
@@ -154,17 +157,19 @@ class CompoundDictionaryMatcher:
             if self._can_start(token):
                 # Longest span first — Yomitan ranks by source length.
                 for j in range(min(i + self._max_span - 1, n - 1), i, -1):
-                    entry = candidates.get((i, j))
-                    if entry is None:
+                    entries = candidates.get((i, j))
+                    if entries is None:
                         continue
-                    candidate, kind = entry
-                    if not self._exist_cache.get(candidate):
-                        continue
-                    synthetic = self._build_synthetic(tokens[i : j + 1], candidate, kind)
-                    # Never consume tokens for a word the gate would then drop.
-                    if self._rule.should_include(synthetic):
-                        replacement = synthetic
-                        consumed_end = j
+                    for candidate, kind in entries:
+                        if not self._exist_cache.get(candidate):
+                            continue
+                        synthetic = self._build_synthetic(tokens[i : j + 1], candidate, kind)
+                        # Never consume tokens for a word the gate would then drop.
+                        if self._rule.should_include(synthetic):
+                            replacement = synthetic
+                            consumed_end = j
+                            break
+                    if replacement is not None:
                         break
             if replacement is not None:
                 merged.append(replacement)
@@ -198,22 +203,30 @@ class CompoundDictionaryMatcher:
             next_index += 1
         return spans
 
-    def _generate_candidates(self, text: str, tokens: list) -> dict[tuple[int, int], tuple[str, str]]:
-        """Map ``(start, end)`` span -> ``(candidate_string, kind)``.
+    def _generate_candidates(self, text: str, tokens: list) -> dict[tuple[int, int], tuple[tuple[str, str], ...]]:
+        """Map ``(start, end)`` span to ordered ``(candidate_string, kind)`` variants.
 
         kind "A" = deinflected tail (joined surfaces + tail orthBase);
         kind "B" = plain surface join (non-inflectable tail only — for an
         inflected tail the surface join is an inflected string, and matching
         it would ship inflected-headword card fronts like 気をつけて).
+
+        The raw-source candidate remains first. A second candidate may replace
+        kana-only nominal components with UniDic's same-reading kanji lemma.
+        This recovers dictionary-attested mixed-script compounds such as
+        むちゃ振り -> 無茶振り without treating arbitrary reading matches as word
+        boundaries. The complete canonicalized span must still be an exact
+        dictionary headword.
         """
         n = len(tokens)
-        out: dict[tuple[int, int], tuple[str, str]] = {}
+        out: dict[tuple[int, int], tuple[tuple[str, str], ...]] = {}
         source_spans = self._source_spans(text, tokens)
         for i in range(n - 1):
             start_span = source_spans.get(i)
             if start_span is None or not self._can_start(tokens[i]):
                 continue
             prefix = tokens[i].surface
+            canonical_prefix = self._canonical_component(tokens[i])
             source_end = start_span[1]
             for j in range(i + 1, min(i + self._max_span, n)):
                 tail = tokens[j]
@@ -231,10 +244,42 @@ class CompoundDictionaryMatcher:
                 # (0..2) span ending on する is reachable through the な).
                 if self._can_end(tail):
                     candidate, kind = self._candidate_for_tail(prefix, tail, joined)
-                    out[(i, j)] = (candidate, kind)
+                    canonical_candidate = self._canonical_candidate_for_tail(canonical_prefix, tail)
+                    entries = [(candidate, kind)]
+                    if canonical_candidate != candidate:
+                        entries.append((canonical_candidate, kind))
+                    out[(i, j)] = tuple(entries)
                 prefix = joined
+                canonical_prefix += self._canonical_component(tail)
                 source_end = tail_span[1]
         return out
+
+    @staticmethod
+    def _canonical_component(token) -> str:
+        """Return a conservative dictionary-spelling alternate for one token.
+
+        Only kana-only nominal tokens may fold to a kanji-bearing lemma, and the
+        token's contextual reading must equal the written kana. This deliberately
+        excludes kanji-to-kanji UniDic normalization, which can cross homographs,
+        and excludes conjugating tokens, whose source-orthography ``orthBase`` is
+        the established card-front contract.
+        """
+        surface = str(token.surface)
+        if _pos1(token) not in {"名詞", "形状詞"} or not is_kana_only(surface):
+            return surface
+        lemma = extract_lemma(token)
+        if lemma == surface or not any(is_cjk_ideograph(char) for char in lemma):
+            return surface
+        reading = katakana_to_hiragana(extract_reading(token))
+        if reading != katakana_to_hiragana(surface):
+            return surface
+        return lemma
+
+    @classmethod
+    def _canonical_candidate_for_tail(cls, canonical_prefix: str, tail) -> str:
+        if _pos1(tail) in _INFLECTABLE_POS1:
+            return canonical_prefix + extract_orth_base(tail)
+        return canonical_prefix + cls._canonical_component(tail)
 
     @staticmethod
     def _candidate_for_tail(prefix: str, tail, joined: str) -> tuple[str, str]:
@@ -243,9 +288,9 @@ class CompoundDictionaryMatcher:
             return prefix + extract_orth_base(tail), "A"
         return joined, "B"
 
-    def _resolve(self, candidates: dict[tuple[int, int], tuple[str, str]]) -> None:
+    def _resolve(self, candidates: dict[tuple[int, int], tuple[tuple[str, str], ...]]) -> None:
         """One batched lookup for all uncached candidate strings."""
-        current = {c for c, _kind in candidates.values()}
+        current = {candidate for entries in candidates.values() for candidate, _kind in entries}
         verdicts = {c: self._exist_cache[c] for c in current if c in self._exist_cache}
         unknown = {c for c in current if c not in verdicts}
         if not unknown:
@@ -322,6 +367,15 @@ class NameSpanMatcher(CompoundDictionaryMatcher):
     """
 
     _default_max_span_chars = _MAX_NAME_SPAN_CHARS
+
+    @staticmethod
+    def _canonical_component(token) -> str:
+        """Names are attested only by their exact raw source spelling."""
+        return str(token.surface)
+
+    @classmethod
+    def _canonical_candidate_for_tail(cls, canonical_prefix: str, tail) -> str:
+        return canonical_prefix + str(tail.surface)
 
     @staticmethod
     def _candidate_for_tail(prefix: str, tail, joined: str) -> tuple[str, str]:
