@@ -7,8 +7,8 @@ the ffmpeg condense pass, sidecar writing) lives in
 :func:`~anki_miner.services.audio_condenser.condense_one`. This worker is the
 signal adapter: it uses the precomputed output path, runs the skip gate, calls
 ``condense_one``, and maps its structured :class:`~anki_miner.services.audio_condenser.CondenseStatus`
-back to translated messages. ``EncoderUnavailableError`` is declared as a
-queue-stopping fatal exception.
+back to translated messages. ``EncoderUnavailableError`` and
+``FilterUnavailableError`` are declared as queue-stopping fatal exceptions.
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ from anki_miner.services.audio_condenser import (
     CondenseResult,
     CondenseStatus,
     EncoderUnavailableError,
+    FilterUnavailableError,
     condense_one,
 )
 from anki_miner.services.audio_tagger import TrackMetadata
@@ -140,7 +141,7 @@ class CondenseWorker(FileQueueWorker):
     1. Emits ``file_started(idx)``.
     2. Uses the planned ``<stem>_condensed.<format>`` path in *output_dir* (or
        next to the media). If it already exists and *overwrite* is False — emits
-       ``file_skipped(idx, out_audio)`` and continues.
+       ``file_skipped(idx, out_audio, reason)`` and continues.
     3. Delegates to :func:`~anki_miner.services.audio_condenser.condense_one`,
        which resolves a subtitle source (D9 priority), runs the pipeline, invokes
        ffmpeg, and optionally writes sidecars.
@@ -150,9 +151,10 @@ class CondenseWorker(FileQueueWorker):
        surfaced through the final progress message — never as a ``file_finished``
        error (the audio is already good).
 
-    :class:`~anki_miner.services.audio_condenser.EncoderUnavailableError` stops
-    the entire queue (every remaining file would hit the same missing encoder)
-    after emitting a per-file error for the triggering file — distinct from a
+    :class:`~anki_miner.services.audio_condenser.EncoderUnavailableError` and
+    :class:`~anki_miner.services.audio_condenser.FilterUnavailableError` stop the
+    entire queue (every remaining file would hit the same broken ffmpeg) after
+    emitting a per-file error for the triggering file — distinct from a
     user cancel (``is_cancelled`` stays False). All other exceptions are caught
     per-file so the queue continues.
 
@@ -182,8 +184,9 @@ class CondenseWorker(FileQueueWorker):
         parent: Optional parent QObject.
     """
 
-    #: A missing encoder dooms every remaining file — stop the queue (see base loop).
-    _FATAL_QUEUE_EXCEPTIONS = (EncoderUnavailableError,)
+    #: A missing encoder, or an ffmpeg whose ``aselect`` does not filter, dooms
+    #: every remaining file — stop the queue (see base loop).
+    _FATAL_QUEUE_EXCEPTIONS = (EncoderUnavailableError, FilterUnavailableError)
 
     def __init__(
         self,
@@ -240,8 +243,9 @@ class CondenseWorker(FileQueueWorker):
         # Skip-if-exists keyed on the audio file only (D11).
         if out_audio.exists() and not self._overwrite:
             logger.debug("condense_worker: skipped %s (exists)", out_audio)
-            self.file_progress.emit(idx, 100, self.tr("Skipped, exists"))
-            self.file_skipped.emit(idx, out_audio)
+            msg = self.tr("Skipped, exists")
+            self.file_progress.emit(idx, 100, msg)
+            self.file_skipped.emit(idx, out_audio, msg)
             return
 
         if self._output_dir is not None:
@@ -278,7 +282,7 @@ class CondenseWorker(FileQueueWorker):
                 cancel_event=self._cancel_event,
             )
         except self._FATAL_QUEUE_EXCEPTIONS:
-            # Missing encoder affects every remaining file. Re-raise so the base
+            # A broken ffmpeg affects every remaining file. Re-raise so the base
             # queue loop reports this file's error and stops the queue without
             # poisoning is_cancelled (a tool error, not a user cancel).
             raise

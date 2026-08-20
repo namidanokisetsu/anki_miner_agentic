@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="ja_JP">
-  <context>
+    <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -24,8 +24,8 @@
         <translation>動画から日本語の単語カードを自動マイニングして Anki に追加 — スクリーンショット、音声、語義もすべて自動で。</translation>
     </message>
     <message>
-        <source>About Anki Miner</source>
-        <translation>Anki Miner について</translation>
+        <source>About Anki Miner Agentic</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>GitHub</source>
@@ -648,16 +648,14 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Is Already Running</source>
-        <translation>Anki Miner は既に実行中です</translation>
+        <source>Anki Miner Agentic Is Already Running</source>
+        <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation>別の Anki Miner が実行中のようです。2 つ同時に実行すると、既知単語と統計のデータベースが破損する恐れがあります。
-
-このまま続行しますか？</translation>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>Continue anyway</source>
@@ -732,12 +730,12 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>残りのパックの処理をキャンセルしました。</translation>
     </message>
     <message>
-        <source>Audio Packs Added</source>
-        <translation>音声パックを追加しました</translation>
-    </message>
-    <message>
         <source>Done.</source>
         <translation>完了しました。</translation>
+    </message>
+    <message>
+        <source>Audio Packs Added</source>
+        <translation>音声パックを追加しました</translation>
     </message>
     <message>
         <source>The import finished, but the settings could not be updated.</source>
@@ -760,6 +758,38 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>インポート処理が完了結果を返さずに終了しました。</translation>
     </message>
     <message>
+        <source>Choose Android audio database</source>
+        <translation>Android 音声データベースを選択</translation>
+    </message>
+    <message>
+        <source>Android database (*.db);;SQLite database (*.sqlite *.sqlite3)</source>
+        <translation>Android データベース (*.db);;SQLite データベース (*.sqlite *.sqlite3)</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Added</source>
+        <translation>Android 音声データベースを追加しました</translation>
+    </message>
+    <message>
+        <source>Registered %1 (%2 entries).</source>
+        <translation>%1 を登録しました（%2 件）。</translation>
+    </message>
+    <message>
+        <source>Registering Android audio database…</source>
+        <translation>Android 音声データベースを登録中…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be added.</source>
+        <translation>Android 音声データベースを追加できませんでした。</translation>
+    </message>
+    <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>別のインポートがまだ完了していません。完了してから再度お試しください。</translation>
+    </message>
+    <message>
+        <source>Choose Android audio database to re-import</source>
+        <translation>再インポートする Android 音声データベースを選択</translation>
+    </message>
+    <message>
         <source>Choose audio pack folder to re-import</source>
         <translation>再インポートする音声パックのフォルダを選択</translation>
     </message>
@@ -768,8 +798,16 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>インデックス済みリソースはマイニング、起動時のプリウォーム、またはカードの一括補完で使用中です。実行中のタスクが完了するまで待ってから再試行してください。</translation>
     </message>
     <message>
-        <source>Audio Pack Re-imported</source>
-        <translation>音声パックを再インポートしました</translation>
+        <source>Re-importing Android audio database…</source>
+        <translation>Android 音声データベースを再インポート中…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be re-imported.</source>
+        <translation>Android 音声データベースを再インポートできませんでした。</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Re-imported</source>
+        <translation>Android 音声データベースを再インポートしました</translation>
     </message>
     <message>
         <source>Re-imported %1 successfully.</source>
@@ -784,8 +822,58 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>音声パックを再インポートできませんでした。</translation>
     </message>
     <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>別のインポートがまだ完了していません。完了してから再度お試しください。</translation>
+        <source>Audio Pack Re-imported</source>
+        <translation>音声パックを再インポートしました</translation>
+    </message>
+    <message>
+        <source>The audio pack folder could not be scanned.</source>
+        <translation>音声パックフォルダをスキャンできませんでした。</translation>
+    </message>
+    <message>
+        <source>No audio packs eligible for automatic repair were found.
+
+Skipped (source folder or database not found; use per-row Re-import…):
+</source>
+        <translation>自動修復の対象となる音声パックが見つかりませんでした。
+
+スキップ（インポート元のフォルダまたはデータベースが見つかりません。行ごとの「再インポート…」を使用してください）:
+</translation>
+    </message>
+    <message>
+        <source>No audio packs in the chain.</source>
+        <translation>チェーンに音声パックがありません。</translation>
+    </message>
+    <message>
+        <source>Nothing to reimport</source>
+        <translation>再インポートする音声パックがありません</translation>
+    </message>
+    <message>
+        <source>Audio pack %1 of %2: %3</source>
+        <translation>音声パック %1 / %2: %3</translation>
+    </message>
+    <message>
+        <source>Re-imported %1 audio pack(s):</source>
+        <translation>%1 個の音声パックを再インポートしました:</translation>
+    </message>
+    <message>
+        <source>Skipped (source folder or database not found; use per-row Re-import…):</source>
+        <translation>スキップ（インポート元のフォルダまたはデータベースが見つかりません。行ごとの「再インポート…」を使用してください）:</translation>
+    </message>
+    <message>
+        <source>Cancelled before the batch finished.</source>
+        <translation>バッチが完了する前にキャンセルされました。</translation>
+    </message>
+    <message>
+        <source>Nothing to do.</source>
+        <translation>行うことはありませんでした。</translation>
+    </message>
+    <message>
+        <source>Audio Packs Re-imported</source>
+        <translation>音声パックを再インポートしました</translation>
+    </message>
+    <message>
+        <source>Some audio packs could not be re-imported.</source>
+        <translation>一部の音声パックを再インポートできませんでした。</translation>
     </message>
 </context><context>
     <name>AudioPackSettingsPanel</name>
@@ -846,6 +934,14 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>保存フォルダーにあるが上の一覧にない音声パックを再追加します。再インポートは不要です。</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>すべて再インポート</translation>
+    </message>
+    <message>
+        <source>Rebuild every audio pack in the list from the folder or database it was imported from. Needed after an app upgrade changes the index format.</source>
+        <translation>一覧にあるすべての音声パックを、インポート元のフォルダまたはデータベースから再構築します。アプリのアップグレードでインデックス形式が変更された場合に必要です。</translation>
+    </message>
+    <message>
         <source>Sources are tried top to bottom — the first one that has audio for a word wins.</source>
         <translation>ソースは上から順に試行されます — 単語の音声がある最初のソースが使用されます。</translation>
     </message>
@@ -880,6 +976,10 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
     <message>
         <source>Audio Pack…</source>
         <translation>音声パック…</translation>
+    </message>
+    <message>
+        <source>Android Audio Database…</source>
+        <translation>Android 音声データベース…</translation>
     </message>
     <message>
         <source>Online Source…</source>
@@ -1262,6 +1362,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>series</source>
         <translation>シリーズ</translation>
+    </message>
+    <message>
+        <source>Every series in the queue is already complete. Select the ones you want to mine again, then click Run selected.</source>
+        <translation>キュー内のすべてのシリーズはすでに完了しています。もう一度マイニングしたいシリーズを選択し、「選択項目を実行」をクリックしてください。</translation>
     </message>
     <message>
         <source>No valid series in the queue to process.</source>
@@ -2172,10 +2276,6 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>{count} 個のピッチフィールドを保持しました — 読みは単語だけから推測することしかできず、上書きすると別の同形異義語のアクセントが適用される可能性があったためです。これらを上書きするには、Expression Reading または Furigana フィールドを対応付けてください。</translation>
     </message>
     <message>
-        <source>{count} sort value(s) are the 9999999 no-frequency-found placeholder.</source>
-        <translation>ソート値 {count} 件が、頻度未検出時のプレースホルダー 9999999 です。</translation>
-    </message>
-    <message>
         <source>Not on this note type (stale mapping): {fields}. Fix in Settings → Anki field mapping.</source>
         <translation>このノートタイプには存在しません（マッピングが古い）：{fields}。設定 → Anki のフィールド割り当てで修正してください。</translation>
     </message>
@@ -2330,6 +2430,14 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
     <message>
         <source>Complete — %1 files processed</source>
         <translation>完了 — %1 個のファイルを処理しました</translation>
+    </message>
+    <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>完了 — %1 個を処理、%2 個をスキップしました</translation>
+    </message>
+    <message>
+        <source>Nothing condensed — all %1 skipped because their output already exists. Enable Overwrite to condense again.</source>
+        <translation>凝縮対象なし — %1 個すべてが出力済みのためスキップしました。再度凝縮するには「上書き」を有効にしてください。</translation>
     </message>
     <message>
         <source>Select Output Folder</source>
@@ -3168,12 +3276,20 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>メディアファイルを %1 件インポートできませんでした。</translation>
     </message>
     <message>
-        <source>Choose Yomitan dictionary zip</source>
+        <source>Choose Yomitan dictionary zips</source>
         <translation>Yomitan辞書のzipを選択</translation>
     </message>
     <message>
         <source>Yomitan zip (*.zip)</source>
         <translation>Yomitan zip (*.zip)</translation>
+    </message>
+    <message>
+        <source>Dictionary %1 of %2: %3</source>
+        <translation>辞書 %1/%2: %3</translation>
+    </message>
+    <message>
+        <source>The dictionary could not be imported.</source>
+        <translation>辞書をインポートできませんでした。</translation>
     </message>
     <message>
         <source>Dictionary added</source>
@@ -3184,24 +3300,32 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>%1 をインポートしました（%2 件）</translation>
     </message>
     <message>
+        <source>Imported %1 dictionaries:</source>
+        <translation>%1 件の辞書をインポートしました:</translation>
+    </message>
+    <message>
+        <source>Failed:</source>
+        <translation>失敗:</translation>
+    </message>
+    <message>
+        <source>Cancelled before remaining dictionaries.</source>
+        <translation>残りの辞書のインポートはキャンセルされました。</translation>
+    </message>
+    <message>
+        <source>Done.</source>
+        <translation>完了しました。</translation>
+    </message>
+    <message>
+        <source>Dictionaries added</source>
+        <translation>辞書を追加しました</translation>
+    </message>
+    <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation>インポートは完了しましたが、設定を更新できませんでした。</translation>
     </message>
     <message>
-        <source>Importing dictionary…</source>
-        <translation>辞書をインポートしています…</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>キャンセル</translation>
-    </message>
-    <message>
-        <source>The dictionary could not be imported.</source>
-        <translation>辞書をインポートできませんでした。</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>別のインポートがまだ完了していません。完了してから再度お試しください。</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -3240,6 +3364,10 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>辞書を再インポートできませんでした。</translation>
     </message>
     <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>別のインポートがまだ完了していません。完了してから再度お試しください。</translation>
+    </message>
+    <message>
         <source>No JMdict XML at %1. Download from EDRDG and place it there.</source>
         <translation>%1 にJMdictのXMLがありません。EDRDGからダウンロードしてそこに配置してください。</translation>
     </message>
@@ -3270,10 +3398,6 @@ Skipped (not eligible for automatic repair; use per-row Re-import…):
         <translation>再インポートする辞書がありません</translation>
     </message>
     <message>
-        <source>Dictionary %1 of %2: %3</source>
-        <translation>辞書 %1/%2: %3</translation>
-    </message>
-    <message>
         <source>Reimported %1 dictionary/dictionaries:</source>
         <translation>%1 件の辞書を再インポートしました:</translation>
     </message>
@@ -3282,20 +3406,8 @@ Skipped (not eligible for automatic repair; use per-row Re-import…):
         <translation>スキップ（自動修復の対象外です。行ごとの「再インポート…」を使用してください）:</translation>
     </message>
     <message>
-        <source>Failed:</source>
-        <translation>失敗:</translation>
-    </message>
-    <message>
-        <source>Cancelled before remaining dictionaries.</source>
-        <translation>残りの辞書のインポートはキャンセルされました。</translation>
-    </message>
-    <message>
         <source>Reimport All</source>
         <translation>すべて再インポート</translation>
-    </message>
-    <message>
-        <source>Done.</source>
-        <translation>完了しました。</translation>
     </message>
     <message>
         <source>Nothing to restore</source>
@@ -3700,10 +3812,6 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Collapsed %1 duplicate-expression word(s)</source>
         <translation>重複表現の単語 %1 件を統合しました</translation>
-    </message>
-    <message>
-        <source>Skipped %1 word(s) already carded under another spelling</source>
-        <translation>別の表記で既にカード化済みのため %1 件の単語をスキップしました</translation>
     </message>
     <message>
         <source>Frequency filter: removed %1 words outside ranks %2-%3</source>
@@ -4324,92 +4432,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>既知単語の検出から除外するデッキ:</translation>
     </message>
 </context><context>
-    <name>FrequencyImportFlow</name>
-    <message>
-        <source> This is a word-based source; its level labels show on the card but don't affect frequency-rank filtering.</source>
-        <translation> これは単語ベースのソースです。レベルラベルはカードに表示されますが、頻度ランクのフィルタリングには影響しません。</translation>
-    </message>
-    <message>
-        <source>Choose frequency source</source>
-        <translation>頻度ソースを選択</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> （不正な形式のエントリを %1 件スキップしました）</translation>
-    </message>
-    <message>
-        <source> This is an occurrence-based source; its counts were converted to ranks.</source>
-        <translation> これは出現回数ベースのソースです。カウントは順位に変換されました。</translation>
-    </message>
-    <message>
-        <source>Frequency Source Added</source>
-        <translation>頻度ソースを追加しました</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>'%2' から %1 件のエントリをインポートしました。</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>インポートは完了しましたが、設定を更新できませんでした。</translation>
-    </message>
-    <message>
-        <source>Importing frequency source…</source>
-        <translation>頻度ソースをインポートしています…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>キャンセル</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be imported.</source>
-        <translation>頻度ソースをインポートできませんでした。</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>別のインポートがまだ完了していません。完了してから再度お試しください。</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>キャンセル中…</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>インポート処理が完了結果を返さずに終了しました。</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>そのフォルダをスキャンできませんでした。</translation>
-    </message>
-    <message>
-        <source>Choose frequency source to re-import</source>
-        <translation>再インポートする頻度ソースを選択</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>インデックス済みリソースはマイニング、起動時のプリウォーム、またはカードの一括補完で使用中です。実行中のタスクが完了するまで待ってから再試行してください。</translation>
-    </message>
-    <message>
-        <source>Frequency Source Re-imported</source>
-        <translation>頻度ソースを再インポートしました</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>%1 を再インポートしました。</translation>
-    </message>
-    <message>
-        <source>Re-importing frequency source…</source>
-        <translation>頻度ソースを再インポートしています…</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be re-imported.</source>
-        <translation>頻度ソースを再インポートできませんでした。</translation>
-    </message>
-    <message>
-        <source>Frequency source (%1);;All Files (*)</source>
-        <translation>頻度ソース (%1);;すべてのファイル (*)</translation>
-    </message>
-</context><context>
     <name>FrequencySettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -4458,6 +4480,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Re-add frequency sources found in the storage folder that aren't in the list above. No re-import needed.</source>
         <translation>保存フォルダーにあるが上の一覧にない頻度ソースを再追加します。再インポートは不要です。</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>すべて再インポート</translation>
+    </message>
+    <message>
+        <source>Rebuild every frequency source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>一覧にあるすべての頻度ソースを、インポート時に保存されたコピーから再構築します。アプリのアップグレードでインデックス形式が変更された場合に必要です。</translation>
     </message>
     <message>
         <source>Every enabled source counts: filtering uses the lowest rank, Frequency Sort the harmonic mean. Order only sets the card's source list.</source>
@@ -4510,6 +4540,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Enable or disable %1</source>
         <translation>%1 を有効化または無効化</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>再インポート</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ 再インポートが必要です（アプリのアップグレード）</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -5104,16 +5142,40 @@ Continue?</source>
         <translation>マイニングしたカードのスタイルを再適用できませんでした。</translation>
     </message>
     <message>
-        <source>These dictionaries need re-importing after an app upgrade (their index format changed):</source>
-        <translation>アプリのアップグレード後、これらの辞書は再インポートが必要です（インデックス形式が変更されました）:</translation>
+        <source>Dictionaries:</source>
+        <translation>辞書:</translation>
     </message>
     <message>
-        <source>Mining is blocked for them until you do. Re-import them now?</source>
-        <translation>再インポートするまで、これらの辞書でのマイニングはブロックされます。今すぐ再インポートしますか？</translation>
+        <source>Frequency sources:</source>
+        <translation>頻度ソース:</translation>
     </message>
     <message>
-        <source>Dictionaries need re-importing</source>
-        <translation>辞書の再インポートが必要です</translation>
+        <source>Pitch accent sources:</source>
+        <translation>ピッチアクセントソース:</translation>
+    </message>
+    <message>
+        <source>Audio packs:</source>
+        <translation>音声パック:</translation>
+    </message>
+    <message>
+        <source>These resources need re-importing after an app upgrade (their index format changed):</source>
+        <translation>アプリのアップグレード後、これらのリソースは再インポートが必要です（インデックス形式が変更されました）:</translation>
+    </message>
+    <message>
+        <source>Mining is blocked until you do.</source>
+        <translation>再インポートするまでマイニングはできません。</translation>
+    </message>
+    <message>
+        <source>Resources need re-importing</source>
+        <translation>リソースの再インポートが必要です</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>すべて再インポート</translation>
+    </message>
+    <message>
+        <source>Later</source>
+        <translation>後で</translation>
     </message>
     <message>
         <source>System validation passed</source>
@@ -5456,84 +5518,6 @@ You can fine-tune these later in Settings → Anki.</source>
         <translation>無音除去ライブラリのインストールが完了しました。</translation>
     </message>
 </context><context>
-    <name>PitchImportFlow</name>
-    <message>
-        <source>Choose pitch accent source</source>
-        <translation>ピッチアクセントソースを選択</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> （不正な形式のエントリを %1 件スキップしました）</translation>
-    </message>
-    <message>
-        <source>Pitch Source Added</source>
-        <translation>ピッチソースを追加しました</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>'%2' から %1 件のエントリをインポートしました。</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>インポートは完了しましたが、設定を更新できませんでした。</translation>
-    </message>
-    <message>
-        <source>Importing pitch source…</source>
-        <translation>ピッチソースをインポートしています…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>キャンセル</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be imported.</source>
-        <translation>ピッチソースをインポートできませんでした。</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>別のインポートがまだ完了していません。完了してから再度お試しください。</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>キャンセル中…</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>インポート処理が完了結果を返さずに終了しました。</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>そのフォルダをスキャンできませんでした。</translation>
-    </message>
-    <message>
-        <source>Choose pitch source to re-import</source>
-        <translation>再インポートするピッチソースを選択</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>インデックス済みリソースはマイニング、起動時のプリウォーム、またはカードの一括補完で使用中です。実行中のタスクが完了するまで待ってから再試行してください。</translation>
-    </message>
-    <message>
-        <source>Pitch Source Re-imported</source>
-        <translation>ピッチソースを再インポートしました</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>%1 を再インポートしました。</translation>
-    </message>
-    <message>
-        <source>Re-importing pitch source…</source>
-        <translation>ピッチソースを再インポートしています…</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be re-imported.</source>
-        <translation>ピッチソースを再インポートできませんでした。</translation>
-    </message>
-    <message>
-        <source>Pitch accent source (%1);;All Files (*)</source>
-        <translation>ピッチアクセントソース（%1）;;すべてのファイル（*）</translation>
-    </message>
-</context><context>
     <name>PitchSettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -5584,6 +5568,14 @@ You can fine-tune these later in Settings → Anki.</source>
         <translation>保存フォルダーにあるが上の一覧にないピッチソースを再追加します。再インポートは不要です。</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>すべて再インポート</translation>
+    </message>
+    <message>
+        <source>Rebuild every pitch source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>一覧にあるすべてのピッチソースを、インポート時に保存されたコピーから再構築します。アプリのアップグレードでインデックス形式が変更された場合に必要です。</translation>
+    </message>
+    <message>
         <source>Checked top to bottom — the first source with a pitch entry for a word wins.</source>
         <translation>上から順に確認され、単語のピッチアクセント項目がある最初のソースが採用されます。</translation>
     </message>
@@ -5626,6 +5618,14 @@ You can fine-tune these later in Settings → Anki.</source>
     <message>
         <source>Enable or disable %1</source>
         <translation>%1 を有効化または無効化</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>再インポート</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ 再インポートが必要です（アプリのアップグレード）</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -6032,6 +6032,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Add Series</source>
         <translation>シリーズを追加</translation>
+    </message>
+    <message>
+        <source>Mine the selected rows, in list order. A completed row is mined again from scratch.</source>
+        <translation>選択した行をリスト順にマイニングします。完了済みの行は、最初から再度マイニングされます。</translation>
     </message>
     <message>
         <source>Process Queue</source>
@@ -6566,8 +6570,8 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>貼り付けテキスト</translation>
     </message>
     <message>
-        <source>Paste Japanese text and mine it into Anki cards — no screenshots or audio.</source>
-        <translation>日本語テキストを貼り付けて Anki カードにマイニングします（スクリーンショット・音声なし）。</translation>
+        <source>Paste Japanese text and mine it into Anki cards — no audio is extracted.</source>
+        <translation>日本語のテキストを貼り付けてAnkiカードにマイニングします — 音声は抽出されません。</translation>
     </message>
     <message>
         <source>Paste text here…</source>
@@ -6576,6 +6580,22 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Drop or paste text here; files are not supported.</source>
         <translation>ここにテキストをドロップまたは貼り付けてください。ファイルには対応していません。</translation>
+    </message>
+    <message>
+        <source>Card Image:</source>
+        <translation>カード画像:</translation>
+    </message>
+    <message>
+        <source>Images</source>
+        <translation>画像</translation>
+    </message>
+    <message>
+        <source>This field takes an image file.</source>
+        <translation>このフィールドには画像ファイルを指定します。</translation>
+    </message>
+    <message>
+        <source>Optional. This image goes in the Picture field of every card from this text.</source>
+        <translation>任意項目。この画像はこのテキストから作られる全カードのPictureフィールドに挿入されます。</translation>
     </message>
     <message>
         <source>Mine</source>
@@ -6596,6 +6616,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Paste some text first.</source>
         <translation>先にテキストを貼り付けてください。</translation>
+    </message>
+    <message>
+        <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
+        <translation>この画像を読み込めません。別の画像を選択するか、フィールドを空にして画像なしでマイニングしてください。</translation>
     </message>
     <message>
         <source>Starting…</source>
@@ -7021,6 +7045,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <source>Details</source>
         <translation>詳細</translation>
     </message>
+    <message>
+        <source>Dismiss</source>
+        <translation>閉じる</translation>
+    </message>
 </context><context>
     <name>SettingsSearchBox</name>
     <message>
@@ -7134,6 +7162,18 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>外観と言語</translation>
     </message>
     <message>
+        <source>Nothing to restore</source>
+        <translation>復元する内容はありません</translation>
+    </message>
+    <message>
+        <source>Every audio pack found in the storage folder is already listed.
+
+A pack that stopped working after an app upgrade is repaired by Re-import on its row, not by restoring it.</source>
+        <translation>保存フォルダー内で見つかった音声パックは、すべてすでに一覧に表示されています。
+
+アプリのアップグレード後に動作しなくなったパックは、復元ではなく、その行の「再インポート」で修復してください。</translation>
+    </message>
+    <message>
         <source>The audio packs could not be restored.</source>
         <translation>音声パックを復元できませんでした。</translation>
     </message>
@@ -7142,12 +7182,28 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>インストール済みの音声パックを確認できませんでした。</translation>
     </message>
     <message>
+        <source>Every frequency source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>保存フォルダー内で見つかった頻度ソースは、すべてすでに一覧に表示されています。
+
+アプリのアップグレード後に動作しなくなったソースは、復元ではなく「すべて再インポート」で修復してください。</translation>
+    </message>
+    <message>
         <source>The frequency sources could not be restored.</source>
         <translation>頻度ソースを復元できませんでした。</translation>
     </message>
     <message>
         <source>Installed frequency sources could not be checked.</source>
         <translation>インストール済みの頻度ソースを確認できませんでした。</translation>
+    </message>
+    <message>
+        <source>Every pitch accent source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>保存フォルダー内で見つかったピッチアクセントソースは、すべてすでに一覧に表示されています。
+
+アプリのアップグレード後に動作しなくなったソースは、復元ではなく「すべて再インポート」で修復してください。</translation>
     </message>
     <message>
         <source>The pitch accent sources could not be restored.</source>
@@ -7598,6 +7654,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>完了 — %1 個のファイルを処理しました</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>完了 — %1 個を処理、%2 個をスキップしました</translation>
+    </message>
+    <message>
+        <source>No subtitles generated — all %1 skipped because their output already exists. Enable Overwrite to regenerate.</source>
+        <translation>字幕生成なし — %1 個すべてが出力済みのためスキップしました。再生成するには「上書き」を有効にしてください。</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>出力フォルダを選択</translation>
     </message>
@@ -7840,6 +7904,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>完了 — %1 個のファイルを処理しました</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>完了 — %1 個を処理、%2 個をスキップしました</translation>
+    </message>
+    <message>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
+        <translation>再タイミングなし — %1 個すべてをスキップしました。その場で再タイミングするには「上書き」を有効にするか、別の出力フォルダーを選択してください。</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>出力フォルダを選択</translation>
     </message>
@@ -7856,8 +7928,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>入力</translation>
     </message>
     <message>
-        <source>alass not found; install it or set its path in Settings to enable retiming.</source>
-        <translation>alass が見つかりません。リタイミングを有効にするには、インストールするか設定でパスを指定してください。</translation>
+        <source>alass not found; retiming uses ffsubsync only. Install alass in Settings for a fallback engine.</source>
+        <translation>alass が見つかりません。リタイミングには ffsubsync のみが使用されます。フォールバックエンジンを使うには、設定で alass をインストールしてください。</translation>
     </message>
     <message>
         <source>Resync a subtitle file to its video by matching audio.</source>
@@ -7920,6 +7992,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>字幕フォルダ:</translation>
     </message>
     <message>
+        <source>Matched pairs:</source>
+        <translation>一致したペア:</translation>
+    </message>
+    <message>
+        <source>%1  —  no matching subtitle</source>
+        <translation>%1  —  一致する字幕なし</translation>
+    </message>
+    <message>
+        <source>Matched pairs (%1):</source>
+        <translation>一致したペア（%1）:</translation>
+    </message>
+    <message>
         <source>Output</source>
         <translation>出力</translation>
     </message>
@@ -7944,12 +8028,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>チェックを外すと、出力字幕が既に存在するペアはスキップされ、上書きされません。</translation>
     </message>
     <message>
-        <source>Split penalty, frame-rate correction and single-offset mode:</source>
-        <translation>分割ペナルティ、フレームレート補正、単一オフセットモード:</translation>
-    </message>
-    <message>
-        <source>Alignment Settings</source>
-        <translation>アライメント設定</translation>
+        <source>Alignment is automatic; an untrustworthy result never replaces the original file.</source>
+        <translation>位置合わせは自動で行われます。信頼できない結果によって元のファイルが上書きされることはありません。</translation>
     </message>
     <message>
         <source>Retime Subtitles</source>
@@ -8062,8 +8142,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>キャンセルされました</translation>
     </message>
     <message>
-        <source>Retiming failed for %1</source>
-        <translation>%1 のリタイミングに失敗しました</translation>
+        <source>No trustworthy sync for %1; original kept unchanged</source>
+        <translation>%1 の同期結果は信頼できません；元のファイルは変更されていません</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8268,38 +8348,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>macOS 向けの alass バイナリは公開されていません。Homebrew でインストールしてください：</translation>
     </message>
     <message>
-        <source>Split penalty</source>
-        <translation>分割ペナルティ</translation>
-    </message>
-    <message>
-        <source>How reluctant alignment is to cut a subtitle into separately-timed segments. Lower values create more cut points for ad breaks. Useful range 1-20; default 7.</source>
-        <translation>字幕を別々のタイミングのセグメントに分割することへの、位置合わせの消極度です。値を小さくするとCM区切りなどの分割点が増えます。実用的な範囲は1〜20、既定値は7です。</translation>
-    </message>
-    <message>
-        <source>Correct frame-rate differences</source>
-        <translation>フレームレートの違いを補正</translation>
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation>フレームレート</translation>
-    </message>
-    <message>
-        <source>Enable only for subtitles from a different-framerate release. On a subtitle that is merely offset this stretches the timing and makes it worse.</source>
-        <translation>フレームレートの異なるリリースの字幕にのみ有効にしてください。単にオフセットがずれているだけの字幕にかけると、タイミングが引き伸ばされて悪化します。</translation>
-    </message>
-    <message>
-        <source>Shift by a single offset only</source>
-        <translation>単一のオフセットのみでシフト</translation>
-    </message>
-    <message>
-        <source>Single offset</source>
-        <translation>単一オフセット</translation>
-    </message>
-    <message>
-        <source>Shift the entire subtitle by one amount; never cut it into separately-timed segments. Suits Japanese media, which rarely has ad-break cuts. Uncheck to allow segmented alignment.</source>
-        <translation>字幕全体を一定量だけシフトし、別々のタイミングのセグメントに分割しません。CM区切りがほとんどない日本語メディアに適しています。セグメント分割による位置合わせを許可するにはチェックを外してください。</translation>
-    </message>
-    <message>
         <source>Subtitle generation needs the faster-whisper engine. This packaged app cannot be extended with ASR. Use the ASR-capable AppImage, or run the command below and then launch the separate pipx-installed Anki Miner:</source>
         <translation>字幕生成には faster-whisper エンジンが必要です。このパッケージ版アプリには ASR を追加できません。ASR対応の AppImage を使用するか、以下のコマンドを実行してから、別途 pipx でインストールした Anki Miner を起動してください:</translation>
     </message>
@@ -8424,6 +8472,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>Offline dictionary</source>
         <translation>オフライン辞書</translation>
+    </message>
+    <message>
+        <source>Frequency lists</source>
+        <translation>頻度リスト</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>ピッチアクセント</translation>
+    </message>
+    <message>
+        <source>Audio packs</source>
+        <translation>音声パック</translation>
     </message>
     <message>
         <source>yt-dlp (YouTube mining)</source>
@@ -8700,6 +8760,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>出現回数</translation>
     </message>
     <message>
+        <source>How many times this word appears in this episode.
+
+The “Sentences” picker offers one option per subtitle line, so it usually lists fewer: repeats on the same line count once here, and lines where the word takes a form that would change the card’s Word are skipped.</source>
+        <translation>この単語がこのエピソードに出現する回数です。
+
+「文」の選択欄は字幕1行につき1つの候補を表示するため、通常はこれより少なくなります。同じ行での繰り返しはここでは1回として数えられ、カードの「単語（マイニング済み）」が変わってしまう形で出現する行は除外されます。</translation>
+    </message>
+    <message>
         <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S：含める／除外　Space：再生／一時停止　Ctrl+A：表示中を含める　Ctrl+D：表示中を除外　Ctrl+Enter：確認</translation>
     </message>
@@ -8718,10 +8786,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>%1
 
-(%2 sentences available — focus the row, then pick one under “Sentences”)</source>
+(%2 example sentences to pick from — focus the row, then choose one under “Sentences”)</source>
         <translation>%1
 
-（利用可能な文が %2 件あります — 行を選択してから「文」で 1 つ選んでください）</translation>
+（選べる例文は %2 件 — 行を選択してから「文」の一覧で選んでください）</translation>
+    </message>
+    <message>
+        <source>Sentences (%1)</source>
+        <translation>文（%1）</translation>
     </message>
     <message>
         <source>No page image for this word</source>
@@ -8872,6 +8944,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>Checks once a day on startup and downloads into Anki Miner's own folder. Leaving this off means YouTube mining will eventually stop working.</source>
         <translation>起動時に 1 日 1 回確認し、Anki Miner 専用フォルダにダウンロードします。オフのままにすると、YouTube マイニングはいずれ動作しなくなります。</translation>
+    </message>
+    <message>
+        <source>Use pre-release yt-dlp builds</source>
+        <translation>yt-dlp のプレリリース版を使用</translation>
+    </message>
+    <message>
+        <source>Pre-release</source>
+        <translation>プレリリース</translation>
+    </message>
+    <message>
+        <source>Updates install yt-dlp's nightly channel, which fixes YouTube breakage days before a stable release. Turning this off keeps the installed build until a newer stable version replaces it.</source>
+        <translation>更新時に yt-dlp の nightly チャンネルをインストールします。安定版の公開より数日早く YouTube の不具合が修正されます。オフにしても、より新しい安定版に置き換わるまでインストール済みのビルドはそのまま使われます。</translation>
     </message>
     <message>
         <source>Optional: path to your own yt-dlp executable...</source>
@@ -9038,8 +9122,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner — Unexpected Error</source>
-        <translation>Anki Miner — 予期しないエラー</translation>
+        <source>Anki Miner Agentic — Unexpected Error</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>%1: %2

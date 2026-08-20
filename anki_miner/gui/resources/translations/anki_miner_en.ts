@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1">
-  <context>
+    <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -24,7 +24,7 @@
         <translation type="unfinished" />
     </message>
     <message>
-        <source>About Anki Miner</source>
+        <source>About Anki Miner Agentic</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -648,11 +648,11 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Is Already Running</source>
+        <source>Anki Miner Agentic Is Already Running</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
         <translation type="unfinished" />
@@ -727,11 +727,11 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Audio Packs Added</source>
+        <source>Done.</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Done.</source>
+        <source>Audio Packs Added</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -755,6 +755,38 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Choose Android audio database</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Android database (*.db);;SQLite database (*.sqlite *.sqlite3)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Android Audio Database Added</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Registered %1 (%2 entries).</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Registering Android audio database…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>The Android audio database could not be added.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Choose Android audio database to re-import</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Choose audio pack folder to re-import</source>
         <translation type="unfinished" />
     </message>
@@ -763,7 +795,15 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Audio Pack Re-imported</source>
+        <source>Re-importing Android audio database…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>The Android audio database could not be re-imported.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Android Audio Database Re-imported</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -779,7 +819,54 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <source>Audio Pack Re-imported</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>The audio pack folder could not be scanned.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No audio packs eligible for automatic repair were found.
+
+Skipped (source folder or database not found; use per-row Re-import…):
+</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No audio packs in the chain.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Nothing to reimport</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Audio pack %1 of %2: %3</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Re-imported %1 audio pack(s):</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Skipped (source folder or database not found; use per-row Re-import…):</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancelled before the batch finished.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Nothing to do.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Audio Packs Re-imported</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Some audio packs could not be re-imported.</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -841,6 +928,14 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Rebuild every audio pack in the list from the folder or database it was imported from. Needed after an app upgrade changes the index format.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Sources are tried top to bottom — the first one that has audio for a word wins.</source>
         <translation type="unfinished" />
     </message>
@@ -874,6 +969,10 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
     </message>
     <message>
         <source>Audio Pack…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Android Audio Database…</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1251,6 +1350,10 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>series</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Every series in the queue is already complete. Select the ones you want to mine again, then click Run selected.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -2162,10 +2265,6 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
-        <source>{count} sort value(s) are the 9999999 no-frequency-found placeholder.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Not on this note type (stale mapping): {fields}. Fix in Settings → Anki field mapping.</source>
         <translation type="unfinished" />
     </message>
@@ -2317,6 +2416,14 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
     </message>
     <message>
         <source>Complete — %1 files processed</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Nothing condensed — all %1 skipped because their output already exists. Enable Overwrite to condense again.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -3156,11 +3263,19 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Choose Yomitan dictionary zip</source>
+        <source>Choose Yomitan dictionary zips</source>
         <translation type="unfinished" />
     </message>
     <message>
         <source>Yomitan zip (*.zip)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Dictionary %1 of %2: %3</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>The dictionary could not be imported.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -3172,23 +3287,31 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Imported %1 dictionaries:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Failed:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancelled before remaining dictionaries.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Done.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Dictionaries added</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Importing dictionary…</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Cancel</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>The dictionary could not be imported.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -3228,6 +3351,10 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>No JMdict XML at %1. Download from EDRDG and place it there.</source>
         <translation type="unfinished" />
     </message>
@@ -3255,10 +3382,6 @@ Skipped (not eligible for automatic repair; use per-row Re-import…):
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Dictionary %1 of %2: %3</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Reimported %1 dictionary/dictionaries:</source>
         <translation type="unfinished" />
     </message>
@@ -3267,19 +3390,7 @@ Skipped (not eligible for automatic repair; use per-row Re-import…):
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Failed:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Cancelled before remaining dictionaries.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Reimport All</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Done.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -3678,10 +3789,6 @@ Files on disk will be left untouched because the folder could not be proven to b
     </message>
     <message>
         <source>Collapsed %1 duplicate-expression word(s)</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Skipped %1 word(s) already carded under another spelling</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -4302,92 +4409,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation type="unfinished" />
     </message>
 </context><context>
-    <name>FrequencyImportFlow</name>
-    <message>
-        <source> This is a word-based source; its level labels show on the card but don't affect frequency-rank filtering.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Choose frequency source</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source> This is an occurrence-based source; its counts were converted to ranks.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Frequency Source Added</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Importing frequency source…</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>The frequency source could not be imported.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Choose frequency source to re-import</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Frequency Source Re-imported</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Re-importing frequency source…</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>The frequency source could not be re-imported.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Frequency source (%1);;All Files (*)</source>
-        <translation type="unfinished" />
-    </message>
-</context><context>
     <name>FrequencySettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -4435,6 +4456,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     </message>
     <message>
         <source>Re-add frequency sources found in the storage folder that aren't in the list above. No re-import needed.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Rebuild every frequency source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -4487,6 +4516,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     </message>
     <message>
         <source>Enable or disable %1</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -5068,15 +5105,39 @@ Continue?</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>These dictionaries need re-importing after an app upgrade (their index format changed):</source>
+        <source>Dictionaries:</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Mining is blocked for them until you do. Re-import them now?</source>
+        <source>Frequency sources:</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Dictionaries need re-importing</source>
+        <source>Pitch accent sources:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Audio packs:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>These resources need re-importing after an app upgrade (their index format changed):</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Mining is blocked until you do.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Resources need re-importing</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Later</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -5419,84 +5480,6 @@ You can fine-tune these later in Settings → Anki.</source>
         <translation type="unfinished" />
     </message>
 </context><context>
-    <name>PitchImportFlow</name>
-    <message>
-        <source>Choose pitch accent source</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Pitch Source Added</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Importing pitch source…</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>The pitch source could not be imported.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Choose pitch source to re-import</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Pitch Source Re-imported</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Re-importing pitch source…</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>The pitch source could not be re-imported.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Pitch accent source (%1);;All Files (*)</source>
-        <translation type="unfinished" />
-    </message>
-</context><context>
     <name>PitchSettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -5547,6 +5530,14 @@ You can fine-tune these later in Settings → Anki.</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Rebuild every pitch source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Checked top to bottom — the first source with a pitch entry for a word wins.</source>
         <translation type="unfinished" />
     </message>
@@ -5588,6 +5579,14 @@ You can fine-tune these later in Settings → Anki.</source>
     </message>
     <message>
         <source>Enable or disable %1</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -5989,6 +5988,10 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Add Series</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Mine the selected rows, in list order. A completed row is mined again from scratch.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -6524,7 +6527,7 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Paste Japanese text and mine it into Anki cards — no screenshots or audio.</source>
+        <source>Paste Japanese text and mine it into Anki cards — no audio is extracted.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -6533,6 +6536,22 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Drop or paste text here; files are not supported.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Card Image:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Images</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>This field takes an image file.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Optional. This image goes in the Picture field of every card from this text.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -6553,6 +6572,10 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Paste some text first.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -6978,6 +7001,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <source>Details</source>
         <translation type="unfinished" />
     </message>
+    <message>
+        <source>Dismiss</source>
+        <translation type="unfinished" />
+    </message>
 </context><context>
     <name>SettingsSearchBox</name>
     <message>
@@ -7091,6 +7118,16 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Nothing to restore</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Every audio pack found in the storage folder is already listed.
+
+A pack that stopped working after an app upgrade is repaired by Re-import on its row, not by restoring it.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>The audio packs could not be restored.</source>
         <translation type="unfinished" />
     </message>
@@ -7099,11 +7136,23 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Every frequency source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>The frequency sources could not be restored.</source>
         <translation type="unfinished" />
     </message>
     <message>
         <source>Installed frequency sources could not be checked.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Every pitch accent source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -7551,6 +7600,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No subtitles generated — all %1 skipped because their output already exists. Enable Overwrite to regenerate.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation type="unfinished" />
     </message>
@@ -7793,6 +7850,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation type="unfinished" />
     </message>
@@ -7809,7 +7874,7 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
-        <source>alass not found; install it or set its path in Settings to enable retiming.</source>
+        <source>alass not found; retiming uses ffsubsync only. Install alass in Settings for a fallback engine.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -7873,6 +7938,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Matched pairs:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>%1  —  no matching subtitle</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Matched pairs (%1):</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Output</source>
         <translation type="unfinished" />
     </message>
@@ -7897,11 +7974,7 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Split penalty, frame-rate correction and single-offset mode:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Alignment Settings</source>
+        <source>Alignment is automatic; an untrustworthy result never replaces the original file.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -8015,7 +8088,7 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Retiming failed for %1</source>
+        <source>No trustworthy sync for %1; original kept unchanged</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -8221,38 +8294,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Split penalty</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>How reluctant alignment is to cut a subtitle into separately-timed segments. Lower values create more cut points for ad breaks. Useful range 1-20; default 7.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Correct frame-rate differences</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Enable only for subtitles from a different-framerate release. On a subtitle that is merely offset this stretches the timing and makes it worse.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Shift by a single offset only</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Single offset</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Shift the entire subtitle by one amount; never cut it into separately-timed segments. Suits Japanese media, which rarely has ad-break cuts. Uncheck to allow segmented alignment.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Subtitle generation needs the faster-whisper engine. This packaged app cannot be extended with ASR. Use the ASR-capable AppImage, or run the command below and then launch the separate pipx-installed Anki Miner:</source>
         <translation type="unfinished" />
     </message>
@@ -8376,6 +8417,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     </message>
     <message>
         <source>Offline dictionary</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Frequency lists</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Audio packs</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -8653,6 +8706,12 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
+        <source>How many times this word appears in this episode.
+
+The “Sentences” picker offers one option per subtitle line, so it usually lists fewer: repeats on the same line count once here, and lines where the word takes a form that would change the card’s Word are skipped.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation type="unfinished" />
     </message>
@@ -8671,7 +8730,11 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>%1
 
-(%2 sentences available — focus the row, then pick one under “Sentences”)</source>
+(%2 example sentences to pick from — focus the row, then choose one under “Sentences”)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Sentences (%1)</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -8822,6 +8885,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     </message>
     <message>
         <source>Checks once a day on startup and downloads into Anki Miner's own folder. Leaving this off means YouTube mining will eventually stop working.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Use pre-release yt-dlp builds</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Pre-release</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Updates install yt-dlp's nightly channel, which fixes YouTube breakage days before a stable release. Turning this off keeps the installed build until a newer stable version replaces it.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -8989,7 +9064,7 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner — Unexpected Error</source>
+        <source>Anki Miner Agentic — Unexpected Error</source>
         <translation type="unfinished" />
     </message>
     <message>

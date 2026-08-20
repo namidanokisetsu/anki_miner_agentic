@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="ru_RU">
-  <context>
+    <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -24,8 +24,8 @@
         <translation>Майньте карточки японской лексики из видео в Anki — скриншоты, аудио и определения автоматически.</translation>
     </message>
     <message>
-        <source>About Anki Miner</source>
-        <translation>О программе Anki Miner</translation>
+        <source>About Anki Miner Agentic</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>GitHub</source>
@@ -650,16 +650,14 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Is Already Running</source>
-        <translation>Anki Miner уже запущен</translation>
+        <source>Anki Miner Agentic Is Already Running</source>
+        <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation>Похоже, уже запущена другая копия Anki Miner. Одновременная работа двух копий может повредить базы данных известных слов и статистики.
-
-Всё равно продолжить?</translation>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>Continue anyway</source>
@@ -734,12 +732,12 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>Отменено до обработки оставшихся пакетов.</translation>
     </message>
     <message>
-        <source>Audio Packs Added</source>
-        <translation>Аудиопакеты добавлены</translation>
-    </message>
-    <message>
         <source>Done.</source>
         <translation>Готово.</translation>
+    </message>
+    <message>
+        <source>Audio Packs Added</source>
+        <translation>Аудиопакеты добавлены</translation>
     </message>
     <message>
         <source>The import finished, but the settings could not be updated.</source>
@@ -762,6 +760,38 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>Обработчик импорта завершил работу без результата.</translation>
     </message>
     <message>
+        <source>Choose Android audio database</source>
+        <translation>Выберите базу данных аудио Android</translation>
+    </message>
+    <message>
+        <source>Android database (*.db);;SQLite database (*.sqlite *.sqlite3)</source>
+        <translation>База данных Android (*.db);;База данных SQLite (*.sqlite *.sqlite3)</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Added</source>
+        <translation>База данных аудио Android добавлена</translation>
+    </message>
+    <message>
+        <source>Registered %1 (%2 entries).</source>
+        <translation>Зарегистрировано: %1 (%2 записей).</translation>
+    </message>
+    <message>
+        <source>Registering Android audio database…</source>
+        <translation>Регистрация базы данных аудио Android…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be added.</source>
+        <translation>Не удалось добавить базу данных аудио Android.</translation>
+    </message>
+    <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>Другой импорт ещё не завершён. Дождитесь его завершения и попробуйте снова.</translation>
+    </message>
+    <message>
+        <source>Choose Android audio database to re-import</source>
+        <translation>Выберите базу данных аудио Android для повторного импорта</translation>
+    </message>
+    <message>
         <source>Choose audio pack folder to re-import</source>
         <translation>Выберите папку аудиопакета для повторного импорта</translation>
     </message>
@@ -770,8 +800,16 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>Индексированные ресурсы используются майнингом, прогревом при запуске или пополнением карточек. Дождитесь завершения текущей задачи и повторите попытку.</translation>
     </message>
     <message>
-        <source>Audio Pack Re-imported</source>
-        <translation>Аудиопакет повторно импортирован</translation>
+        <source>Re-importing Android audio database…</source>
+        <translation>Повторный импорт базы данных аудио Android…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be re-imported.</source>
+        <translation>Не удалось повторно импортировать базу данных аудио Android.</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Re-imported</source>
+        <translation>База данных аудио Android повторно импортирована</translation>
     </message>
     <message>
         <source>Re-imported %1 successfully.</source>
@@ -786,8 +824,58 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>Не удалось повторно импортировать пакет аудио.</translation>
     </message>
     <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Другой импорт ещё не завершён. Дождитесь его завершения и попробуйте снова.</translation>
+        <source>Audio Pack Re-imported</source>
+        <translation>Аудиопакет повторно импортирован</translation>
+    </message>
+    <message>
+        <source>The audio pack folder could not be scanned.</source>
+        <translation>Не удалось просканировать папку аудиопакета.</translation>
+    </message>
+    <message>
+        <source>No audio packs eligible for automatic repair were found.
+
+Skipped (source folder or database not found; use per-row Re-import…):
+</source>
+        <translation>Не найдено аудиопакетов, подходящих для автоматического восстановления.
+
+Пропущено (исходная папка или база данных не найдены; используйте «Повторный импорт…» в соответствующей строке):
+</translation>
+    </message>
+    <message>
+        <source>No audio packs in the chain.</source>
+        <translation>В цепочке нет аудиопакетов.</translation>
+    </message>
+    <message>
+        <source>Nothing to reimport</source>
+        <translation>Нечего импортировать повторно</translation>
+    </message>
+    <message>
+        <source>Audio pack %1 of %2: %3</source>
+        <translation>Аудиопакет %1 из %2: %3</translation>
+    </message>
+    <message>
+        <source>Re-imported %1 audio pack(s):</source>
+        <translation>Повторно импортировано аудиопакетов (%1):</translation>
+    </message>
+    <message>
+        <source>Skipped (source folder or database not found; use per-row Re-import…):</source>
+        <translation>Пропущено (исходная папка или база данных не найдены; используйте «Повторный импорт…» в соответствующей строке):</translation>
+    </message>
+    <message>
+        <source>Cancelled before the batch finished.</source>
+        <translation>Отменено до завершения пакетной операции.</translation>
+    </message>
+    <message>
+        <source>Nothing to do.</source>
+        <translation>Нечего делать.</translation>
+    </message>
+    <message>
+        <source>Audio Packs Re-imported</source>
+        <translation>Аудиопакеты повторно импортированы</translation>
+    </message>
+    <message>
+        <source>Some audio packs could not be re-imported.</source>
+        <translation>Не удалось повторно импортировать некоторые аудиопакеты.</translation>
     </message>
 </context><context>
     <name>AudioPackSettingsPanel</name>
@@ -848,6 +936,14 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>Повторно добавить пакеты аудио, найденные в папке хранения, но отсутствующие в списке выше. Повторный импорт не требуется.</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>Повторно импортировать все</translation>
+    </message>
+    <message>
+        <source>Rebuild every audio pack in the list from the folder or database it was imported from. Needed after an app upgrade changes the index format.</source>
+        <translation>Перестроить все аудиопакеты в списке из папки или базы данных, из которой они были импортированы. Требуется после того, как обновление приложения изменит формат индекса.</translation>
+    </message>
+    <message>
         <source>Sources are tried top to bottom — the first one that has audio for a word wins.</source>
         <translation>Источники проверяются сверху вниз — используется первый, в котором есть аудио для слова.</translation>
     </message>
@@ -882,6 +978,10 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
     <message>
         <source>Audio Pack…</source>
         <translation>Пакет аудио…</translation>
+    </message>
+    <message>
+        <source>Android Audio Database…</source>
+        <translation>База данных аудио Android…</translation>
     </message>
     <message>
         <source>Online Source…</source>
@@ -1264,6 +1364,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>series</source>
         <translation>серии</translation>
+    </message>
+    <message>
+        <source>Every series in the queue is already complete. Select the ones you want to mine again, then click Run selected.</source>
+        <translation>Все серии в очереди уже завершены. Выберите те, которые хотите майнить снова, затем нажмите «Запустить выбранное».</translation>
     </message>
     <message>
         <source>No valid series in the queue to process.</source>
@@ -2176,10 +2280,6 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>Сохранено полей тонального ударения: {count} — чтение можно было лишь предположить по одному слову, поэтому перезапись могла применить ударение неверного омографа. Сопоставьте поле чтения выражения или фуриганы, чтобы перезаписать их.</translation>
     </message>
     <message>
-        <source>{count} sort value(s) are the 9999999 no-frequency-found placeholder.</source>
-        <translation>Сортировочные значения, равные заглушке 9999999 для ненайденной частотности: {count}.</translation>
-    </message>
-    <message>
         <source>Not on this note type (stale mapping): {fields}. Fix in Settings → Anki field mapping.</source>
         <translation>Нет в этом типе заметки (устаревшее сопоставление): {fields}. Исправьте сопоставление полей в Настройки → Anki.</translation>
     </message>
@@ -2334,6 +2434,14 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
     <message>
         <source>Complete — %1 files processed</source>
         <translation>Завершено — обработано файлов: %1</translation>
+    </message>
+    <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Завершено — обработано файлов: %1, пропущено файлов: %2</translation>
+    </message>
+    <message>
+        <source>Nothing condensed — all %1 skipped because their output already exists. Enable Overwrite to condense again.</source>
+        <translation>Ничего не сжато — пропущено файлов: %1, так как их вывод уже существует. Включите «Перезаписывать», чтобы сжать повторно.</translation>
     </message>
     <message>
         <source>Select Output Folder</source>
@@ -3172,12 +3280,20 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>Не удалось импортировать %1 медиафайл(ов).</translation>
     </message>
     <message>
-        <source>Choose Yomitan dictionary zip</source>
-        <translation>Выберите zip-архив словаря Yomitan</translation>
+        <source>Choose Yomitan dictionary zips</source>
+        <translation>Выберите zip-архивы словарей Yomitan</translation>
     </message>
     <message>
         <source>Yomitan zip (*.zip)</source>
         <translation>Zip-архив Yomitan (*.zip)</translation>
+    </message>
+    <message>
+        <source>Dictionary %1 of %2: %3</source>
+        <translation>Словарь %1 из %2: %3</translation>
+    </message>
+    <message>
+        <source>The dictionary could not be imported.</source>
+        <translation>Не удалось импортировать словарь.</translation>
     </message>
     <message>
         <source>Dictionary added</source>
@@ -3188,24 +3304,32 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>Импортирован %1 (записей: %2)</translation>
     </message>
     <message>
+        <source>Imported %1 dictionaries:</source>
+        <translation>Импортировано словарей: %1:</translation>
+    </message>
+    <message>
+        <source>Failed:</source>
+        <translation>Ошибка:</translation>
+    </message>
+    <message>
+        <source>Cancelled before remaining dictionaries.</source>
+        <translation>Отменено до обработки остальных словарей.</translation>
+    </message>
+    <message>
+        <source>Done.</source>
+        <translation>Готово.</translation>
+    </message>
+    <message>
+        <source>Dictionaries added</source>
+        <translation>Словари добавлены</translation>
+    </message>
+    <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation>Импорт завершён, но не удалось обновить настройки.</translation>
     </message>
     <message>
-        <source>Importing dictionary…</source>
-        <translation>Импорт словаря…</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Отмена</translation>
-    </message>
-    <message>
-        <source>The dictionary could not be imported.</source>
-        <translation>Не удалось импортировать словарь.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Другой импорт ещё не завершён. Дождитесь его завершения и попробуйте снова.</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -3244,6 +3368,10 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>Не удалось повторно импортировать словарь.</translation>
     </message>
     <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>Другой импорт ещё не завершён. Дождитесь его завершения и попробуйте снова.</translation>
+    </message>
+    <message>
         <source>No JMdict XML at %1. Download from EDRDG and place it there.</source>
         <translation>Нет XML-файла JMdict по пути %1. Скачайте его с EDRDG и поместите туда.</translation>
     </message>
@@ -3274,10 +3402,6 @@ Skipped (not eligible for automatic repair; use per-row Re-import…):
         <translation>Нечего импортировать повторно</translation>
     </message>
     <message>
-        <source>Dictionary %1 of %2: %3</source>
-        <translation>Словарь %1 из %2: %3</translation>
-    </message>
-    <message>
         <source>Reimported %1 dictionary/dictionaries:</source>
         <translation>Повторно импортировано словарей: %1:</translation>
     </message>
@@ -3286,20 +3410,8 @@ Skipped (not eligible for automatic repair; use per-row Re-import…):
         <translation>Пропущено (не подходят для автоматического восстановления; используйте «Повторный импорт…» в соответствующей строке):</translation>
     </message>
     <message>
-        <source>Failed:</source>
-        <translation>Ошибка:</translation>
-    </message>
-    <message>
-        <source>Cancelled before remaining dictionaries.</source>
-        <translation>Отменено до обработки остальных словарей.</translation>
-    </message>
-    <message>
         <source>Reimport All</source>
         <translation>Повторно импортировать все</translation>
-    </message>
-    <message>
-        <source>Done.</source>
-        <translation>Готово.</translation>
     </message>
     <message>
         <source>Nothing to restore</source>
@@ -3712,10 +3824,6 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Collapsed %1 duplicate-expression word(s)</source>
         <translation>Объединено слов с повторяющимся выражением: %1</translation>
-    </message>
-    <message>
-        <source>Skipped %1 word(s) already carded under another spelling</source>
-        <translation>Пропущено слов, уже имеющих карточку под другим написанием: %1</translation>
     </message>
     <message>
         <source>Frequency filter: removed %1 words outside ranks %2-%3</source>
@@ -4350,92 +4458,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>Колода, исключаемая из определения известных слов:</translation>
     </message>
 </context><context>
-    <name>FrequencyImportFlow</name>
-    <message>
-        <source> This is a word-based source; its level labels show on the card but don't affect frequency-rank filtering.</source>
-        <translation> Это источник на основе слов; его метки уровней показываются на карточке, но не влияют на фильтрацию по рангу частотности.</translation>
-    </message>
-    <message>
-        <source>Choose frequency source</source>
-        <translation>Выберите источник частотности</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> (пропущено %1 некорректных записей)</translation>
-    </message>
-    <message>
-        <source> This is an occurrence-based source; its counts were converted to ranks.</source>
-        <translation> Это источник на основе количества вхождений; его значения были преобразованы в ранги.</translation>
-    </message>
-    <message>
-        <source>Frequency Source Added</source>
-        <translation>Источник частотности добавлен</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>Импортировано записей: %1 из «%2».</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>Импорт завершён, но не удалось обновить настройки.</translation>
-    </message>
-    <message>
-        <source>Importing frequency source…</source>
-        <translation>Импорт источника частотности…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Отмена</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be imported.</source>
-        <translation>Не удалось импортировать источник частотности.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Другой импорт ещё не завершён. Дождитесь его завершения и попробуйте снова.</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>Отмена…</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>Обработчик импорта завершил работу без результата.</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>Не удалось просканировать эту папку.</translation>
-    </message>
-    <message>
-        <source>Choose frequency source to re-import</source>
-        <translation>Выберите источник частотности для повторного импорта</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>Индексированные ресурсы используются майнингом, прогревом при запуске или пополнением карточек. Дождитесь завершения текущей задачи и повторите попытку.</translation>
-    </message>
-    <message>
-        <source>Frequency Source Re-imported</source>
-        <translation>Источник частотности импортирован повторно</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>%1 успешно импортирован повторно.</translation>
-    </message>
-    <message>
-        <source>Re-importing frequency source…</source>
-        <translation>Повторный импорт источника частотности…</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be re-imported.</source>
-        <translation>Не удалось повторно импортировать источник частотности.</translation>
-    </message>
-    <message>
-        <source>Frequency source (%1);;All Files (*)</source>
-        <translation>Источник частотности (%1);;Все файлы (*)</translation>
-    </message>
-</context><context>
     <name>FrequencySettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -4484,6 +4506,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Re-add frequency sources found in the storage folder that aren't in the list above. No re-import needed.</source>
         <translation>Повторно добавьте источники частотности, найденные в папке хранения, но отсутствующие в списке выше. Повторный импорт не требуется.</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>Повторно импортировать все</translation>
+    </message>
+    <message>
+        <source>Rebuild every frequency source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>Перестроить все источники частотности в списке из копии, сохранённой при импорте. Требуется после того, как обновление приложения изменит формат индекса.</translation>
     </message>
     <message>
         <source>Every enabled source counts: filtering uses the lowest rank, Frequency Sort the harmonic mean. Order only sets the card's source list.</source>
@@ -4536,6 +4566,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Enable or disable %1</source>
         <translation>Включить или отключить %1</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>Переимпортировать</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ требуется повторный импорт (обновление приложения)</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -5130,16 +5168,40 @@ Continue?</source>
         <translation>Не удалось обновить стиль созданных карточек.</translation>
     </message>
     <message>
-        <source>These dictionaries need re-importing after an app upgrade (their index format changed):</source>
-        <translation>Эти словари нужно переимпортировать после обновления приложения (формат их индекса изменился):</translation>
+        <source>Dictionaries:</source>
+        <translation>Словари:</translation>
     </message>
     <message>
-        <source>Mining is blocked for them until you do. Re-import them now?</source>
-        <translation>Майнинг для них заблокирован, пока вы этого не сделаете. Переимпортировать их сейчас?</translation>
+        <source>Frequency sources:</source>
+        <translation>Источники частотности:</translation>
     </message>
     <message>
-        <source>Dictionaries need re-importing</source>
-        <translation>Требуется повторный импорт словарей</translation>
+        <source>Pitch accent sources:</source>
+        <translation>Источники тонального ударения:</translation>
+    </message>
+    <message>
+        <source>Audio packs:</source>
+        <translation>Аудиопакеты:</translation>
+    </message>
+    <message>
+        <source>These resources need re-importing after an app upgrade (their index format changed):</source>
+        <translation>Следующим ресурсам требуется повторный импорт после обновления приложения (формат их индекса изменился):</translation>
+    </message>
+    <message>
+        <source>Mining is blocked until you do.</source>
+        <translation>Майнинг заблокирован, пока вы этого не сделаете.</translation>
+    </message>
+    <message>
+        <source>Resources need re-importing</source>
+        <translation>Требуется повторный импорт ресурсов</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>Повторно импортировать все</translation>
+    </message>
+    <message>
+        <source>Later</source>
+        <translation>Позже</translation>
     </message>
     <message>
         <source>System validation passed</source>
@@ -5482,84 +5544,6 @@ You can fine-tune these later in Settings → Anki.</source>
         <translation>Библиотека удаления тишины успешно установлена.</translation>
     </message>
 </context><context>
-    <name>PitchImportFlow</name>
-    <message>
-        <source>Choose pitch accent source</source>
-        <translation>Выберите источник тонального ударения</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> (пропущено %1 некорректных записей)</translation>
-    </message>
-    <message>
-        <source>Pitch Source Added</source>
-        <translation>Источник тонального ударения добавлен</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>Импортировано записей: %1 из «%2».</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>Импорт завершён, но не удалось обновить настройки.</translation>
-    </message>
-    <message>
-        <source>Importing pitch source…</source>
-        <translation>Импорт источника тонального ударения…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Отмена</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be imported.</source>
-        <translation>Не удалось импортировать источник тонального ударения.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Другой импорт ещё не завершён. Дождитесь его завершения и попробуйте снова.</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>Отмена…</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>Обработчик импорта завершил работу без результата.</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>Не удалось просканировать эту папку.</translation>
-    </message>
-    <message>
-        <source>Choose pitch source to re-import</source>
-        <translation>Выберите источник тонального ударения для повторного импорта</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>Индексированные ресурсы используются майнингом, прогревом при запуске или пополнением карточек. Дождитесь завершения текущей задачи и повторите попытку.</translation>
-    </message>
-    <message>
-        <source>Pitch Source Re-imported</source>
-        <translation>Источник тонального ударения повторно импортирован</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>%1 успешно импортирован повторно.</translation>
-    </message>
-    <message>
-        <source>Re-importing pitch source…</source>
-        <translation>Повторный импорт источника тонального ударения…</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be re-imported.</source>
-        <translation>Не удалось повторно импортировать источник тонального ударения.</translation>
-    </message>
-    <message>
-        <source>Pitch accent source (%1);;All Files (*)</source>
-        <translation>Источник тонального ударения (%1);;Все файлы (*)</translation>
-    </message>
-</context><context>
     <name>PitchSettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -5610,6 +5594,14 @@ You can fine-tune these later in Settings → Anki.</source>
         <translation>Повторно добавьте источники тонального ударения, найденные в папке хранения, но отсутствующие в списке выше. Повторный импорт не требуется.</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>Повторно импортировать все</translation>
+    </message>
+    <message>
+        <source>Rebuild every pitch source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>Перестроить все источники тонального ударения в списке из копии, сохранённой при импорте. Требуется после того, как обновление приложения изменит формат индекса.</translation>
+    </message>
+    <message>
         <source>Checked top to bottom — the first source with a pitch entry for a word wins.</source>
         <translation>Проверяются сверху вниз — побеждает первый источник, содержащий запись тонального ударения для слова.</translation>
     </message>
@@ -5652,6 +5644,14 @@ You can fine-tune these later in Settings → Anki.</source>
     <message>
         <source>Enable or disable %1</source>
         <translation>Включить или отключить %1</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>Переимпортировать</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ требуется повторный импорт (обновление приложения)</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -6058,6 +6058,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Add Series</source>
         <translation>Добавить сериал</translation>
+    </message>
+    <message>
+        <source>Mine the selected rows, in list order. A completed row is mined again from scratch.</source>
+        <translation>Майнить выбранные строки в порядке списка. Завершённая строка майнится заново, с нуля.</translation>
     </message>
     <message>
         <source>Process Queue</source>
@@ -6592,8 +6596,8 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>Вставленный текст</translation>
     </message>
     <message>
-        <source>Paste Japanese text and mine it into Anki cards — no screenshots or audio.</source>
-        <translation>Вставьте японский текст и майните его в карточки Anki — без скриншотов и аудио.</translation>
+        <source>Paste Japanese text and mine it into Anki cards — no audio is extracted.</source>
+        <translation>Вставьте японский текст и майните его в карточки Anki — аудио не извлекается.</translation>
     </message>
     <message>
         <source>Paste text here…</source>
@@ -6602,6 +6606,22 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Drop or paste text here; files are not supported.</source>
         <translation>Перетащите или вставьте текст сюда; файлы не поддерживаются.</translation>
+    </message>
+    <message>
+        <source>Card Image:</source>
+        <translation>Изображение карточки:</translation>
+    </message>
+    <message>
+        <source>Images</source>
+        <translation>Изображения</translation>
+    </message>
+    <message>
+        <source>This field takes an image file.</source>
+        <translation>Это поле принимает файл изображения.</translation>
+    </message>
+    <message>
+        <source>Optional. This image goes in the Picture field of every card from this text.</source>
+        <translation>Необязательно. Это изображение попадает в поле Picture каждой карточки, созданной из этого текста.</translation>
     </message>
     <message>
         <source>Mine</source>
@@ -6622,6 +6642,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Paste some text first.</source>
         <translation>Сначала вставьте текст.</translation>
+    </message>
+    <message>
+        <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
+        <translation>Это изображение не удаётся прочитать. Выберите другое или очистите поле, чтобы майнить без изображения.</translation>
     </message>
     <message>
         <source>Starting…</source>
@@ -7047,6 +7071,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <source>Details</source>
         <translation>Подробности</translation>
     </message>
+    <message>
+        <source>Dismiss</source>
+        <translation>Закрыть</translation>
+    </message>
 </context><context>
     <name>SettingsSearchBox</name>
     <message>
@@ -7160,6 +7188,18 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>Внешний вид и язык</translation>
     </message>
     <message>
+        <source>Nothing to restore</source>
+        <translation>Нечего восстанавливать</translation>
+    </message>
+    <message>
+        <source>Every audio pack found in the storage folder is already listed.
+
+A pack that stopped working after an app upgrade is repaired by Re-import on its row, not by restoring it.</source>
+        <translation>Все аудиопакеты, найденные в папке хранения, уже отображены в списке.
+
+Пакет, переставший работать после обновления приложения, исправляется кнопкой «Переимпортировать» в его строке, а не восстановлением.</translation>
+    </message>
+    <message>
         <source>The audio packs could not be restored.</source>
         <translation>Не удалось восстановить пакеты аудио.</translation>
     </message>
@@ -7168,12 +7208,28 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>Не удалось проверить установленные пакеты аудио.</translation>
     </message>
     <message>
+        <source>Every frequency source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>Все источники частотности, найденные в папке хранения, уже отображены в списке.
+
+Источник, переставший работать после обновления приложения, исправляется кнопкой «Повторно импортировать все», а не восстановлением.</translation>
+    </message>
+    <message>
         <source>The frequency sources could not be restored.</source>
         <translation>Не удалось восстановить источники частотности.</translation>
     </message>
     <message>
         <source>Installed frequency sources could not be checked.</source>
         <translation>Не удалось проверить установленные источники частотности.</translation>
+    </message>
+    <message>
+        <source>Every pitch accent source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>Все источники тонального ударения, найденные в папке хранения, уже отображены в списке.
+
+Источник, переставший работать после обновления приложения, исправляется кнопкой «Повторно импортировать все», а не восстановлением.</translation>
     </message>
     <message>
         <source>The pitch accent sources could not be restored.</source>
@@ -7628,6 +7684,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Завершено — обработано файлов: %1</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Завершено — обработано файлов: %1, пропущено файлов: %2</translation>
+    </message>
+    <message>
+        <source>No subtitles generated — all %1 skipped because their output already exists. Enable Overwrite to regenerate.</source>
+        <translation>Субтитры не созданы — пропущено файлов: %1, так как их вывод уже существует. Включите «Перезаписывать», чтобы создать заново.</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>Выбрать папку для вывода</translation>
     </message>
@@ -7870,6 +7934,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Завершено — обработано файлов: %1</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Завершено — обработано файлов: %1, пропущено файлов: %2</translation>
+    </message>
+    <message>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
+        <translation>Файлы не пересинхронизированы — пропущено файлов: %1. Включите «Перезаписывать», чтобы пересинхронизировать на месте, или выберите другую папку для вывода.</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>Выбрать папку для вывода</translation>
     </message>
@@ -7886,8 +7958,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Ввод</translation>
     </message>
     <message>
-        <source>alass not found; install it or set its path in Settings to enable retiming.</source>
-        <translation>alass не найден; установите его или укажите путь в настройках для включения пересинхронизации тайминга.</translation>
+        <source>alass not found; retiming uses ffsubsync only. Install alass in Settings for a fallback engine.</source>
+        <translation>alass не найден; для пересинхронизации используется только ffsubsync. Установите alass в настройках, чтобы получить резервный движок.</translation>
     </message>
     <message>
         <source>Resync a subtitle file to its video by matching audio.</source>
@@ -7950,6 +8022,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Папка с субтитрами:</translation>
     </message>
     <message>
+        <source>Matched pairs:</source>
+        <translation>Сопоставленные пары:</translation>
+    </message>
+    <message>
+        <source>%1  —  no matching subtitle</source>
+        <translation>%1  —  нет подходящих субтитров</translation>
+    </message>
+    <message>
+        <source>Matched pairs (%1):</source>
+        <translation>Сопоставленные пары (%1):</translation>
+    </message>
+    <message>
         <source>Output</source>
         <translation>Вывод</translation>
     </message>
@@ -7974,12 +8058,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Если флажок снят, пары, у которых выходные субтитры уже существуют, пропускаются, а не перезаписываются.</translation>
     </message>
     <message>
-        <source>Split penalty, frame-rate correction and single-offset mode:</source>
-        <translation>Штраф за разбиение, коррекция частоты кадров и режим единого смещения:</translation>
-    </message>
-    <message>
-        <source>Alignment Settings</source>
-        <translation>Настройки выравнивания</translation>
+        <source>Alignment is automatic; an untrustworthy result never replaces the original file.</source>
+        <translation>Выравнивание выполняется автоматически; ненадёжный результат никогда не заменяет исходный файл.</translation>
     </message>
     <message>
         <source>Retime Subtitles</source>
@@ -8092,8 +8172,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Отменено</translation>
     </message>
     <message>
-        <source>Retiming failed for %1</source>
-        <translation>Ошибка пересинхронизации для %1</translation>
+        <source>No trustworthy sync for %1; original kept unchanged</source>
+        <translation>Нет надёжной синхронизации для %1; оригинал остался без изменений</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8298,38 +8378,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Бинарный файл alass для macOS не публикуется. Установите его через Homebrew:</translation>
     </message>
     <message>
-        <source>Split penalty</source>
-        <translation>Штраф за разбиение</translation>
-    </message>
-    <message>
-        <source>How reluctant alignment is to cut a subtitle into separately-timed segments. Lower values create more cut points for ad breaks. Useful range 1-20; default 7.</source>
-        <translation>Насколько неохотно выравнивание разбивает субтитры на отдельно синхронизированные сегменты. Меньшие значения создают больше точек разбиения для рекламных пауз. Полезный диапазон 1-20; по умолчанию 7.</translation>
-    </message>
-    <message>
-        <source>Correct frame-rate differences</source>
-        <translation>Исправлять различия частоты кадров</translation>
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation>Частота кадров</translation>
-    </message>
-    <message>
-        <source>Enable only for subtitles from a different-framerate release. On a subtitle that is merely offset this stretches the timing and makes it worse.</source>
-        <translation>Включайте только для субтитров из релиза с другой частотой кадров. На субтитрах, которые просто смещены, это растягивает тайминг и ухудшает результат.</translation>
-    </message>
-    <message>
-        <source>Shift by a single offset only</source>
-        <translation>Сдвигать только на единое смещение</translation>
-    </message>
-    <message>
-        <source>Single offset</source>
-        <translation>Единое смещение</translation>
-    </message>
-    <message>
-        <source>Shift the entire subtitle by one amount; never cut it into separately-timed segments. Suits Japanese media, which rarely has ad-break cuts. Uncheck to allow segmented alignment.</source>
-        <translation>Сдвигать весь файл субтитров на одну величину; никогда не разбивать его на отдельно синхронизированные сегменты. Подходит для японских медиа, где редко бывают рекламные разбиения. Снимите флажок, чтобы разрешить сегментированное выравнивание.</translation>
-    </message>
-    <message>
         <source>Subtitle generation needs the faster-whisper engine. This packaged app cannot be extended with ASR. Use the ASR-capable AppImage, or run the command below and then launch the separate pipx-installed Anki Miner:</source>
         <translation>Для генерации субтитров нужен движок faster-whisper. Это упакованное приложение нельзя расширить ASR. Используйте AppImage с поддержкой ASR либо выполните команду ниже и затем запустите отдельно установленный через pipx Anki Miner:</translation>
     </message>
@@ -8454,6 +8502,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>Offline dictionary</source>
         <translation>Офлайн-словарь</translation>
+    </message>
+    <message>
+        <source>Frequency lists</source>
+        <translation>Списки частотности</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>Тональное ударение</translation>
+    </message>
+    <message>
+        <source>Audio packs</source>
+        <translation>Аудиопакеты</translation>
     </message>
     <message>
         <source>yt-dlp (YouTube mining)</source>
@@ -8730,6 +8790,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Вхождения</translation>
     </message>
     <message>
+        <source>How many times this word appears in this episode.
+
+The “Sentences” picker offers one option per subtitle line, so it usually lists fewer: repeats on the same line count once here, and lines where the word takes a form that would change the card’s Word are skipped.</source>
+        <translation>Сколько раз это слово встречается в этом эпизоде.
+
+Список «Предложения» предлагает по одному варианту на строку субтитров, поэтому обычно их меньше: повторы в одной строке здесь считаются один раз, а строки, где слово стоит в форме, меняющей поле «Слово (намайнено)» карточки, пропускаются.</translation>
+    </message>
+    <message>
         <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S — включить/исключить · Пробел — воспроизведение/пауза · Ctrl+A — включить видимые · Ctrl+D — исключить видимые · Ctrl+Enter — подтвердить</translation>
     </message>
@@ -8748,10 +8816,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>%1
 
-(%2 sentences available — focus the row, then pick one under “Sentences”)</source>
+(%2 example sentences to pick from — focus the row, then choose one under “Sentences”)</source>
         <translation>%1
 
-(доступно предложений: %2 — выделите строку, затем выберите одно в столбце «Предложения»)</translation>
+(примеров для выбора: %2 — выделите строку, затем выберите один в разделе «Предложения»)</translation>
+    </message>
+    <message>
+        <source>Sentences (%1)</source>
+        <translation>Предложения (%1)</translation>
     </message>
     <message>
         <source>No page image for this word</source>
@@ -8902,6 +8974,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>Checks once a day on startup and downloads into Anki Miner's own folder. Leaving this off means YouTube mining will eventually stop working.</source>
         <translation>Проверяет раз в день при запуске и загружает в собственную папку Anki Miner. Если отключить, майнинг YouTube со временем перестанет работать.</translation>
+    </message>
+    <message>
+        <source>Use pre-release yt-dlp builds</source>
+        <translation>Использовать предрелизные сборки yt-dlp</translation>
+    </message>
+    <message>
+        <source>Pre-release</source>
+        <translation>Предрелиз</translation>
+    </message>
+    <message>
+        <source>Updates install yt-dlp's nightly channel, which fixes YouTube breakage days before a stable release. Turning this off keeps the installed build until a newer stable version replaces it.</source>
+        <translation>Обновления устанавливают ночной канал yt-dlp, в котором поломки YouTube исправляются за несколько дней до стабильного выпуска. Если выключить, установленная сборка останется, пока её не заменит более новая стабильная версия.</translation>
     </message>
     <message>
         <source>Optional: path to your own yt-dlp executable...</source>
@@ -9068,8 +9152,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner — Unexpected Error</source>
-        <translation>Anki Miner — Непредвиденная ошибка</translation>
+        <source>Anki Miner Agentic — Unexpected Error</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>%1: %2

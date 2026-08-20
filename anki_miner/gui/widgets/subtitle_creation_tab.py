@@ -105,6 +105,11 @@ class SubtitleCreationTab(_ToolTabBase):
             failed=self.tr("Failed — see log"),
             run_problem=self.tr("Some files could not be transcribed."),
             complete_template=self.tr("Complete — %1 files processed"),
+            complete_skipped_template=self.tr("Complete — %1 processed, %2 skipped"),
+            all_skipped_template=self.tr(
+                "No subtitles generated — all %1 skipped because their output already exists. "
+                "Enable Overwrite to regenerate."
+            ),
             select_output_folder=self.tr("Select Output Folder"),
             output_default=self.tr("Next to source media"),
             task_title=self.tr("Subtitle generation"),
@@ -364,6 +369,13 @@ class SubtitleCreationTab(_ToolTabBase):
         # over a live thread.
         if self.worker_thread is not None and self.worker_thread.isRunning():
             return
+
+        # A fresh attempt supersedes the complaint about the last one -- both a
+        # refusal ("Choose a folder before generating subtitles") and a problem
+        # the previous run logged through `_ToolTabBase._on_log_problem`, which
+        # nothing else ever cleared. After the reentrancy guard, before anything
+        # that re-raises.
+        self.clear_screen_issue()
 
         # Collect media file list
         video_files = self._collect_video_files()

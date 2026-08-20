@@ -26,6 +26,7 @@ pytest.importorskip("PyQt6.QtWidgets")
 
 from anki_miner.config import AnkiMinerConfig
 from anki_miner.gui.widgets.subtitle_retime_tab import SubtitleRetimeTab
+from anki_miner.models import TerminalOutcome
 from anki_miner.services.retime_reference import ReferenceOverride
 from anki_miner.utils.file_pairing import FilePair
 
@@ -131,15 +132,15 @@ def test_alass_present_enables_retime(qtbot, tmp_path):
     assert tab.engine_notice_label.isHidden()
 
 
-def test_alass_absent_disables_retime(qtbot, tmp_path):
-    """alass absent → Retime disabled, notice visible."""
+def test_alass_absent_keeps_retime_enabled_with_notice(qtbot, tmp_path):
+    """alass absent → notice visible, but Retime stays enabled (ffsubsync runs)."""
     config = _make_config(tmp_path)
     with patch(_COMPUTE_AVAILABLE, return_value=False):
         tab = SubtitleRetimeTab(config)
         assert tab._availability_worker.wait(3000)
         qtbot.waitUntil(lambda: not tab.engine_notice_label.isHidden(), timeout=3000)
     qtbot.addWidget(tab)
-    assert not tab.retime_button.isEnabled()
+    assert tab.retime_button.isEnabled()
     assert not tab.engine_notice_label.isHidden()
 
 
@@ -158,7 +159,7 @@ def test_alass_available_via_path_check(qtbot, tmp_path):
 
 
 def test_alass_unavailable_via_path_check(qtbot, tmp_path):
-    """resolve_alass returns 'alass' but shutil.which → None → unavailable."""
+    """resolve_alass returns 'alass' but shutil.which → None → notice shown."""
     config = _make_config(tmp_path)
     with (
         patch("anki_miner.gui.widgets.subtitle_retime_tab.resolve_alass", return_value="alass"),
@@ -168,11 +169,11 @@ def test_alass_unavailable_via_path_check(qtbot, tmp_path):
         assert tab._availability_worker.wait(3000)
         qtbot.waitUntil(lambda: not tab.engine_notice_label.isHidden(), timeout=3000)
     qtbot.addWidget(tab)
-    assert not tab.retime_button.isEnabled()
+    assert tab.retime_button.isEnabled()
 
 
 def test_alass_resolved_path_missing_unavailable(qtbot, tmp_path):
-    """resolve_alass returns an explicit path that does not exist → unavailable."""
+    """resolve_alass returns an explicit path that does not exist → notice shown."""
     config = _make_config(tmp_path)
     missing = str(tmp_path / "nope" / "alass")
     with patch("anki_miner.gui.widgets.subtitle_retime_tab.resolve_alass", return_value=missing):
@@ -180,7 +181,7 @@ def test_alass_resolved_path_missing_unavailable(qtbot, tmp_path):
         assert tab._availability_worker.wait(3000)
         qtbot.waitUntil(lambda: not tab.engine_notice_label.isHidden(), timeout=3000)
     qtbot.addWidget(tab)
-    assert not tab.retime_button.isEnabled()
+    assert tab.retime_button.isEnabled()
 
 
 def test_alass_resolved_path_exists_available(qtbot, tmp_path):
@@ -494,10 +495,67 @@ def test_alignment_knobs_are_not_on_the_tab(qtbot, tmp_path):
     assert not hasattr(tab, "no_split_checkbox")
 
 
-def test_tab_links_to_alignment_settings(qtbot, tmp_path):
-    """A button points at where those controls went."""
+def test_tab_has_no_alignment_settings_link(qtbot, tmp_path):
+    """The alignment knobs are gone entirely; no button points at them."""
     tab = _make_tab(_make_config(tmp_path), qtbot)
-    assert tab.alignment_settings_button.text().strip()
+    assert not hasattr(tab, "alignment_settings_button")
+
+
+# ---------------------------------------------------------------------------
+# Folder-mode pair preview
+# ---------------------------------------------------------------------------
+
+
+def _folder_fixture(tmp_path):
+    video_dir = tmp_path / "videos"
+    video_dir.mkdir()
+    sub_dir = tmp_path / "subs"
+    sub_dir.mkdir()
+    (video_dir / "Show - 01.mkv").touch()
+    (video_dir / "Show - 02.mkv").touch()
+    (video_dir / "Show - 03.mkv").touch()
+    (sub_dir / "jp 01.srt").touch()
+    (sub_dir / "jp 02.srt").touch()
+    return video_dir, sub_dir
+
+
+def test_pair_preview_lists_matches_and_unmatched(qtbot, tmp_path):
+    """Folder mode shows exactly which subtitle each video will get, plus
+    unmatched videos — mispairing must be visible before the run."""
+    tab = _make_tab(_make_config(tmp_path), qtbot)
+    video_dir, sub_dir = _folder_fixture(tmp_path)
+
+    tab._on_folder_mode()
+    tab.video_folder_selector.set_path(str(video_dir))
+    tab.subtitle_folder_selector.set_path(str(sub_dir))
+
+    assert not tab.pair_preview.isHidden()
+    items = [tab.pair_preview.item(i).text() for i in range(tab.pair_preview.count())]
+    assert any("Show - 01.mkv" in t and "jp 01.srt" in t for t in items)
+    assert any("Show - 02.mkv" in t and "jp 02.srt" in t for t in items)
+    assert any("Show - 03.mkv" in t and "no matching subtitle" in t for t in items)
+    assert "2" in tab.pair_preview_label.text()
+
+
+def test_pair_preview_hidden_in_single_file_mode(qtbot, tmp_path):
+    tab = _make_tab(_make_config(tmp_path), qtbot)
+    video_dir, sub_dir = _folder_fixture(tmp_path)
+    tab._on_folder_mode()
+    tab.video_folder_selector.set_path(str(video_dir))
+    tab.subtitle_folder_selector.set_path(str(sub_dir))
+    assert not tab.pair_preview.isHidden()
+
+    tab._on_file_mode()
+    assert tab.pair_preview.isHidden()
+    assert tab.pair_preview_label.isHidden()
+
+
+def test_pair_preview_hidden_until_both_folders_chosen(qtbot, tmp_path):
+    tab = _make_tab(_make_config(tmp_path), qtbot)
+    video_dir, _sub_dir = _folder_fixture(tmp_path)
+    tab._on_folder_mode()
+    tab.video_folder_selector.set_path(str(video_dir))
+    assert tab.pair_preview.isHidden()
 
 
 # ---------------------------------------------------------------------------
@@ -755,7 +813,7 @@ def _capture_signal_slots(signal_mock):
 
 
 def test_file_skipped_logs_skipped_not_done(qtbot, tmp_path):
-    """file_skipped(idx, out_path) logs 'Skipped: <name>', not 'Done:' (T1)."""
+    """file_skipped(idx, out_path, reason) logs 'Skipped: <name> — <reason>', not 'Done:' (T1)."""
     config = _make_config(tmp_path)
     video = tmp_path / "episode.mp4"
     sub = tmp_path / "episode.srt"
@@ -778,11 +836,13 @@ def test_file_skipped_logs_skipped_not_done(qtbot, tmp_path):
         tab.retime_button.click()
 
     for slot in skipped_slots:
-        slot(0, out_srt)
+        slot(0, out_srt, "Output equals input; enable Overwrite to retime in place")
 
     log_text = tab.log_widget.text_edit.toPlainText()
     assert "Skipped" in log_text
     assert "episode.srt" in log_text
+    # The worker's reason reaches the Activity log, not just a transient label.
+    assert "enable Overwrite" in log_text
     assert "Done" not in log_text
 
 
@@ -818,12 +878,129 @@ def test_file_skipped_advances_progress(qtbot, tmp_path):
     assert tab.progress_widget.progress_bar.value() == 0
 
     for slot in skipped_slots:
-        slot(0, video1.with_suffix(".srt"))
+        slot(0, video1.with_suffix(".srt"), "Skipped, exists")
     assert tab.progress_widget.progress_bar.value() == 50
 
     for slot in skipped_slots:
-        slot(1, video2.with_suffix(".srt"))
+        slot(1, video2.with_suffix(".srt"), "Skipped, exists")
     assert tab.progress_widget.progress_bar.value() == 100
+
+
+def test_all_skipped_run_names_the_remedy(qtbot, tmp_path):
+    """A run where every pair was skipped must NOT report 'Complete — N files
+    processed'; the completion status names the skip count and the remedy
+    (enable Overwrite / different output folder)."""
+    config = _make_config(tmp_path)
+    video1 = tmp_path / "ep01.mp4"
+    video2 = tmp_path / "ep02.mp4"
+    sub1 = tmp_path / "ep01.srt"
+    sub2 = tmp_path / "ep02.srt"
+    for p in (video1, video2, sub1, sub2):
+        p.write_bytes(b"fake")
+
+    fake_worker = _FakeWorker()
+    skipped_slots = _capture_signal_slots(fake_worker.file_skipped)
+    finished_slots = _capture_signal_slots(fake_worker.queue_finished)
+
+    tab = _make_tab(config, qtbot)
+    tab.folder_mode_button.click()
+    tab.video_folder_selector.set_path(str(tmp_path))
+    tab.subtitle_folder_selector.set_path(str(tmp_path))
+
+    fake_pairs = [FilePair(video1, sub1), FilePair(video2, sub2)]
+    with (
+        patch(_AVAILABLE, return_value=True),
+        patch(_OS_ACCESS, return_value=True),
+        patch(_WORKER_CLS, return_value=fake_worker),
+        patch(_FIND_PAIRS, return_value=fake_pairs),
+    ):
+        tab.retime_button.click()
+
+    for slot in skipped_slots:
+        slot(0, sub1, "Output equals input; enable Overwrite to retime in place")
+        slot(1, sub2, "Output equals input; enable Overwrite to retime in place")
+    for slot in finished_slots:
+        slot(TerminalOutcome.SUCCESS)
+
+    status = tab.progress_widget.status_label.text()
+    assert "No files retimed" in status
+    assert "2" in status
+    assert "Overwrite" in status
+    assert "files processed" not in status
+
+
+def test_partially_skipped_run_reports_both_counts(qtbot, tmp_path):
+    """One retimed + one skipped → completion says '1 processed, 1 skipped'."""
+    config = _make_config(tmp_path)
+    video1 = tmp_path / "ep01.mp4"
+    video2 = tmp_path / "ep02.mp4"
+    sub1 = tmp_path / "ep01.srt"
+    sub2 = tmp_path / "ep02.srt"
+    for p in (video1, video2, sub1, sub2):
+        p.write_bytes(b"fake")
+
+    fake_worker = _FakeWorker()
+    skipped_slots = _capture_signal_slots(fake_worker.file_skipped)
+    done_slots = _capture_signal_slots(fake_worker.file_finished)
+    finished_slots = _capture_signal_slots(fake_worker.queue_finished)
+
+    tab = _make_tab(config, qtbot)
+    tab.folder_mode_button.click()
+    tab.video_folder_selector.set_path(str(tmp_path))
+    tab.subtitle_folder_selector.set_path(str(tmp_path))
+
+    fake_pairs = [FilePair(video1, sub1), FilePair(video2, sub2)]
+    with (
+        patch(_AVAILABLE, return_value=True),
+        patch(_OS_ACCESS, return_value=True),
+        patch(_WORKER_CLS, return_value=fake_worker),
+        patch(_FIND_PAIRS, return_value=fake_pairs),
+    ):
+        tab.retime_button.click()
+
+    for slot in done_slots:
+        slot(0, sub1, None)
+    for slot in skipped_slots:
+        slot(1, sub2, "Skipped, exists")
+    for slot in finished_slots:
+        slot(TerminalOutcome.SUCCESS)
+
+    status = tab.progress_widget.status_label.text()
+    assert "1 processed" in status
+    assert "1 skipped" in status
+
+
+def test_unskipped_run_keeps_original_completion_wording(qtbot, tmp_path):
+    """No skips → the historical 'Complete — N files processed' line is unchanged."""
+    config = _make_config(tmp_path)
+    video = tmp_path / "episode.mp4"
+    sub = tmp_path / "episode.srt"
+    video.write_bytes(b"fake")
+    sub.write_text("1\n")
+
+    fake_worker = _FakeWorker()
+    done_slots = _capture_signal_slots(fake_worker.file_finished)
+    finished_slots = _capture_signal_slots(fake_worker.queue_finished)
+
+    tab = _make_tab(config, qtbot)
+    tab.video_file_selector.set_path(str(video))
+    tab.subtitle_file_selector.set_path(str(sub))
+
+    with (
+        patch(_AVAILABLE, return_value=True),
+        patch(_OS_ACCESS, return_value=True),
+        patch(_WORKER_CLS, return_value=fake_worker),
+    ):
+        tab.retime_button.click()
+
+    for slot in done_slots:
+        slot(0, sub, None)
+    for slot in finished_slots:
+        slot(TerminalOutcome.SUCCESS)
+
+    status = tab.progress_widget.status_label.text()
+    assert "1 files processed" in status
+    assert "skipped" not in status
 
 
 def test_file_finished_still_logs_done_for_success(qtbot, tmp_path):
@@ -875,7 +1052,8 @@ def test_alass_probe_cached_not_rerun_per_call(qtbot, tmp_path):
         tab = SubtitleRetimeTab(config)
         qtbot.addWidget(tab)
         assert tab._availability_worker.wait(3000)
-        qtbot.waitUntil(tab.retime_button.isEnabled, timeout=3000)
+        # The button no longer waits on the probe; wait for the cached bool.
+        qtbot.waitUntil(tab._alass_available, timeout=3000)
         # Construction probed exactly once.
         assert which.call_count == 1
         # Repeated availability reads must NOT re-probe.
@@ -897,14 +1075,13 @@ def test_update_config_recomputes_alass_cache(qtbot, tmp_path):
         qtbot.addWidget(tab)
         assert tab._availability_worker.wait(3000)
         qtbot.waitUntil(lambda: not tab.engine_notice_label.isHidden(), timeout=3000)
-        assert not tab.retime_button.isEnabled()
         assert which.call_count == 1
 
         # alass now appears on PATH; a config refresh must flip the cached bool.
         which.return_value = "/usr/bin/alass"
         tab.update_config(dataclasses.replace(config, alass_location="/x"))
         assert tab._availability_worker.wait(3000)
-        qtbot.waitUntil(tab.retime_button.isEnabled, timeout=3000)
+        qtbot.waitUntil(tab.engine_notice_label.isHidden, timeout=3000)
         assert which.call_count == 2
         assert tab.retime_button.isEnabled()
         assert tab._alass_is_available is True

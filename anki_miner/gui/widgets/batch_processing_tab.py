@@ -382,6 +382,8 @@ class BatchProcessingTab(MiningTabBase):
         if self._is_processing:
             return
 
+        self.clear_screen_issue()
+
         folders = self._get_validated_folders()
         if not folders:
             self.show_screen_issue(ScreenIssue(summary=self.tr("Choose existing video and subtitle folders.")))
@@ -575,10 +577,26 @@ class BatchProcessingTab(MiningTabBase):
             media_context = replace(media_context, context_resolver=_resolve)
         return media_context, self._lookup_fn_from_processor(w.curation_processor)
 
+    def _empty_run_summary(self) -> str:
+        """Why a Process Queue click found nothing to mine."""
+        if self.queue_panel.has_only_completed_rows():
+            return self.tr(
+                "Every series in the queue is already complete. "
+                "Select the ones you want to mine again, then click Run selected."
+            )
+        return self.tr("No valid series in the queue to process.")
+
     def _process_queue(self) -> None:
         """Process all items in queue."""
         if self._is_processing:
             return
+
+        # A fresh attempt supersedes the complaint about the last one: the user
+        # who filled the queue this banner objected to must not still be reading
+        # "No valid series" over a run that is now working. After the reentrancy
+        # guard, so a click landing on a live run cannot wipe that run's problem,
+        # and before the checks below, which re-raise whatever is still wrong.
+        self.clear_screen_issue()
 
         # The rows themselves are the model now: each one bound to a persistent
         # QueueItem when its folders validated. The queue is NOT rebuilt here --
@@ -587,7 +605,7 @@ class BatchProcessingTab(MiningTabBase):
         self._run_selection = self.queue_panel.runnable_items()
 
         if not self._run_selection:
-            self.show_screen_issue(ScreenIssue(summary=self.tr("No valid series in the queue to process.")))
+            self.show_screen_issue(ScreenIssue(summary=self._empty_run_summary()))
             return
 
         self._warn_incomplete_items()

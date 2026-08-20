@@ -20,6 +20,7 @@ from anki_miner.services.dictionary.storage import (
     attest_detail,
     bulk_insert,
     create_index,
+    create_lookup_indexes,
     exact_term_sequences,
     lookup,
     lookup_many,
@@ -63,6 +64,64 @@ class TestCreateIndex:
             indexes = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")}
             assert "idx_term" in indexes
             assert "idx_reading" in indexes
+
+    def test_deferring_lookup_indexes_creates_tables_only(self, tmp_path: Path):
+        db_path = tmp_path / "deferred.sqlite"
+        create_index(db_path, with_lookup_indexes=False)
+
+        with sqlite3.connect(db_path) as conn:
+            tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            assert {"entries", "tags", "meta"} <= tables
+            indexes = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")}
+            assert "idx_term" not in indexes
+            assert "idx_reading" not in indexes
+
+    def test_create_lookup_indexes_completes_a_deferred_schema(self, tmp_path: Path):
+        deferred = tmp_path / "deferred.sqlite"
+        eager = tmp_path / "eager.sqlite"
+        create_index(deferred, with_lookup_indexes=False)
+        create_lookup_indexes(deferred)
+        create_index(eager)
+
+        def schema(path: Path) -> set[tuple[str, str]]:
+            with sqlite3.connect(path) as conn:
+                return {
+                    (row[0], row[1])
+                    for row in conn.execute("SELECT name, type FROM sqlite_master WHERE sql IS NOT NULL")
+                }
+
+        # Deferring the index build must land the same schema, not a subset.
+        assert schema(deferred) == schema(eager)
+
+    def test_create_lookup_indexes_is_idempotent(self, tmp_path: Path):
+        db_path = tmp_path / "twice.sqlite"
+        create_index(db_path, with_lookup_indexes=False)
+        create_lookup_indexes(db_path)
+        create_lookup_indexes(db_path)
+
+        with sqlite3.connect(db_path) as conn:
+            indexes = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")}
+        assert {"idx_term", "idx_reading"} <= indexes
+
+    def test_rows_inserted_before_the_indexes_are_still_found(self, tmp_path: Path):
+        db_path = tmp_path / "ordered.sqlite"
+        create_index(db_path, with_lookup_indexes=False)
+        bulk_insert(
+            db_path,
+            [
+                DictRow(term="猫", reading="ねこ", content="cat"),
+                DictRow(term="犬", reading="いぬ", content="dog"),
+            ],
+        )
+        create_lookup_indexes(db_path)
+
+        conn = open_readonly(db_path)
+        try:
+            assert lookup(conn, "猫")[0][0] == "cat"
+            # Reading lookups go through idx_reading, built after the rows.
+            assert lookup(conn, "いぬ")[0][0] == "dog"
+        finally:
+            conn.close()
 
     def test_schema_version_is_6(self):
         assert SCHEMA_VERSION == 6
@@ -1481,6 +1540,139 @@ class TestHomographScoping:
             assert lookup_many(conn, [("しゃべる", None)], scope_homographs=False)["しゃべる"] == [
                 ("<div>shovel</div>", "", 1)
             ]
+        finally:
+            conn.close()
+
+
+class TestLemmaScoping:
+    """Rule A': lemma-exact scoping for kana fronts with no term-exact row.
+
+    A kana-spelled token (mined_form ゆう, lemma 言う) resolves purely through the
+    folded-reading scan, where every ゆう-reading homograph qualifies and score
+    ranking buries the right lexeme (有 1999800 > 夕 > 結う > 言う 989800 in the
+    real JMdict build). When the caller supplies the token's lemma and at least
+    one fetched row's term equals it, the scope keeps only those rows (plus
+    same-content duplicates — the Rule A carve-out). Rule A (term-exact) still
+    takes precedence; no lemma row ⇒ fall through to Rule B unchanged.
+    """
+
+    def _seed_yuu(self, db_path: Path) -> None:
+        # Mirrors the real JMdict ゆう constellation: four lexemes share the
+        # reading ゆう; 言う ranks LAST by score.
+        create_index(db_path)
+        bulk_insert(
+            db_path,
+            [
+                DictRow(term="有", reading="ゆう", content="<div>existence</div>", score=1999800, sequence=1),
+                DictRow(term="夕", reading="ゆう", content="<div>evening</div>", score=1999800, sequence=2),
+                DictRow(term="結う", reading="ゆう", content="<div>to do up hair</div>", score=999800, sequence=3),
+                DictRow(term="言う", reading="ゆう", content="<div>to say</div>", score=989800, sequence=4),
+            ],
+        )
+
+    def test_lemma_scopes_kana_query_to_lemma_rows(self, tmp_path: Path):
+        db_path = tmp_path / "yuu.sqlite"
+        self._seed_yuu(db_path)
+        conn = open_readonly(db_path)
+        try:
+            scoped = lookup(conn, "ゆう", "ゆう", lemma="言う")
+            assert scoped == [("<div>to say</div>", "", 4)]
+            assert lookup_many(conn, [("ゆう", "ゆう")], lemmas={"ゆう": "言う"})["ゆう"] == scoped
+        finally:
+            conn.close()
+
+    def test_no_lemma_keeps_current_ranking(self, tmp_path: Path):
+        """Without a lemma the pre-A' behavior is pinned: Rule B keeps every
+        kanji-term homograph and score ranking leads with 有."""
+        db_path = tmp_path / "yuu.sqlite"
+        self._seed_yuu(db_path)
+        conn = open_readonly(db_path)
+        try:
+            unscoped = lookup(conn, "ゆう", "ゆう")
+            assert [c for c, _, _ in unscoped] == [
+                "<div>existence</div>",
+                "<div>evening</div>",
+                "<div>to do up hair</div>",
+                "<div>to say</div>",
+            ]
+            assert lookup_many(conn, [("ゆう", "ゆう")])["ゆう"] == unscoped
+        finally:
+            conn.close()
+
+    def test_rule_a_precedence_over_lemma(self, tmp_path: Path):
+        """A term-exact row still wins: the dictionary's own ゆう headword is
+        kept and the lemma plays no part (Rule A checked before Rule A')."""
+        db_path = tmp_path / "exact.sqlite"
+        create_index(db_path)
+        bulk_insert(
+            db_path,
+            [
+                DictRow(term="ゆう", reading="ゆう", content="<div>kana headword</div>", sequence=1),
+                DictRow(term="言う", reading="ゆう", content="<div>to say</div>", sequence=2),
+            ],
+        )
+        conn = open_readonly(db_path)
+        try:
+            scoped = lookup(conn, "ゆう", "ゆう", lemma="言う")
+            assert scoped == [("<div>kana headword</div>", "", 1)]
+            assert lookup_many(conn, [("ゆう", "ゆう")], lemmas={"ゆう": "言う"})["ゆう"] == scoped
+        finally:
+            conn.close()
+
+    def test_lemma_content_carveout_keeps_same_gloss_duplicate(self, tmp_path: Path):
+        """A rescript variant row (云う) sharing the lemma row's exact content
+        survives to union its tags, like Rule A's carve-out; the distinct-gloss
+        homograph (夕) is still dropped."""
+        db_path = tmp_path / "carveout.sqlite"
+        create_index(db_path)
+        bulk_insert(
+            db_path,
+            [
+                DictRow(term="言う", reading="ゆう", content="<div>to say</div>", tags="common", sequence=1),
+                DictRow(term="云う", reading="ゆう", content="<div>to say</div>", tags="rare", sequence=2),
+                DictRow(term="夕", reading="ゆう", content="<div>evening</div>", sequence=3),
+            ],
+        )
+        conn = open_readonly(db_path)
+        try:
+            scoped = lookup(conn, "ゆう", "ゆう", lemma="言う")
+            contents = [c for c, _, _ in scoped]
+            assert contents.count("<div>to say</div>") == 2
+            assert "<div>evening</div>" not in contents
+            assert lookup_many(conn, [("ゆう", "ゆう")], lemmas={"ゆう": "言う"})["ゆう"] == scoped
+        finally:
+            conn.close()
+
+    def test_lemma_without_matching_rows_falls_through_to_rule_b(self, tmp_path: Path):
+        """Lemma given but no row carries it (いえる: lemma 言う, rows only 癒える)
+        ⇒ identical to the no-lemma result (Rule B keeps kanji terms)."""
+        db_path = tmp_path / "ieru.sqlite"
+        create_index(db_path)
+        bulk_insert(
+            db_path,
+            [
+                DictRow(term="癒える", reading="いえる", content="<div>to heal</div>", sequence=1),
+                DictRow(term="イエル", reading="いえる", content="<div>kana noise</div>", sequence=2),
+            ],
+        )
+        conn = open_readonly(db_path)
+        try:
+            with_lemma = lookup(conn, "いえる", "いえる", lemma="言う")
+            assert with_lemma == lookup(conn, "いえる", "いえる")
+            assert with_lemma == [("<div>to heal</div>", "", 1)]
+            assert lookup_many(conn, [("いえる", "いえる")], lemmas={"いえる": "言う"})["いえる"] == with_lemma
+        finally:
+            conn.close()
+
+    def test_unscoped_probe_ignores_lemma(self, tmp_path: Path):
+        """scope_homographs=False (existence/attestation probes) stays byte-
+        identical to pre-A' behavior even when a lemma is supplied."""
+        db_path = tmp_path / "probe.sqlite"
+        self._seed_yuu(db_path)
+        conn = open_readonly(db_path)
+        try:
+            unscoped = lookup_many(conn, [("ゆう", "ゆう")], scope_homographs=False, lemmas={"ゆう": "言う"})["ゆう"]
+            assert len(unscoped) == 4
         finally:
             conn.close()
 
