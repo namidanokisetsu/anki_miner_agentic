@@ -27,7 +27,7 @@ from .models import (
     canonical_json,
     content_id,
 )
-from .policy import DIFFICULTY_POLICY_VERSION, REVIEW_BATCH_BOUND, TEMPORARY_MAX_CANDIDATE_UNKNOWNS
+from .policy import MAX_DEFINITION_OPTION_CHARS, MAX_DEFINITION_OPTIONS, MAX_SENTENCE_VARIANTS
 from .review import review_contract
 from .store import AgentStore
 
@@ -149,7 +149,7 @@ class CandidateBatchService:
         self,
         inputs: list[LocalEpisodeInput | YouTubeInput],
         *,
-        max_cards: int | None = None,
+        max_cards: int,
     ) -> dict[str, Any]:
         require(bool(inputs), "invalid_input", "At least one episode input is required")
         profile = self.store.profile_status()
@@ -161,9 +161,8 @@ class CandidateBatchService:
             profile_analyzer=profile["analyzer_key"],
             current_analyzer=self.analyzer.identity.key,
         )
-        effective_max_cards = self.config.max_cards if max_cards is None else max_cards
-        require(type(effective_max_cards) is int, "invalid_limit", "max_cards must be an integer")
-        require(1 <= effective_max_cards <= self.config.max_cards, "invalid_limit", "max_cards exceeds the profile cap")
+        require(type(max_cards) is int, "invalid_limit", "max_cards must be an integer")
+        require(max_cards >= 1, "invalid_limit", "max_cards must be positive")
 
         resolved = [self._resolve_input(item) for item in inputs]
         episode_parsers = [self._parser_for_episode(item) for item in resolved]
@@ -192,7 +191,7 @@ class CandidateBatchService:
             words, line_index, counts, _entries = parsed
             self._attach_frequency(words)
             self.word_filter.attach_occurrence_counts(words, counts)
-            self.word_filter.attach_sentence_candidates(words, line_index, max_candidates=self.config.max_variants)
+            self.word_filter.attach_sentence_candidates(words, line_index, max_candidates=MAX_SENTENCE_VARIANTS)
             cue_flags = self._cue_flags(episode, parser, raw_entries_cache)
             for word in words:
                 word.video_file = episode.video_file
@@ -224,8 +223,7 @@ class CandidateBatchService:
             "config_hash": self.config.material_hash(),
             "mining_policy_hash": self.mining_policy_hash,
             "lookup_material": lookup_material,
-            "max_cards": effective_max_cards,
-            "review_batch_bound": REVIEW_BATCH_BOUND,
+            "max_cards": max_cards,
         }
         request_hash = hashlib.sha256(canonical_json(request_material).encode("utf-8")).hexdigest()
         revision_id = content_id("batch", request_material)
@@ -335,13 +333,6 @@ class CandidateBatchService:
                 reasons.append(
                     {"code": "not_i_plus_one", "message": "Sentence does not contain exactly one unknown lexeme"}
                 )
-            if unknown_count > TEMPORARY_MAX_CANDIDATE_UNKNOWNS:
-                reasons.append(
-                    {
-                        "code": "too_many_candidate_unknowns",
-                        "message": "Sentence exceeds the temporary conservative candidate-unknown guard",
-                    }
-                )
             severe_flags = sorted(set(quality_flags) - {"automatic_transcript"})
             if severe_flags:
                 reasons.append(
@@ -368,9 +359,9 @@ class CandidateBatchService:
                         for seen in alternative_words
                     ):
                         alternative_words.append(variant)
-                    if len(alternative_words) >= self.config.max_variants:
+                    if len(alternative_words) >= MAX_SENTENCE_VARIANTS:
                         break
-                if len(alternative_words) >= self.config.max_variants:
+                if len(alternative_words) >= MAX_SENTENCE_VARIANTS:
                     break
             public = {
                 "schema_version": PUBLIC_SCHEMA_VERSION,
@@ -421,13 +412,7 @@ class CandidateBatchService:
                 "definition_options": [],
                 "allowed_enrichments": allowed_enrichments,
                 "flags": list(quality_flags),
-                "difficulty": {
-                    "policy_version": DIFFICULTY_POLICY_VERSION,
-                    "signal": "candidate_unknown_count",
-                    "value": unknown_count,
-                    "automatic_max": TEMPORARY_MAX_CANDIDATE_UNKNOWNS,
-                    "calibrated_score": None,
-                },
+                "difficulty": {"signal": "candidate_unknown_count", "value": unknown_count},
                 "review": {"state": "required", "contract_version": review_contract()["version"]},
                 "eligible": not reasons,
                 "eligibility": {"reason_codes": [item["code"] for item in reasons], "diagnostics": reasons},
@@ -501,17 +486,16 @@ class CandidateBatchService:
         )
         # Full definition text is the largest and slowest candidate enrichment.
         # Eligibility and deterministic ranking therefore run first, and only
-        # the bounded public shortlist is hydrated.
-        shortlist_size = min(REVIEW_BATCH_BOUND, effective_max_cards)
-        shortlist = [item for item in candidates if item["public"]["eligible"]][:shortlist_size]
+        # the user-authorized public shortlist is hydrated.
+        shortlist = [item for item in candidates if item["public"]["eligible"]][:max_cards]
         definition_options: dict[str, list[dict[str, str]]] = {}
         if self.definition_options_lookup is not None:
             for item in shortlist:
                 term = item["lexical_id"]
                 options = _compact_definition_options(
                     self.definition_options_lookup(term),
-                    max_options=self.config.max_definition_options,
-                    max_chars=self.config.max_definition_option_chars,
+                    max_options=MAX_DEFINITION_OPTIONS,
+                    max_chars=MAX_DEFINITION_OPTION_CHARS,
                 )
                 item["public"]["definition_options"] = options
                 definition_options[term] = options
@@ -544,10 +528,7 @@ class CandidateBatchService:
             ).hexdigest(),
             "request_hash": request_hash,
             "sources": sources,
-            "max_cards": effective_max_cards,
-            # Existing durable storage uses this column as the internal public
-            # candidate bound. It is no longer user-configurable authority.
-            "review_pool_size": shortlist_size,
+            "max_cards": max_cards,
         }
         return self.store.create_batch(batch, candidates)
 

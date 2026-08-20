@@ -120,14 +120,6 @@ class AgentProfileConfig:
     knowledge_sources: tuple[KnowledgeSource, ...]
     write_target: WriteTarget
     mature_interval_days: int = 21
-    max_cards: int = 20
-    max_payload_bytes: int = 512_000
-    max_variants: int = 4
-    max_rationale_chars: int = 500
-    max_definition_options: int = 12
-    max_definition_option_chars: int = 2_000
-    max_chosen_definition_chars: int = 240
-    max_sentence_translation_chars: int = 500
     chosen_definition_field: str = ""
     sentence_translation_field: str = ""
     # "japanese" uses the existing language-tag auto-detection. An integer is
@@ -139,34 +131,6 @@ class AgentProfileConfig:
             object.__setattr__(self, "knowledge_sources", tuple(self.knowledge_sources))
         require(bool(self.knowledge_sources), "invalid_config", "At least one knowledge source is required")
         require(self.mature_interval_days >= 1, "invalid_config", "mature_interval_days must be positive")
-        require(self.max_cards >= 1, "invalid_config", "max_cards must be positive")
-        require(self.max_payload_bytes >= 1024, "invalid_config", "max_payload_bytes must be at least 1024")
-        require(1 <= self.max_variants <= 20, "invalid_config", "max_variants must be between 1 and 20")
-        require(
-            0 <= self.max_rationale_chars <= 10_000,
-            "invalid_config",
-            "max_rationale_chars must be between 0 and 10000",
-        )
-        require(
-            1 <= self.max_definition_options <= 50,
-            "invalid_config",
-            "max_definition_options must be between 1 and 50",
-        )
-        require(
-            100 <= self.max_definition_option_chars <= 10_000,
-            "invalid_config",
-            "max_definition_option_chars must be between 100 and 10000",
-        )
-        require(
-            1 <= self.max_chosen_definition_chars <= 1_000,
-            "invalid_config",
-            "max_chosen_definition_chars must be between 1 and 1000",
-        )
-        require(
-            1 <= self.max_sentence_translation_chars <= 2_000,
-            "invalid_config",
-            "max_sentence_translation_chars must be between 1 and 2000",
-        )
         enrichment_fields = [self.chosen_definition_field, self.sentence_translation_field]
         require(
             all(value == value.strip() for value in enrichment_fields),
@@ -192,14 +156,6 @@ class AgentProfileConfig:
             "knowledge_sources",
             "write_target",
             "mature_interval_days",
-            "max_cards",
-            "max_payload_bytes",
-            "max_variants",
-            "max_rationale_chars",
-            "max_definition_options",
-            "max_definition_option_chars",
-            "max_chosen_definition_chars",
-            "max_sentence_translation_chars",
             "chosen_definition_field",
             "sentence_translation_field",
             "audio_track",
@@ -214,14 +170,6 @@ class AgentProfileConfig:
             name: value[name]
             for name in (
                 "mature_interval_days",
-                "max_cards",
-                "max_payload_bytes",
-                "max_variants",
-                "max_rationale_chars",
-                "max_definition_options",
-                "max_definition_option_chars",
-                "max_chosen_definition_chars",
-                "max_sentence_translation_chars",
                 "chosen_definition_field",
                 "sentence_translation_field",
                 "audio_track",
@@ -231,9 +179,7 @@ class AgentProfileConfig:
         return cls(knowledge_sources=sources, write_target=target, **kwargs)
 
     def material_hash(self) -> str:
-        value = asdict(self)
-        value.pop("max_payload_bytes", None)
-        return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
+        return hashlib.sha256(canonical_json(asdict(self)).encode("utf-8")).hexdigest()
 
 
 SubtitleSource = Literal["local", "youtube_manual", "youtube_auto", "local_asr"]

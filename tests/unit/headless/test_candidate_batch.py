@@ -110,15 +110,14 @@ def test_prepare_is_persistent_compact_and_idempotent(tmp_path):
         definition_probe=lambda terms: dict.fromkeys(terms, True),
     )
 
-    first = service.prepare([LocalEpisodeInput(video, subtitle)])
-    second = service.prepare([LocalEpisodeInput(video, subtitle)])
+    first = service.prepare([LocalEpisodeInput(video, subtitle)], max_cards=10)
+    second = service.prepare([LocalEpisodeInput(video, subtitle)], max_cards=10)
     page = store.list_candidates(
         first["batch_revision"],
         offset=0,
         limit=10,
         include_ineligible=False,
         expected_schema_version=1,
-        max_payload_bytes=100_000,
     )
 
     assert second["batch_revision"] == first["batch_revision"]
@@ -147,14 +146,13 @@ def test_prepare_applies_per_input_subtitle_offset(tmp_path):
         definition_probe=lambda terms: dict.fromkeys(terms, True),
     )
 
-    batch = service.prepare([LocalEpisodeInput(video, subtitle, subtitle_offset=2.25)])
+    batch = service.prepare([LocalEpisodeInput(video, subtitle, subtitle_offset=2.25)], max_cards=10)
     page = store.list_candidates(
         batch["batch_revision"],
         offset=0,
         limit=10,
         include_ineligible=False,
         expected_schema_version=1,
-        max_payload_bytes=100_000,
     )
 
     candidate = page["candidates"][0]
@@ -184,9 +182,9 @@ def test_prepare_rebuilds_after_dictionary_availability_changes(tmp_path):
         definition_probe=probe,
     )
 
-    before = service.prepare([LocalEpisodeInput(video, subtitle)])
+    before = service.prepare([LocalEpisodeInput(video, subtitle)], max_cards=10)
     dictionary_ready = True
-    after = service.prepare([LocalEpisodeInput(video, subtitle)])
+    after = service.prepare([LocalEpisodeInput(video, subtitle)], max_cards=10)
 
     assert before["batch_revision"] != after["batch_revision"]
     assert before["eligible_count"] == 0
@@ -208,7 +206,6 @@ def test_prepare_exposes_bounded_plain_text_definition_options(tmp_path):
         cfg(
             chosen_definition_field="Chosen",
             sentence_translation_field="Translation",
-            max_definition_option_chars=100,
         ),
         definition_probe=lambda terms: dict.fromkeys(terms, True),
         definition_options_lookup=lambda term: [
@@ -217,14 +214,13 @@ def test_prepare_exposes_bounded_plain_text_definition_options(tmp_path):
         ],
     )
 
-    batch = service.prepare([LocalEpisodeInput(video, subtitle)])
+    batch = service.prepare([LocalEpisodeInput(video, subtitle)], max_cards=10)
     page = store.list_candidates(
         batch["batch_revision"],
         offset=0,
         limit=10,
         include_ineligible=False,
         expected_schema_version=1,
-        max_payload_bytes=100_000,
     )
 
     assert page["candidates"][0]["definition_options"] == [
@@ -267,14 +263,13 @@ def test_prepare_persists_frequency_sort_rank_for_commit(tmp_path):
         pitch_service=PitchService(),
     )
 
-    batch = service.prepare([LocalEpisodeInput(video, subtitle)])
+    batch = service.prepare([LocalEpisodeInput(video, subtitle)], max_cards=10)
     page = store.list_candidates(
         batch["batch_revision"],
         offset=0,
         limit=1,
         include_ineligible=False,
         expected_schema_version=1,
-        max_payload_bytes=100_000,
     )
     candidate_id = page["candidates"][0]["candidate_id"]
     candidate = store.get_candidates(batch["batch_revision"], [candidate_id])[0]
@@ -318,14 +313,13 @@ def test_captionless_youtube_can_opt_into_local_asr(tmp_path):
         definition_probe=lambda terms: dict.fromkeys(terms, True),
     )
 
-    batch = service.prepare([YouTubeInput("https://youtu.be/abc123def45", allow_asr=True)])
+    batch = service.prepare([YouTubeInput("https://youtu.be/abc123def45", allow_asr=True)], max_cards=10)
     page = store.list_candidates(
         batch["batch_revision"],
         offset=0,
         limit=10,
         include_ineligible=False,
         expected_schema_version=1,
-        max_payload_bytes=100_000,
     )
 
     candidate = page["candidates"][0]
@@ -369,7 +363,7 @@ def test_prepare_uses_one_reusable_subtitle_parse(tmp_path):
         definition_probe=lambda terms: dict.fromkeys(terms, True),
     )
 
-    service.prepare([LocalEpisodeInput(video, subtitle)])
+    service.prepare([LocalEpisodeInput(video, subtitle)], max_cards=10)
 
     assert parser.calls == 1
 
@@ -421,13 +415,13 @@ def test_definition_options_load_only_after_eligibility_and_shortlist_bounds(tmp
         Analyzer(),
         TwoWordParser(),
         Filter(),
-        cfg(chosen_definition_field="Chosen", max_cards=1),
+        cfg(chosen_definition_field="Chosen"),
         word_list_service=WordLists(),
         definition_probe=lambda terms: dict.fromkeys(terms, True),
         definition_options_lookup=lambda term: calls.append(term) or [("D", "meaning")],
     )
 
-    service.prepare([LocalEpisodeInput(video, subtitle)])
+    service.prepare([LocalEpisodeInput(video, subtitle)], max_cards=1)
 
     assert calls == ["食べる"]
 
@@ -447,7 +441,7 @@ def _word(surface, sentence, start, *, reading="ヨミ", pos="名詞"):
     )
 
 
-def test_conservative_guard_exposes_exact_candidate_unknown_items(tmp_path):
+def test_unknown_count_is_evidence_not_a_hidden_eligibility_cap(tmp_path):
     sentence = "文明は未来を脅かす。"
 
     class ThreeWordParser(Parser):
@@ -479,21 +473,20 @@ def test_conservative_guard_exposes_exact_candidate_unknown_items(tmp_path):
         definition_probe=lambda terms: dict.fromkeys(terms, True),
     )
 
-    batch = service.prepare([LocalEpisodeInput(video, subtitle)])
+    batch = service.prepare([LocalEpisodeInput(video, subtitle)], max_cards=10)
     page = store.list_candidates(
         batch["batch_revision"],
         offset=0,
         limit=10,
         include_ineligible=True,
         expected_schema_version=1,
-        max_payload_bytes=100_000,
     )
 
     assert len(page["candidates"]) == 3
     for candidate in page["candidates"]:
         assert candidate["sentence"]["candidate_unknown_items"] == ["文明", "未来", "脅かす"]
-        assert candidate["difficulty"]["calibrated_score"] is None
-        assert "too_many_candidate_unknowns" in candidate["eligibility"]["reason_codes"]
+        assert candidate["difficulty"] == {"signal": "candidate_unknown_count", "value": 3}
+        assert candidate["eligible"] is True
 
 
 def test_target_competition_precedes_sentence_deduplication(tmp_path):
@@ -528,14 +521,13 @@ def test_target_competition_precedes_sentence_deduplication(tmp_path):
         definition_probe=lambda terms: dict.fromkeys(terms, True),
     )
 
-    batch = service.prepare([LocalEpisodeInput(video, subtitle)])
+    batch = service.prepare([LocalEpisodeInput(video, subtitle)], max_cards=10)
     page = store.list_candidates(
         batch["batch_revision"],
         offset=0,
         limit=10,
         include_ineligible=True,
         expected_schema_version=1,
-        max_payload_bytes=100_000,
     )
     by_target = {item["target"]["mined_form"]: item for item in page["candidates"]}
 

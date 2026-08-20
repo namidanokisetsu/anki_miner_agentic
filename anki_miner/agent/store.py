@@ -14,7 +14,7 @@ from typing import Any, Iterator
 from .errors import AgentMiningError, require
 from .models import PUBLIC_SCHEMA_VERSION, canonical_json, content_id
 
-_SCHEMA_VERSION = 2
+_SCHEMA_VERSION = 3
 
 
 class AgentStore:
@@ -47,7 +47,7 @@ class AgentStore:
     def _initialize(self) -> None:
         with self._transaction() as conn:
             version = int(conn.execute("PRAGMA user_version").fetchone()[0])
-            if version not in (0, 1, _SCHEMA_VERSION):
+            if version not in (0, 1, 2, _SCHEMA_VERSION):
                 raise AgentMiningError(
                     "unsupported_database",
                     f"Agent database schema {version} is not supported by this build",
@@ -130,7 +130,6 @@ class AgentStore:
                     candidate_count INTEGER NOT NULL,
                     eligible_count INTEGER NOT NULL,
                     max_cards INTEGER NOT NULL,
-                    review_pool_size INTEGER,
                     committed_job_id TEXT,
                     error_json TEXT
                 );
@@ -195,6 +194,10 @@ class AgentStore:
                     conn.execute("ALTER TABLE mining_jobs ADD COLUMN job_timestamp TEXT")
                 if "job_tag" not in columns:
                     conn.execute("ALTER TABLE mining_jobs ADD COLUMN job_tag TEXT")
+            if version in (1, 2):
+                columns = {row[1] for row in conn.execute("PRAGMA table_info(mining_batches)")}
+                if "review_pool_size" in columns:
+                    conn.execute("ALTER TABLE mining_batches DROP COLUMN review_pool_size")
             conn.execute(f"PRAGMA user_version={_SCHEMA_VERSION}")
 
     def create_run(self, revision_id: str, shortlist: list[dict[str, Any]]) -> dict[str, Any]:
@@ -407,8 +410,8 @@ class AgentStore:
             conn.execute(
                 """INSERT INTO mining_batches
                    (revision_id, profile_revision_id, analyzer_key, config_hash, request_hash, state,
-                    source_json, candidate_count, eligible_count, max_cards, review_pool_size)
-                   VALUES (?, ?, ?, ?, ?, 'ready', ?, ?, ?, ?, ?)""",
+                    source_json, candidate_count, eligible_count, max_cards)
+                   VALUES (?, ?, ?, ?, ?, 'ready', ?, ?, ?, ?)""",
                 (
                     batch["revision_id"],
                     batch["profile_revision_id"],
@@ -419,7 +422,6 @@ class AgentStore:
                     len(candidates),
                     sum(1 for item in candidates if item["public"]["eligible"]),
                     batch["max_cards"],
-                    batch.get("review_pool_size"),
                 ),
             )
             for position, candidate in enumerate(candidates):
@@ -454,7 +456,6 @@ class AgentStore:
                 "candidate_count": row["candidate_count"],
                 "eligible_count": row["eligible_count"],
                 "max_cards": row["max_cards"],
-                "review_pool_size": row["review_pool_size"],
                 "committed_job_id": row["committed_job_id"],
             }
         finally:
@@ -469,7 +470,6 @@ class AgentStore:
         limit: int,
         include_ineligible: bool,
         expected_schema_version: int,
-        max_payload_bytes: int,
     ) -> dict[str, Any]:
         require(
             expected_schema_version == PUBLIC_SCHEMA_VERSION,
@@ -484,12 +484,11 @@ class AgentStore:
             batch = conn.execute("SELECT * FROM mining_batches WHERE revision_id=?", (revision_id,)).fetchone()
             require(batch is not None, "batch_not_found", "Mining batch does not exist", batch_revision=revision_id)
             where = "batch_revision=?" + ("" if include_ineligible else " AND eligible=1")
-            pool_limit = batch["review_pool_size"]
             effective_total = int(
                 conn.execute(f"SELECT COUNT(*) FROM mining_candidates WHERE {where}", (revision_id,)).fetchone()[0]
             )
-            if not include_ineligible and pool_limit is not None:
-                effective_total = min(effective_total, int(pool_limit))
+            if not include_ineligible:
+                effective_total = min(effective_total, int(batch["max_cards"]))
             fetch_limit = min(limit, max(0, effective_total - offset))
             rows = conn.execute(
                 f"SELECT public_json FROM mining_candidates WHERE {where} ORDER BY position LIMIT ? OFFSET ?",
@@ -505,14 +504,6 @@ class AgentStore:
                 "next_offset": offset + len(rows) if offset + len(rows) < effective_total else None,
                 "candidates": [json.loads(row["public_json"]) for row in rows],
             }
-            size = len(canonical_json(payload).encode("utf-8"))
-            require(
-                size <= max_payload_bytes,
-                "payload_too_large",
-                "Candidate page exceeds the configured response-size limit; request a smaller page",
-                bytes=size,
-                max_payload_bytes=max_payload_bytes,
-            )
             return payload
 
     def get_candidates(self, revision_id: str, candidate_ids: Iterable[str]) -> list[dict[str, Any]]:

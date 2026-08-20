@@ -29,7 +29,6 @@ def cfg(enabled=True, **kwargs):
     return AgentProfileConfig(
         (KnowledgeSource("Deck", "ExampleNote", ("word",), ("sentence",)),),
         WriteTarget("Destination", "ExampleNote", enabled=enabled),
-        max_cards=2,
         **kwargs,
     )
 
@@ -57,7 +56,6 @@ def make_batch(store, tmp_path, eligible=True):
             "request_hash": "r",
             "sources": [],
             "max_cards": 2,
-            "review_pool_size": None,
         },
         [{"lexical_id": "食べる", "public": public, "internal": internal}],
     )

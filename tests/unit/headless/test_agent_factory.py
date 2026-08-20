@@ -38,10 +38,9 @@ def test_effective_setting_ownership_is_closed_and_single_source():
         "gui_mining_policy",
         "agent_config",
         "run_authorization",
-        "internal_derived",
     }
     assert SETTING_OWNERSHIP["mining_policy"].source == "active_gui_profile"
-    assert SETTING_OWNERSHIP["run_ceiling"].source == "prepare_mining_run.max_cards"
+    assert SETTING_OWNERSHIP["max_cards"].source == "prepare_mining_run.max_cards"
 
 
 def test_agent_inherits_gui_mining_settings_without_runtime_shadows(tmp_path, monkeypatch):
@@ -153,3 +152,37 @@ def test_legacy_policy_keys_are_rejected_even_when_false(tmp_path, monkeypatch):
         "owner": "Settings → Filtering",
         "action": "Remove 'exclude_katakana_only' from the configured agent JSON file",
     }
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "owner"),
+    [
+        ("max_cards", 300, "the prepare_mining_run request"),
+        ("max_payload_bytes", 512_000, "Anki Miner internal transport"),
+        ("review_pool_size", 20, "the prepare_mining_run request"),
+    ],
+)
+def test_agent_config_rejects_removed_limit_keys(tmp_path, monkeypatch, key, value, owner):
+    monkeypatch.setattr(GUIConfigManager, "load_config", classmethod(lambda cls: AnkiMinerConfig()))
+    path = tmp_path / "agent.json"
+    path.write_text(
+        json.dumps(
+            {
+                "agent": {
+                    "knowledge_sources": [
+                        {"deck": "Known", "note_type": "ExampleNote", "word_fields": ["word"]}
+                    ],
+                    "write_target": {"deck": "Mining", "note_type": "ExampleNote"},
+                    key: value,
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AgentMiningError) as raised:
+        load_agent_config(path)
+
+    assert raised.value.code == "unsupported_agent_config_key"
+    assert raised.value.details["key"] == key
+    assert raised.value.details["owner"] == owner

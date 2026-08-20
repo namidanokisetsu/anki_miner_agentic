@@ -10,7 +10,7 @@ from anki_miner.gui.utils.config_manager import GUIConfigManager
 
 from .models import canonical_json
 
-SettingOwner = Literal["gui_mining_policy", "agent_config", "run_authorization", "internal_derived"]
+SettingOwner = Literal["gui_mining_policy", "agent_config", "run_authorization"]
 
 
 @dataclass(frozen=True)
@@ -25,16 +25,16 @@ SETTING_OWNERSHIP: dict[str, SettingOwnership] = {
     "mining_policy": SettingOwnership("gui_mining_policy", "active_gui_profile"),
     "knowledge_sources": SettingOwnership("agent_config", "agent.knowledge_sources"),
     "write_target": SettingOwnership("agent_config", "agent.write_target"),
-    "safety_ceiling": SettingOwnership("agent_config", "agent.max_cards"),
-    "transport_bound": SettingOwnership("agent_config", "agent.max_payload_bytes"),
     "enrichment_fields": SettingOwnership("agent_config", "agent.*_field"),
-    "run_ceiling": SettingOwnership("run_authorization", "prepare_mining_run.max_cards"),
-    "review_batch_bound": SettingOwnership("internal_derived", "application_constant"),
+    "max_cards": SettingOwnership("run_authorization", "prepare_mining_run.max_cards"),
 }
 
-REVIEW_BATCH_BOUND = 20
-TEMPORARY_MAX_CANDIDATE_UNKNOWNS = 2
-DIFFICULTY_POLICY_VERSION = "candidate_unknown_count_v1"
+MAX_SENTENCE_VARIANTS = 4
+MAX_RATIONALE_CHARS = 500
+MAX_DEFINITION_OPTIONS = 12
+MAX_DEFINITION_OPTION_CHARS = 2_000
+MAX_CHOSEN_DEFINITION_CHARS = 240
+MAX_SENTENCE_TRANSLATION_CHARS = 500
 
 GUI_MINING_POLICY_FIELDS = (
     "allowed_pos",
@@ -100,20 +100,6 @@ def effective_policy_inspection(config: Any, fingerprint: str) -> dict[str, Any]
                 "explicit": values[key] != defaults[key],
             }
             for key in sorted(values)
-        ],
-        "derived": [
-            {
-                "setting": "review_batch_bound",
-                "value": REVIEW_BATCH_BOUND,
-                "source": "application_constant",
-                "explicit": False,
-            },
-            {
-                "setting": "candidate_unknown_guard",
-                "value": TEMPORARY_MAX_CANDIDATE_UNKNOWNS,
-                "source": DIFFICULTY_POLICY_VERSION,
-                "explicit": False,
-            },
         ],
         "conflicts": [],
         "canonical_bytes": len(canonical_json(values).encode("utf-8")),
