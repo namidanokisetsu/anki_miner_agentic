@@ -20,3 +20,4 @@ def test_mcp_exposes_only_the_two_call_workflow():
     server = create_server(FakeApplication())
     tools = asyncio.run(server.list_tools())
     assert [tool.name for tool in tools] == ["prepare_mining_run", "commit_mining_run"]
+    assert "explicitly stated in the current user request" in tools[0].description
