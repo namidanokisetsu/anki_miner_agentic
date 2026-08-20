@@ -129,10 +129,13 @@ class AgentMiningApplication:
                     "max_chars": MAX_CHOSEN_DEFINITION_CHARS,
                 },
                 "sentence_translation": {
-                    "instruction_version": "close_translation_v1",
+                    "instruction_version": "close_translation_v2",
                     "format": "plain_text_one_line",
                     "max_chars": MAX_SENTENCE_TRANSLATION_CHARS,
-                    "instruction": "Preserve Japanese syntax, imagery, and phrasing when understandable.",
+                    "instruction": (
+                        "Prefer the Japanese structure, imagery, and phrasing over idiomatic rewriting when "
+                        "understandable, but do not produce unnatural word-for-word English."
+                    ),
                 },
             },
             "destination": {

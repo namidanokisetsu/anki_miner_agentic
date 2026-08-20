@@ -55,7 +55,7 @@ Omit `audio_track` to select Japanese automatically. Use a zero-based audio-only
     "rationale": "<optional short diagnostic>",
     "enrichments": {
       "chosen_definition": "<short meaning supported by definition_options>",
-      "sentence_translation": "<one-line translation of the complete sentence>"
+      "sentence_translation": "<close, readable translation preserving Japanese phrasing>"
     }
   }]
 }
