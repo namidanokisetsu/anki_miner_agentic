@@ -17,7 +17,7 @@ Anki Miner Agentic owns synchronization, filtering, lookup data, media, note con
 
 ## Required workflow
 
-1. Call `prepare_mining_run(inputs, max_cards)`. It synchronizes the learner profile and returns one bounded shortlist plus a durable `run_id`.
+1. Call `prepare_mining_run(inputs, max_cards)`. It synchronizes the learner profile and returns one durable shortlist of up to `max_cards` candidates.
 2. Review every returned candidate under `review_contract`. Zero selections and shortfalls are successful; there is no quota.
 3. Build one `reviews` array using each candidate ID unchanged. Each item is `select` or `reject`, names one allowed reason code, and may include a short rationale.
 4. A selected review must name the matching prepared `definition_option_id` and supply every key in `required_enrichments`. A rejected review must set `definition_option_id` to `null` and omit `enrichments`.

@@ -16,7 +16,6 @@ def config(**kwargs):
     return AgentProfileConfig(
         (KnowledgeSource("Known", "Note", ("Expression",), ("Sentence",)),),
         WriteTarget("Mining", "Note", enabled=True),
-        max_cards=3,
         **kwargs,
     )
 
@@ -61,7 +60,6 @@ def make_run(
             "request_hash": "request",
             "sources": [],
             "max_cards": 3,
-            "review_pool_size": 3,
         },
         rows,
     )
@@ -220,7 +218,6 @@ def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path, monke
                     "request_hash": "r",
                     "sources": [],
                     "max_cards": max_cards,
-                    "review_pool_size": max_cards,
                 },
                 rows,
             )
@@ -230,8 +227,6 @@ def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path, monke
         AgentProfileConfig(
             (KnowledgeSource("Known", "Note", ("Expression",), ()),),
             WriteTarget("Mining", "Note"),
-            max_cards=3,
-            max_payload_bytes=10_000,
         ),
         Profile(),
         Candidates(),
@@ -258,7 +253,7 @@ def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path, monke
     }
 
 
-def test_large_safety_ceiling_publishes_only_small_review_batch_and_explicit_paging(tmp_path):
+def test_requested_max_cards_is_the_only_review_batch_bound(tmp_path):
     store = AgentStore(tmp_path / "agent.sqlite3")
 
     class Profile:
@@ -288,7 +283,6 @@ def test_large_safety_ceiling_publishes_only_small_review_batch_and_explicit_pag
                     "request_hash": "r",
                     "sources": [],
                     "max_cards": max_cards,
-                    "review_pool_size": 20,
                 },
                 rows,
             )
@@ -298,8 +292,6 @@ def test_large_safety_ceiling_publishes_only_small_review_batch_and_explicit_pag
         AgentProfileConfig(
             (KnowledgeSource("Known", "Note", ("Expression",), ()),),
             WriteTarget("Mining", "Note"),
-            max_cards=300,
-            max_payload_bytes=2_000,
         ),
         Profile(),
         Candidates(),
@@ -308,20 +300,10 @@ def test_large_safety_ceiling_publishes_only_small_review_batch_and_explicit_pag
 
     result = app.prepare_mining_run({"inputs": [], "max_cards": 300})
 
-    assert result["limits"] == {
-        "safety_ceiling": 300,
-        "run_ceiling": 300,
-        "review_batch_bound": 20,
-        "semantics": "maxima_not_targets",
-    }
-    assert result["review_batch"]["count"] < 20
+    assert result["max_cards"] == 300
+    assert result["review_batch"]["count"] == 40
     assert result["review_batch"]["zero_or_shortfall_is_success"] is True
-    assert result["paging"] == {
-        "complete": False,
-        "intended_count": 20,
-        "published_count": result["review_batch"]["count"],
-        "reason": "transport_bound",
-    }
+    assert result["review_batch"]["complete"] is True
 
 
 def test_decorative_score_is_not_part_of_the_review_contract(tmp_path):
@@ -423,5 +405,20 @@ def test_store_migrates_v1_jobs_with_durable_tag_columns(tmp_path):
 
     with sqlite3.connect(path) as conn:
         columns = {row[1] for row in conn.execute("PRAGMA table_info(mining_jobs)")}
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 2
-    assert {"job_timestamp", "job_tag"} <= columns
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert {"job_timestamp", "job_tag"} <= columns
+
+
+def test_store_migrates_v2_review_pool_column(tmp_path):
+    path = tmp_path / "agent.sqlite3"
+    AgentStore(path)
+    with sqlite3.connect(path) as conn:
+        conn.execute("ALTER TABLE mining_batches ADD COLUMN review_pool_size INTEGER")
+        conn.execute("PRAGMA user_version=2")
+
+    AgentStore(path)
+
+    with sqlite3.connect(path) as conn:
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(mining_batches)")}
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert "review_pool_size" not in columns

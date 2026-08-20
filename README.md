@@ -5,7 +5,7 @@ A fork of [Anki Miner](https://github.com/0xzerolight/anki_miner) that adds a bo
 ## What this fork changes
 
 - Synchronizes learner evidence from explicitly mapped Anki decks and fields into a separate agent database.
-- Deterministically prepares at most 20 review candidates using the active GUI mining policy; the agent cannot override that policy.
+- Deterministically prepares up to the request's `max_cards` using the active GUI mining policy; the agent cannot override either value.
 - Requires the agent to select or reject every returned candidate under a versioned contract, then writes only supported selections.
 - Adds optional, allowlisted definition and sentence-translation fields plus durable, candidate-aligned receipts.
 

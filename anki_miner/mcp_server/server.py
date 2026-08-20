@@ -34,7 +34,7 @@ def create_server(app: AgentMiningApplication) -> Any:
         max_cards: int,
         ctx: Context,
     ) -> dict[str, Any]:
-        """Synchronize and return one durable, bounded candidate shortlist."""
+        """Synchronize and return one durable shortlist of up to the requested max_cards."""
         await ctx.report_progress(0, 2, "Synchronizing profile and preparing shortlist")
         result = app.prepare_mining_run({"inputs": inputs, "max_cards": max_cards})
         await ctx.report_progress(2, 2, "Mining run prepared")

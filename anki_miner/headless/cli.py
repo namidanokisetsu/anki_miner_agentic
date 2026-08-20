@@ -16,9 +16,9 @@ from anki_miner.runtime import build_agent_application
 _HELP = {
     "settings": """settings
   agent: knowledge_sources, write_target, mature_interval_days
-         safety max_cards, payload/enrichment limits and fields
+         enrichment fields and audio track
   GUI profile: dictionaries, filters, word lists, ranking, media, paths and card policy
-  per run: max_cards is an up-to authorization, never a target""",
+  per run: max_cards is the only count limit and is never a target""",
     "workflow": """workflow
   prepare_mining_run -> review every returned candidate -> commit_mining_run
   Select or reject each candidate; every selection needs every required enrichment.""",

@@ -32,11 +32,11 @@ YouTube:
 }
 ```
 
-`prepare_mining_run` synchronizes the learner profile, validates live mappings, resolves and fingerprints sources, parses and ranks candidates, handles internal storage pagination, bounds dictionary options, and returns:
+`prepare_mining_run` synchronizes the learner profile, validates live mappings, resolves and fingerprints sources, parses and ranks candidates, bounds dictionary options, and returns:
 
-- `run_id` and separately labeled safety, run, and review maxima;
-- one bounded `shortlist`;
-- immutable review-batch IDs/formula, a versioned `review_contract`, and explicit paging completeness;
+- `run_id` and the request's single `max_cards` value;
+- one `shortlist` containing up to `max_cards` eligible candidates;
+- immutable review-batch IDs/formula and a versioned `review_contract`;
 - `required_enrichments`;
 - destination deck and note type.
 
@@ -70,7 +70,7 @@ Review the returned batch without a quota. Every selected candidate must use `cl
 | Error | Action |
 |---|---|
 | profile, mapping, or Anki connection error | Stop and correct setup from live Anki; never guess names. |
-| `invalid_limit` or `max_cards_exceeded` | Stay within both the user maximum and configured cap. |
+| `invalid_limit` or `max_cards_exceeded` | Supply one positive integer `max_cards` and keep the selection within it. |
 | `candidate_not_in_run`, `unknown_candidate`, or ineligible review | Use only eligible IDs from this run's shortlist. |
 | `missing_required_enrichment` | Supply the missing enrichment or change that candidate to an explicit rejection before retrying. |
 | `invalid_review` or `missing_candidate_reviews` | Follow the returned review fields and reason-code allowlist; review every returned candidate. |

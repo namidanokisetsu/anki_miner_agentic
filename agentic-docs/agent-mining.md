@@ -40,8 +40,6 @@ The active GUI profile is the single source of mining policy: dictionaries, filt
       "enabled": false
     },
     "mature_interval_days": 21,
-    "max_cards": 50,
-    "max_payload_bytes": 512000,
     "chosen_definition_field": "<optional field>",
     "sentence_translation_field": "<optional field>",
     "audio_track": "japanese"
@@ -49,7 +47,7 @@ The active GUI profile is the single source of mining policy: dictionaries, filt
 }
 ```
 
-Executable paths and deterministic mining policy belong exclusively to the active GUI profile. Agent-side `runtime_overrides`, `mining`, `review_pool_size`, `page_size`, exclusion flags, and inline word lists are rejected with `unsupported_agent_config_key`, even when their value is false or empty. Prepared runs and profile status include the effective policy fingerprint and setting provenance.
+Executable paths and deterministic mining policy belong exclusively to the active GUI profile. Card count belongs only to each `prepare_mining_run.max_cards` request. Agent-side `max_cards`, payload/review/page limits, `runtime_overrides`, `mining`, exclusion flags, and inline word lists are rejected with `unsupported_agent_config_key`, even when their value is false or empty. Prepared runs and profile status include the effective policy fingerprint and setting provenance.
 
 Compact CLI help is available without a config or Anki connection:
 
@@ -71,7 +69,7 @@ anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" profile
 anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" policy-status
 ```
 
-`policy-status` is read-only. It shows the next-run fingerprint, each bounded effective value and owner, derived safety values, and any stale live Anki mappings.
+`policy-status` is read-only. It shows the next-run GUI-policy fingerprint, setting ownership, and any stale live Anki mappings.
 
 ## Call 1: prepare
 
@@ -91,7 +89,7 @@ anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" policy-
 
 YouTube uses `{"type":"youtube","url":"...","allow_automatic":true,"allow_asr":false}`. Manual Japanese subtitles are preferred. Automatic captions and local ASR remain explicit opt-ins and retain provenance/quality flags. Omit `audio_track` to select Japanese by language metadata; use a zero-based audio-only stream index only for incorrect metadata.
 
-`prepare_mining_run` validates the live mapping and synchronizes the learner profile, fingerprints each unique source path, parses each subtitle into one reusable representation, applies deterministic eligibility and ranking, bounds review internally, loads full definition options only for shortlisted candidates, and internally consumes storage pages. It returns one compact response with `run_id`, separately labeled safety/run/review maxima, immutable review-batch metadata, a versioned review contract, paging completeness, required enrichments, destination, and `shortlist`. Zero cards and shortfalls are successful outcomes.
+`prepare_mining_run` validates the live mapping and synchronizes the learner profile, fingerprints each unique source path, parses each subtitle into one reusable representation, applies deterministic eligibility and ranking, and loads full definition options for up to the requested `max_cards`. It returns one response with `run_id`, the single `max_cards` value, immutable review-batch metadata, a versioned review contract, required enrichments, destination, and `shortlist`. Zero cards and shortfalls are successful outcomes; the response is never silently truncated by another card or payload cap.
 
 Candidate records contain target and sentence context, learner aggregates, quality flags, frequency/pitch signals, and bounded dictionary options. They never contain raw learner fields, review histories, or database paths.
 

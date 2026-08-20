@@ -17,6 +17,7 @@ from anki_miner.models import TokenizedWord
 from .candidates import file_fingerprint
 from .errors import AgentMiningError, require
 from .models import AgentProfileConfig
+from .policy import MAX_CHOSEN_DEFINITION_CHARS, MAX_RATIONALE_CHARS, MAX_SENTENCE_TRANSLATION_CHARS
 from .review import REJECT_REASONS, REVIEW_SPEC_VERSION, SELECT_REASON
 from .store import AgentStore
 
@@ -249,11 +250,11 @@ class MiningCommitService:
             rationale = item.get("rationale", "")
             require(isinstance(rationale, str), "invalid_review", "rationale must be a string")
             require(
-                len(rationale) <= self.config.max_rationale_chars,
+                len(rationale) <= MAX_RATIONALE_CHARS,
                 "feedback_too_large",
-                "rationale exceeds the configured size limit",
+                "rationale exceeds the fixed size limit",
                 candidate_id=candidate_id,
-                max_chars=self.config.max_rationale_chars,
+                max_chars=MAX_RATIONALE_CHARS,
             )
             metadata[candidate_id] = {
                 "review": {
@@ -527,11 +528,11 @@ class MiningCommitService:
             rationale = value.get("rationale", "")
             require(isinstance(rationale, str), "invalid_feedback", "rationale must be a string")
             require(
-                len(rationale) <= self.config.max_rationale_chars,
+                len(rationale) <= MAX_RATIONALE_CHARS,
                 "feedback_too_large",
-                "rationale exceeds the configured size limit",
+                "rationale exceeds the fixed size limit",
                 candidate_id=candidate_id,
-                max_chars=self.config.max_rationale_chars,
+                max_chars=MAX_RATIONALE_CHARS,
             )
             score = value.get("score")
             require(score is None or type(score) in (int, float), "invalid_feedback", "score must be numeric")
@@ -660,11 +661,11 @@ class MiningCommitService:
         limits = {
             "chosen_definition": (
                 self.config.chosen_definition_field,
-                self.config.max_chosen_definition_chars,
+                MAX_CHOSEN_DEFINITION_CHARS,
             ),
             "sentence_translation": (
                 self.config.sentence_translation_field,
-                self.config.max_sentence_translation_chars,
+                MAX_SENTENCE_TRANSLATION_CHARS,
             ),
         }
         if require_mapped:
@@ -714,7 +715,7 @@ class MiningCommitService:
                 require(
                     len(value) <= max_chars,
                     "enrichment_too_large",
-                    f"{key} exceeds the configured size limit",
+                    f"{key} exceeds the fixed size limit",
                     candidate_id=candidate_id,
                     max_chars=max_chars,
                 )
