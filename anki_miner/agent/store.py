@@ -619,10 +619,11 @@ class AgentStore:
         self,
         run_id: str,
         selected: list[str],
+        rejected: list[str],
         metadata: dict[str, dict[str, Any]],
         enrichments: dict[str, dict[str, Any]],
     ) -> tuple[dict[str, Any], bool]:
-        selection = {"selected": selected, "rejected": [], "metadata": metadata, "enrichments": enrichments}
+        selection = {"selected": selected, "rejected": rejected, "metadata": metadata, "enrichments": enrichments}
         with self._transaction() as conn:
             run = self.run_status(run_id, conn=conn)
             revision_id = run["batch_revision"]
@@ -648,16 +649,13 @@ class AgentStore:
                 (job_id, revision_id),
             )
             selected_set = set(selected)
-            for row in conn.execute(
-                "SELECT candidate_id FROM mining_candidates WHERE batch_revision=? ORDER BY position", (revision_id,)
-            ):
-                candidate_id = row["candidate_id"]
+            for candidate_id in [*selected, *rejected]:
                 conn.execute(
                     "INSERT INTO candidate_feedback VALUES (?, ?, ?, ?, NULL)",
                     (
                         revision_id,
                         candidate_id,
-                        "selected" if candidate_id in selected_set else "not_reviewed",
+                        "selected" if candidate_id in selected_set else "rejected",
                         canonical_json(metadata.get(candidate_id, {})),
                     ),
                 )
@@ -718,7 +716,7 @@ class AgentStore:
             selected_count = len(selection["selected"])
             failed = int(totals.get("failed", 0))
             finished = sum(int(value) for value in totals.values())
-            if failed == 0 and finished == selected_count:
+            if selected_count == 0 or (failed == 0 and finished == selected_count):
                 state = "completed"
             elif selected_count > 0 and failed == selected_count:
                 state = "failed"

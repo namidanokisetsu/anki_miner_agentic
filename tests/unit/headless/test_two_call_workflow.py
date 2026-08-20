@@ -26,6 +26,7 @@ def make_run(
     tmp_path,
     candidate_ids=("candidate_z", "candidate_a", "candidate_m"),
     audio_tracks=None,
+    run_candidate_ids=None,
 ):
     video = tmp_path / "episode.mp4"
     subtitle = tmp_path / "episode.srt"
@@ -39,7 +40,10 @@ def make_run(
                 "public": {
                     "candidate_id": candidate_id,
                     "eligible": True,
-                    "definition_options": [{"dictionary": "D", "text": f"meaning-{index}"}],
+                    "review": {"state": "required", "contract_version": "candidate_review_v1"},
+                    "definition_options": [
+                        {"option_id": "definition_1", "dictionary": "D", "text": f"meaning-{index}"}
+                    ],
                 },
                 "internal": {
                     "video_fingerprint": file_fingerprint(video),
@@ -61,7 +65,8 @@ def make_run(
         },
         rows,
     )
-    return store.create_run("batch_two_call", [row["public"] for row in rows])
+    published = set(candidate_ids if run_candidate_ids is None else run_candidate_ids)
+    return store.create_run("batch_two_call", [row["public"] for row in rows if row["public"]["candidate_id"] in published])
 
 
 class BatchWriter:
@@ -81,14 +86,26 @@ class BatchWriter:
         ][: len(candidates)]
 
 
+def review(candidate_id, *, decision="select", reason_code=None, enrichments=None):
+    item = {
+        "candidate_id": candidate_id,
+        "decision": decision,
+        "definition_option_id": "definition_1" if decision == "select" else None,
+        "reason_code": reason_code or ("clear_supported_target" if decision == "select" else "ambiguous_context"),
+    }
+    if enrichments is not None:
+        item["enrichments"] = enrichments
+    return item
+
+
 def test_two_call_commit_groups_and_preserves_exact_order_and_receipts(tmp_path):
     store = AgentStore(tmp_path / "agent.sqlite3")
     run = make_run(store, tmp_path)
     writer = BatchWriter()
     service = MiningCommitService(store, config(), writer)
-    selections = [{"candidate_id": value} for value in ("candidate_z", "candidate_a", "candidate_m")]
+    reviews = [review(value) for value in ("candidate_z", "candidate_a", "candidate_m")]
 
-    receipt = service.commit_run(run["run_id"], selections)
+    receipt = service.commit_run(run["run_id"], reviews)
 
     assert writer.preflights == 1
     assert len(writer.groups) == 1
@@ -110,16 +127,16 @@ def test_unchanged_retry_reuses_job_and_changed_selection_fails(tmp_path):
     run = make_run(store, tmp_path, ("candidate_z",))
     writer = BatchWriter()
     service = MiningCommitService(store, config(), writer)
-    selection = [{"candidate_id": "candidate_z"}]
+    chosen = [review("candidate_z")]
 
-    first = service.commit_run(run["run_id"], selection)
-    second = service.commit_run(run["run_id"], selection)
+    first = service.commit_run(run["run_id"], chosen)
+    second = service.commit_run(run["run_id"], chosen)
     assert second["job_id"] == first["job_id"]
     assert second["tags"] == first["tags"]
     assert len(writer.groups) == 1
 
     with pytest.raises(AgentMiningError) as raised:
-        service.commit_run(run["run_id"], [])
+        service.commit_run(run["run_id"], [review("candidate_z", decision="reject")])
     assert raised.value.code == "run_selection_changed"
     assert len(writer.groups) == 1
 
@@ -137,7 +154,7 @@ def test_required_enrichment_validation_is_side_effect_free(tmp_path):
     with pytest.raises(AgentMiningError) as raised:
         service.commit_run(
             run["run_id"],
-            [{"candidate_id": "candidate_z", "enrichments": {"chosen_definition": "meaning-0"}}],
+            [review("candidate_z", enrichments={"chosen_definition": "meaning-0"})],
         )
     assert raised.value.code == "missing_required_enrichment"
     assert writer.preflights == 0
@@ -160,7 +177,14 @@ def test_commit_fingerprints_each_unique_path_once(monkeypatch, tmp_path):
         return real(path)
 
     monkeypatch.setattr(commit_module, "file_fingerprint", counted)
-    service.commit_run(run["run_id"], [{"candidate_id": value} for value in ("candidate_z", "candidate_a")])
+    service.commit_run(
+        run["run_id"],
+        [
+            review("candidate_z"),
+            review("candidate_a"),
+            review("candidate_m", decision="reject"),
+        ],
+    )
 
     assert len(calls) == 2
     assert len(set(calls)) == 2
@@ -177,7 +201,7 @@ def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path, monke
             return {"status": "ready"}
 
     class Candidates:
-        def prepare(self, inputs, *, max_cards, review_pool_size):
+        def prepare(self, inputs, *, max_cards):
             events.append("prepare")
             rows = [
                 {
@@ -196,7 +220,7 @@ def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path, monke
                     "request_hash": "r",
                     "sources": [],
                     "max_cards": max_cards,
-                    "review_pool_size": review_pool_size,
+                    "review_pool_size": max_cards,
                 },
                 rows,
             )
@@ -214,7 +238,7 @@ def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path, monke
         object(),
     )
 
-    result = app.prepare_mining_run({"inputs": [], "max_cards": 3, "review_pool_size": 3})
+    result = app.prepare_mining_run({"inputs": [], "max_cards": 3})
 
     assert events == ["sync", "prepare"]
     assert result["run_id"].startswith("run_")
@@ -223,6 +247,140 @@ def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path, monke
         "candidate-1",
         "candidate-2",
     ]
+    assert result["review_contract"] == {
+        "version": "candidate_review_v1",
+        "instruction": result["review_contract"]["instruction"],
+        "decisions": ["select", "reject"],
+        "select_reason": "clear_supported_target",
+        "reject_reasons": ["ambiguous_context", "suspicious_text", "unsupported_sense"],
+        "fields": ["candidate_id", "decision", "definition_option_id", "reason_code"],
+        "optional_fields": ["rationale", "enrichments"],
+    }
+
+
+def test_large_safety_ceiling_publishes_only_small_review_batch_and_explicit_paging(tmp_path):
+    store = AgentStore(tmp_path / "agent.sqlite3")
+
+    class Profile:
+        def sync(self):
+            return {"status": "ready"}
+
+    class Candidates:
+        def prepare(self, inputs, *, max_cards):
+            rows = [
+                {
+                    "lexical_id": f"word-{index}",
+                    "public": {
+                        "candidate_id": f"candidate-{index}",
+                        "eligible": True,
+                        "sentence": {"text": "文" * 150},
+                    },
+                    "internal": {},
+                }
+                for index in range(40)
+            ]
+            return store.create_batch(
+                {
+                    "revision_id": "batch_large_ceiling",
+                    "profile_revision_id": "profile",
+                    "analyzer_key": "a",
+                    "config_hash": "c",
+                    "request_hash": "r",
+                    "sources": [],
+                    "max_cards": max_cards,
+                    "review_pool_size": 20,
+                },
+                rows,
+            )
+
+    app = AgentMiningApplication(
+        store,
+        AgentProfileConfig(
+            (KnowledgeSource("Known", "Note", ("Expression",), ()),),
+            WriteTarget("Mining", "Note"),
+            max_cards=300,
+            max_payload_bytes=2_000,
+        ),
+        Profile(),
+        Candidates(),
+        object(),
+    )
+
+    result = app.prepare_mining_run({"inputs": [], "max_cards": 300})
+
+    assert result["limits"] == {
+        "safety_ceiling": 300,
+        "run_ceiling": 300,
+        "review_batch_bound": 20,
+        "semantics": "maxima_not_targets",
+    }
+    assert result["review_batch"]["count"] < 20
+    assert result["review_batch"]["zero_or_shortfall_is_success"] is True
+    assert result["paging"] == {
+        "complete": False,
+        "intended_count": 20,
+        "published_count": result["review_batch"]["count"],
+        "reason": "transport_bound",
+    }
+
+
+def test_decorative_score_is_not_part_of_the_review_contract(tmp_path):
+    store = AgentStore(tmp_path / "agent.sqlite3")
+    run = make_run(store, tmp_path, ("candidate_z",))
+    writer = BatchWriter()
+
+    with pytest.raises(AgentMiningError) as raised:
+        MiningCommitService(store, config(), writer).commit_run(
+            run["run_id"],
+            [{"candidate_id": "candidate_z", "metadata": {"score": 0.9}}],
+        )
+
+    assert raised.value.code == "invalid_review"
+    assert writer.preflights == 0
+
+
+def test_all_rejected_is_a_successful_no_write_review(tmp_path):
+    store = AgentStore(tmp_path / "agent.sqlite3")
+    run = make_run(store, tmp_path, ("candidate_z",))
+    writer = BatchWriter()
+
+    receipt = MiningCommitService(store, config(), writer).commit_run(
+        run["run_id"], [review("candidate_z", decision="reject", reason_code="suspicious_text")]
+    )
+
+    assert receipt["state"] == "completed"
+    assert receipt["review_counts"] == {"reviewed": 1, "selected": 0, "rejected": 1}
+    assert writer.preflights == 0
+
+
+def test_every_returned_candidate_requires_an_explicit_review(tmp_path):
+    store = AgentStore(tmp_path / "agent.sqlite3")
+    run = make_run(store, tmp_path, ("candidate_z", "candidate_a"))
+    writer = BatchWriter()
+
+    with pytest.raises(AgentMiningError) as raised:
+        MiningCommitService(store, config(), writer).commit_run(run["run_id"], [review("candidate_z")])
+
+    assert raised.value.code == "missing_candidate_reviews"
+    assert writer.preflights == 0
+
+
+def test_run_feedback_records_only_candidates_published_for_review(tmp_path):
+    store = AgentStore(tmp_path / "agent.sqlite3")
+    run = make_run(
+        store,
+        tmp_path,
+        ("candidate_z", "candidate_a", "candidate_m"),
+        run_candidate_ids=("candidate_z",),
+    )
+
+    MiningCommitService(store, config(), BatchWriter()).commit_run(run["run_id"], [review("candidate_z")])
+
+    with sqlite3.connect(tmp_path / "agent.sqlite3") as conn:
+        feedback = conn.execute(
+            "SELECT candidate_id, decision FROM candidate_feedback ORDER BY candidate_id"
+        ).fetchall()
+    assert feedback == [("candidate_z", "selected")]
 
 
 def test_global_writer_failure_stops_remaining_source_groups(tmp_path):
@@ -241,7 +399,7 @@ def test_global_writer_failure_stops_remaining_source_groups(tmp_path):
 
     writer = FailingWriter()
     receipt = MiningCommitService(store, config(), writer).commit_run(
-        run["run_id"], [{"candidate_id": "candidate_z"}, {"candidate_id": "candidate_a"}]
+        run["run_id"], [review("candidate_z"), review("candidate_a")]
     )
 
     assert len(writer.groups) == 1

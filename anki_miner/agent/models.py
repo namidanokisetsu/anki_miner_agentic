@@ -121,7 +121,6 @@ class AgentProfileConfig:
     write_target: WriteTarget
     mature_interval_days: int = 21
     max_cards: int = 20
-    review_pool_size: int | None = None
     max_payload_bytes: int = 512_000
     max_variants: int = 4
     max_rationale_chars: int = 500
@@ -141,11 +140,6 @@ class AgentProfileConfig:
         require(bool(self.knowledge_sources), "invalid_config", "At least one knowledge source is required")
         require(self.mature_interval_days >= 1, "invalid_config", "mature_interval_days must be positive")
         require(self.max_cards >= 1, "invalid_config", "max_cards must be positive")
-        require(
-            self.review_pool_size is None or self.review_pool_size >= 1,
-            "invalid_config",
-            "review_pool_size must be positive or null",
-        )
         require(self.max_payload_bytes >= 1024, "invalid_config", "max_payload_bytes must be at least 1024")
         require(1 <= self.max_variants <= 20, "invalid_config", "max_variants must be between 1 and 20")
         require(
@@ -199,7 +193,6 @@ class AgentProfileConfig:
             "write_target",
             "mature_interval_days",
             "max_cards",
-            "review_pool_size",
             "max_payload_bytes",
             "max_variants",
             "max_rationale_chars",
@@ -222,7 +215,6 @@ class AgentProfileConfig:
             for name in (
                 "mature_interval_days",
                 "max_cards",
-                "review_pool_size",
                 "max_payload_bytes",
                 "max_variants",
                 "max_rationale_chars",

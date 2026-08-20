@@ -13,18 +13,17 @@ from anki_miner.agent.errors import AgentMiningError
 from anki_miner.exceptions import AnkiConnectionError, OperationCancelled, SetupError, SubtitleParseError
 from anki_miner.runtime import build_agent_application
 
-
 _HELP = {
     "settings": """settings
   agent: knowledge_sources, write_target, mature_interval_days
-         max_cards, review_pool_size, payload/enrichment limits and fields
-  GUI profile: dictionaries, filters, word lists, ranking, media and card policy
-  runtime_overrides: ffmpeg/ffprobe/alass/yt-dlp paths only""",
+         safety max_cards, payload/enrichment limits and fields
+  GUI profile: dictionaries, filters, word lists, ranking, media, paths and card policy
+  per run: max_cards is an up-to authorization, never a target""",
     "workflow": """workflow
-  prepare_mining_run -> select and enrich returned candidates -> commit_mining_run
-  Stay within max_cards; every selected candidate needs every required enrichment.""",
+  prepare_mining_run -> review every returned candidate -> commit_mining_run
+  Select or reject each candidate; every selection needs every required enrichment.""",
     "commands": """commands
-  profile-validate | profile-sync | profile-status
+  profile-validate | profile-sync | profile-status | policy-status
   prepare-run --request FILE | commit-run --request FILE
   Lower-level recovery: prepare, candidates, commit, job""",
 }
@@ -60,6 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
     commands.add_parser("profile-validate")
     commands.add_parser("profile-sync")
     commands.add_parser("profile-status")
+    commands.add_parser("policy-status")
     prepare = commands.add_parser("prepare")
     prepare.add_argument("--request", required=True, help="Preparation request JSON path, or - for stdin")
     candidates = commands.add_parser("candidates")
@@ -75,7 +75,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_prepare = commands.add_parser("prepare-run")
     run_prepare.add_argument("--request", required=True, help="Run preparation JSON path, or - for stdin")
     run_commit = commands.add_parser("commit-run")
-    run_commit.add_argument("--request", required=True, help="Run selection JSON path, or - for stdin")
+    run_commit.add_argument("--request", required=True, help="Run reviews JSON path, or - for stdin")
     return parser
 
 
@@ -86,6 +86,8 @@ def _dispatch(args: argparse.Namespace, app: AgentMiningApplication) -> dict[str
         return app.sync_learner_profile()
     if args.command == "profile-status":
         return app.get_learner_profile()
+    if args.command == "policy-status":
+        return app.inspect_effective_policy()
     if args.command == "prepare":
         return app.prepare_mining_batch(_json_file(args.request))
     if args.command == "candidates":
@@ -104,7 +106,7 @@ def _dispatch(args: argparse.Namespace, app: AgentMiningApplication) -> dict[str
         return app.prepare_mining_run(_json_file(args.request))
     if args.command == "commit-run":
         request = _json_file(args.request)
-        return app.commit_mining_run(str(request.get("run_id", "")), list(request.get("selections", [])))
+        return app.commit_mining_run(str(request.get("run_id", "")), list(request.get("reviews", [])))
     raise AgentMiningError("invalid_command", "Unknown command")
 
 

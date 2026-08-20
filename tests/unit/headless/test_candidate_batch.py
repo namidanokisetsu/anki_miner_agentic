@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from dataclasses import replace
 from types import SimpleNamespace
 
 from anki_miner.agent.candidates import CandidateBatchService
@@ -13,6 +14,7 @@ from anki_miner.agent.models import (
     YouTubeInput,
 )
 from anki_miner.agent.store import AgentStore
+from anki_miner.config import AnkiMinerConfig
 from anki_miner.exceptions.youtube import NoJapaneseSubtitlesError
 from anki_miner.models import TokenizedWord
 
@@ -226,8 +228,8 @@ def test_prepare_exposes_bounded_plain_text_definition_options(tmp_path):
     )
 
     assert page["candidates"][0]["definition_options"] == [
-        {"dictionary": "First Dictionary", "text": "to eat, consume"},
-        {"dictionary": "Second Dictionary", "text": "to live on"},
+        {"option_id": "definition_1", "dictionary": "First Dictionary", "text": "to eat, consume"},
+        {"option_id": "definition_2", "dictionary": "Second Dictionary", "text": "to live on"},
     ]
     assert page["candidates"][0]["allowed_enrichments"] == ["chosen_definition", "sentence_translation"]
 
@@ -419,7 +421,7 @@ def test_definition_options_load_only_after_eligibility_and_shortlist_bounds(tmp
         Analyzer(),
         TwoWordParser(),
         Filter(),
-        cfg(chosen_definition_field="Chosen", review_pool_size=1),
+        cfg(chosen_definition_field="Chosen", max_cards=1),
         word_list_service=WordLists(),
         definition_probe=lambda terms: dict.fromkeys(terms, True),
         definition_options_lookup=lambda term: calls.append(term) or [("D", "meaning")],
@@ -428,3 +430,115 @@ def test_definition_options_load_only_after_eligibility_and_shortlist_bounds(tmp
     service.prepare([LocalEpisodeInput(video, subtitle)])
 
     assert calls == ["食べる"]
+
+
+def _word(surface, sentence, start, *, reading="ヨミ", pos="名詞"):
+    return TokenizedWord(
+        surface=surface,
+        lemma=surface,
+        reading=reading,
+        sentence=sentence,
+        start_time=start,
+        end_time=start + 2.0,
+        duration=2.0,
+        orth_base=surface,
+        expression_reading=reading,
+        pos=pos,
+    )
+
+
+def test_conservative_guard_exposes_exact_candidate_unknown_items(tmp_path):
+    sentence = "文明は未来を脅かす。"
+
+    class ThreeWordParser(Parser):
+        def parse_subtitle_file_with_index(self, path):
+            return [
+                _word("文明", sentence, 1.0),
+                _word("未来", sentence, 1.0),
+                _word("脅かす", sentence, 1.0, pos="動詞"),
+            ], []
+
+        def count_lemmas(self, path):
+            return Counter({"文明": 1, "未来": 1, "脅かす": 1})
+
+        def parse_raw_entries(self, path):
+            return [(1.0, 3.0, sentence)]
+
+    video = tmp_path / "episode.mp4"
+    subtitle = tmp_path / "episode.srt"
+    video.write_bytes(b"video")
+    subtitle.write_text("fixture", encoding="utf-8")
+    store = AgentStore(tmp_path / "agent.sqlite3")
+    publish_empty_profile(store)
+    service = CandidateBatchService(
+        store,
+        Analyzer(),
+        ThreeWordParser(),
+        Filter(),
+        cfg(),
+        definition_probe=lambda terms: dict.fromkeys(terms, True),
+    )
+
+    batch = service.prepare([LocalEpisodeInput(video, subtitle)])
+    page = store.list_candidates(
+        batch["batch_revision"],
+        offset=0,
+        limit=10,
+        include_ineligible=True,
+        expected_schema_version=1,
+        max_payload_bytes=100_000,
+    )
+
+    assert len(page["candidates"]) == 3
+    for candidate in page["candidates"]:
+        assert candidate["sentence"]["candidate_unknown_items"] == ["文明", "未来", "脅かす"]
+        assert candidate["difficulty"]["calibrated_score"] is None
+        assert "too_many_candidate_unknowns" in candidate["eligibility"]["reason_codes"]
+
+
+def test_target_competition_precedes_sentence_deduplication(tmp_path):
+    sentence = "ゴールが文明を脅かす。"
+
+    class CompetingParser(Parser):
+        def parse_subtitle_file_with_index(self, path):
+            return [
+                _word("ゴール", sentence, 1.0, reading="ゴール"),
+                _word("脅かす", sentence, 1.0, pos="動詞"),
+            ], []
+
+        def count_lemmas(self, path):
+            return Counter({"ゴール": 3, "脅かす": 1})
+
+        def parse_raw_entries(self, path):
+            return [(1.0, 3.0, sentence)]
+
+    video = tmp_path / "episode.mp4"
+    subtitle = tmp_path / "episode.srt"
+    video.write_bytes(b"video")
+    subtitle.write_text("fixture", encoding="utf-8")
+    store = AgentStore(tmp_path / "agent.sqlite3")
+    publish_empty_profile(store)
+    service = CandidateBatchService(
+        store,
+        Analyzer(),
+        CompetingParser(),
+        Filter(),
+        cfg(),
+        mining_policy=replace(AnkiMinerConfig(), deduplicate_sentences=True),
+        definition_probe=lambda terms: dict.fromkeys(terms, True),
+    )
+
+    batch = service.prepare([LocalEpisodeInput(video, subtitle)])
+    page = store.list_candidates(
+        batch["batch_revision"],
+        offset=0,
+        limit=10,
+        include_ineligible=True,
+        expected_schema_version=1,
+        max_payload_bytes=100_000,
+    )
+    by_target = {item["target"]["mined_form"]: item for item in page["candidates"]}
+
+    assert by_target["脅かす"]["eligible"] is True
+    assert by_target["ゴール"]["eligible"] is False
+    assert "weaker_sentence_target" in by_target["ゴール"]["eligibility"]["reason_codes"]

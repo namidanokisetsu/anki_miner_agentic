@@ -17,5 +17,5 @@ def test_settings_help_names_policy_owners(capsys):
 
     assert "knowledge_sources" in output
     assert "GUI profile" in output
-    assert "runtime_overrides" in output
+    assert "runtime_overrides" not in output
     assert output.count("\n") <= 6

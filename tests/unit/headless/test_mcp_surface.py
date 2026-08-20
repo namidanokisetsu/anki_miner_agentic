@@ -11,8 +11,8 @@ class FakeApplication:
     def prepare_mining_run(self, request):
         return request
 
-    def commit_mining_run(self, run_id, selections):
-        return {"run_id": run_id, "selections": selections}
+    def commit_mining_run(self, run_id, reviews):
+        return {"run_id": run_id, "reviews": reviews}
 
 
 def test_mcp_exposes_only_the_two_call_workflow():
