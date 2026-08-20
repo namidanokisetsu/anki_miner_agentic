@@ -19,6 +19,7 @@ from anki_miner.models.reading import ReadingDocument
 from anki_miner.models.youtube import FetchedMedia
 from anki_miner.orchestration.episode_processor import (
     EpisodeProcessor,
+    _build_lemma_context,
     _EpisodeContext,
     sanitize_source_label,
 )
@@ -88,6 +89,71 @@ class TestSanitizeSourceLabel:
 
     def test_all_metadata_collapses_to_empty(self):
         assert sanitize_source_label("[WEBRip][JA]-Trix") == ""
+
+
+class TestBuildLemmaContext:
+    """Lemma context for the definition/glossary batches: a kana-front token
+    (mined_form ゆう, lemma 言う) supplies its lemma so the dictionary lookup's
+    Rule A' scope can prefer the right lexeme over same-reading homographs."""
+
+    def test_kana_front_maps_mined_form_to_lemma(self):
+        word = TokenizedWord(
+            surface="ゆう",
+            lemma="言う",
+            reading="ユウ",
+            sentence="そうゆうことか",
+            start_time=1.0,
+            end_time=2.0,
+            duration=1.0,
+            orth_base="ゆう",
+            pos="動詞",
+        )
+        assert word.mined_form == "ゆう"
+        assert _build_lemma_context([word]) == {"ゆう": "言う"}
+
+    def test_identity_lemma_excluded(self):
+        # 食べた: mined_form == lemma == 食べる — nothing to disambiguate.
+        word = _make_word()
+        assert word.mined_form == word.lemma
+        assert _build_lemma_context([word]) == {}
+
+    def test_empty_lemma_excluded(self):
+        word = TokenizedWord(
+            surface="ろう瑚",
+            lemma="",
+            reading="ロウゴ",
+            sentence="ろう瑚のテスト",
+            start_time=1.0,
+            end_time=2.0,
+            duration=1.0,
+            pos="名詞",
+        )
+        assert _build_lemma_context([word]) == {}
+
+    def test_first_seen_wins_for_duplicate_mined_forms(self):
+        a = TokenizedWord(
+            surface="ゆう",
+            lemma="言う",
+            reading="ユウ",
+            sentence="そうゆうことか",
+            start_time=1.0,
+            end_time=2.0,
+            duration=1.0,
+            orth_base="ゆう",
+            pos="動詞",
+        )
+        b = TokenizedWord(
+            surface="ゆっ",
+            lemma="結う",
+            reading="ユッ",
+            sentence="髪をゆった",
+            start_time=3.0,
+            end_time=4.0,
+            duration=1.0,
+            orth_base="ゆう",
+            pos="動詞",
+        )
+        assert _build_lemma_context([a, b]) == {"ゆう": "言う"}
 
 
 class TestProcessEpisode:
@@ -1399,11 +1465,11 @@ class TestOptionalServices:
         assert "frequency" not in extra_fields
         assert "frequency_sort" not in extra_fields
 
-    def test_unranked_word_writes_missing_sentinel_when_field_mapped(self, test_config, mock_services, tmp_path):
-        """Unranked word + mapped frequency_sort field: writes the 9999999 sentinel.
+    def test_unranked_word_leaves_sort_field_unwritten_when_mapped(self, test_config, mock_services, tmp_path):
+        """Unranked word + mapped frequency_sort field: the field is left unwritten.
 
-        The sentinel sorts no-data cards *last* in Anki's browser instead of
-        before rank 1 (an omitted field reads as the empty string).
+        v2.7.8-v2.11.0 stamped a 9999999 placeholder here, which read as a real
+        (absurd) rank on the card. No rank means no value.
         """
         word = _make_word("食べる")
         media = _make_media()
@@ -1432,9 +1498,40 @@ class TestOptionalServices:
 
         card_data = mock_services["anki_service"].create_cards_batch.call_args[0][0]
         extra_fields = card_data[0].extra_fields or {}
-        # No per-source breakdown, but the sort field carries the missing sentinel.
+        # Neither the per-source breakdown nor the sort value: no rank, no claim.
         assert "frequency" not in extra_fields
-        assert extra_fields["frequency_sort"] == "9999999"
+        assert "frequency_sort" not in extra_fields
+
+    def test_no_frequency_service_leaves_sort_field_unwritten(self, test_config, mock_services, tmp_path):
+        """Mapped frequency_sort + NO frequency source at all: nothing is written.
+
+        Applying a note-type preset auto-maps FreqSort, so this is the config a
+        preset user with no frequency list installed runs — every card used to
+        get the 9999999 placeholder.
+        """
+        word = _make_word("食べる")
+        media = _make_media()
+
+        mock_services["subtitle_parser"].parse_subtitle_file.return_value = [word]
+        mock_services["anki_service"].get_existing_vocabulary.return_value = set()
+        mock_services["word_filter"].filter_unknown.return_value = [word]
+        mock_services["media_extractor"].extract_media_batch.return_value = [(word, media)]
+        mock_services["definition_service"].get_definitions_batch.return_value = ["1. to eat"]
+        mock_services["anki_service"].create_cards_batch.return_value = [1]
+
+        config = replace(test_config, anki_fields={**test_config.anki_fields, "frequency_sort": "FrequencySort"})
+        processor = build_processor(
+            config=config,
+            presenter=NullPresenter(),
+            frequency_service=None,
+            **mock_services,
+        )
+
+        processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
+
+        card_data = mock_services["anki_service"].create_cards_batch.call_args[0][0]
+        extra_fields = card_data[0].extra_fields or {}
+        assert "frequency_sort" not in extra_fields
 
 
 class TestPitchLemmaReading:

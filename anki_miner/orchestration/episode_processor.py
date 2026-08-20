@@ -71,6 +71,7 @@ if TYPE_CHECKING:
     from anki_miner.interfaces.sentence_audio import SentenceAudioFetcher
     from anki_miner.models import LineLemmas
     from anki_miner.models.reading import ImageRef, ReadingDocument
+    from anki_miner.services.audio_packs.registry import AudioPackRegistry
     from anki_miner.services.dictionary.registry import DictionaryRegistry
     from anki_miner.services.frequency.multi_frequency_service import MultiFrequencyService
     from anki_miner.services.frequency.registry import FrequencySourceRegistry
@@ -127,6 +128,25 @@ def sanitize_source_label(label: str) -> str:
     """Remove *arr release metadata (e.g. ``[WEBRip-1080p][JA]-Trix``) from a
     source label, leaving the human-readable title."""
     return _ARR_METADATA_RE.sub("", label).strip()
+
+
+def _build_lemma_context(words: list[TokenizedWord]) -> dict[str, str]:
+    """Map each word's ``mined_form`` to its UniDic lemma for the definition /
+    glossary batches' Rule A′ homograph scope.
+
+    A kana front (mined_form ゆう, lemma 言う) resolves only through the
+    dictionary's folded-reading scan, where score ranking prefers the wrong
+    same-reading homograph (有/夕/結う over 言う); the lemma names the lexeme
+    the tokenizer actually chose. Identity pairs carry no signal and an empty
+    lemma (fully-OOV shapes) has nothing to point at, so both are skipped.
+    First-seen wins for duplicate mined_forms, mirroring the batches' own
+    first-reading-wins dedup.
+    """
+    context: dict[str, str] = {}
+    for w in words:
+        if w.lemma and w.lemma != w.mined_form:
+            context.setdefault(w.mined_form, w.lemma)
+    return context
 
 
 @dataclass
@@ -210,6 +230,7 @@ class EpisodeProcessor:
         dictionary_registry: DictionaryRegistry | None = None,
         frequency_registry: FrequencySourceRegistry | None = None,
         pitch_registry: PitchSourceRegistry | None = None,
+        audio_pack_registry: AudioPackRegistry | None = None,
         sentence_audio_fetcher: SentenceAudioFetcher | None = None,
         owns_lookup_services: bool = True,
     ):
@@ -246,6 +267,9 @@ class EpisodeProcessor:
                 must not be gated.
             pitch_registry: Optional loaded pitch registry, same role and same
                 inactive-means-ungated rule.
+            audio_pack_registry: Optional loaded audio pack registry, same role.
+                ``None`` whenever the expression_audio field is unmapped or no
+                pack entry is enabled — the same inactive-means-ungated rule.
             sentence_audio_fetcher: Optional sentence-TTS fetcher. Consulted
                 ONLY by ``process_reading`` phase 3' (reading sources have no
                 source audio); video/YouTube/audiobook paths never touch it.
@@ -280,6 +304,7 @@ class EpisodeProcessor:
         self._dictionary_registry = dictionary_registry
         self._frequency_registry = frequency_registry
         self._pitch_registry = pitch_registry
+        self._audio_pack_registry = audio_pack_registry
         self.owns_lookup_services = owns_lookup_services
         self._cancelled = False
         # Per-run external cancel source (e.g. a worker's threading.Event
@@ -1315,11 +1340,19 @@ class EpisodeProcessor:
             if alternate != w.mined_form and not _differs_by_okurigana_only(w.mined_form, alternate):
                 alternate = ""
             fallback_context.setdefault(w.mined_form, (alternate, None))
+        # Rule A′ lemma scope: a kana front's lemma names its lexeme so the
+        # lookup keeps 言う's rows for ゆう instead of the highest-scored
+        # same-reading homograph (有/夕/結う). Passed only when non-empty —
+        # the same legacy-call-shape convention the service applies toward
+        # providers, so kanji-only runs keep the pre-A′ call signature.
+        lemma_context = _build_lemma_context(words_with_media)
+        lemma_kwargs: dict[str, dict[str, str]] = {"lemma_context": lemma_context} if lemma_context else {}
         definitions = self.definition_service.get_definitions_batch(
             lookup_pairs,
             progress_callback,
             fallback_context,
             is_cancelled=lambda: self.cancelled,
+            **lemma_kwargs,
         )
         self.presenter.show_success(
             QCoreApplication.translate(
@@ -1336,6 +1369,7 @@ class EpisodeProcessor:
                 lookup_pairs,
                 progress_callback,
                 is_cancelled=lambda: self.cancelled,
+                **lemma_kwargs,
             )
             # get_glossaries_batch has no miss-fallback mechanism, so a miss may
             # retry once under a same-kanji, okurigana-only lemma alternate.
@@ -1521,15 +1555,17 @@ class EpisodeProcessor:
             if word.frequency_sources:
                 extra_fields["frequency"] = render_frequency_html(word.frequency_sources)
             # Numeric sort column: the harmonic mean of the per-source ranks
-            # (Yomitan getFrequencyHarmonic), with the 9999999 sentinel for
-            # words no source ranks so they sort *last* rather than before rank 1
-            # (an omitted field reads as empty string in Anki's browser). Gated on
-            # the field being mapped so the default config's notes stay byte-for-
-            # byte identical; the sentinel is emitted only when a user opts in.
-            if self.config.anki_fields.get("frequency_sort"):
-                extra_fields["frequency_sort"] = (
-                    str(word.frequency_harmonic_rank) if word.frequency_harmonic_rank is not None else "9999999"
-                )
+            # (Yomitan getFrequencyHarmonic). A word no source ranks gets NOTHING
+            # written — the field must never claim a rank the word does not have.
+            # v2.7.8-v2.11.0 wrote a 9999999 "missing" sentinel here so unranked
+            # words sorted last; it read as a real (absurd) rank on the card, and
+            # because the write was gated only on the mapping, a user with a
+            # preset-mapped FreqSort and no frequency source got it on EVERY card.
+            # `frequency_harmonic_rank` is set only inside the source-gated block
+            # in _phase2_filter, so a None here covers all three misses: no source
+            # loaded, source loaded but no row, and categorical-only attestation.
+            if self.config.anki_fields.get("frequency_sort") and word.frequency_harmonic_rank is not None:
+                extra_fields["frequency_sort"] = str(word.frequency_harmonic_rank)
             if glossary:
                 extra_fields["glossary"] = (
                     attach_card_style_block(glossary, dict_css_entries=episode_dict_css_entries)
@@ -2401,31 +2437,34 @@ class EpisodeProcessor:
         """Raise SetupError if any enabled indexed slot needs reimport (4.0).
 
         The single-episode backstop for the schema-bump migration gate, across
-        all three indexed families: consults each injected registry's per-slot
+        all four indexed families: consults each injected registry's per-slot
         ``schema_ok`` (NOT the built chains, which silently drop stale slots) so
         a user who upgraded and mines before reimporting gets one actionable
         error instead of a silent zero-card run, an unfiltered flood of rare
-        words, or a blank pitch field.
+        words, a blank pitch field, or cards quietly falling back to the online
+        audio sources.
 
         Queue workers front-run this with their own pre-loop check so a batch
         aborts once rather than per item; this covers the direct single-episode
         callers (episode / manual-pair / deck-builder).
 
-        A family whose registry was not injected is skipped — for frequency and
-        pitch that is the normal state when the user has not configured them,
-        and it is what keeps both optional.
+        A family whose registry was not injected is skipped — for frequency,
+        pitch and audio packs that is the normal state when the user has not
+        configured them, and it is what keeps all three optional.
         """
         message = stale_resource_reimport_error(
             self.config,
             dictionary_registry=self._dictionary_registry,
             frequency_registry=self._frequency_registry,
             pitch_registry=self._pitch_registry,
+            audio_registry=self._audio_pack_registry,
             families=frozenset(
                 kind
                 for kind, registry in (
                     ("dictionary", self._dictionary_registry),
                     ("frequency", self._frequency_registry),
                     ("pitch", self._pitch_registry),
+                    ("audio", self._audio_pack_registry),
                 )
                 if registry is not None
             ),

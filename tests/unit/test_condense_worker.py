@@ -27,7 +27,11 @@ from anki_miner.gui.workers.condense_worker import (
     CondenseOutputCollisionError,
     CondenseWorker,
 )
-from anki_miner.services.audio_condenser import EncoderUnavailableError, FfmpegStepFailure
+from anki_miner.services.audio_condenser import (
+    EncoderUnavailableError,
+    FfmpegStepFailure,
+    FilterUnavailableError,
+)
 from anki_miner.services.audio_tagger import TrackMetadata
 from anki_miner.utils.audio_track_detector import SubtitleStream
 
@@ -79,6 +83,7 @@ class _FakeService:
         *,
         condense_result: bool = True,
         encoder_error: bool = False,
+        filter_error: bool = False,
         cancel_on_condense: bool = False,
         extract_returns: bool = True,
         condense_failure: FfmpegStepFailure | None = None,
@@ -86,6 +91,7 @@ class _FakeService:
         self._condense_result = condense_result
         self._condense_failure = condense_failure
         self._encoder_error = encoder_error
+        self._filter_error = filter_error
         self._cancel_on_condense = cancel_on_condense
         self._extract_returns = extract_returns
         self.condense_calls: list[dict] = []
@@ -121,6 +127,8 @@ class _FakeService:
         )
         if self._encoder_error:
             raise EncoderUnavailableError("ffmpeg encoder 'libmp3lame' is unavailable")
+        if self._filter_error:
+            raise FilterUnavailableError("This ffmpeg build's 'aselect' filter does not filter")
         if self._cancel_on_condense and cancel_event is not None:
             cancel_event.set()
             return False, None
@@ -141,7 +149,7 @@ def _capture(worker: CondenseWorker) -> dict:
     worker.file_started.connect(lambda idx: cap["started"].append(idx))
     worker.file_progress.connect(lambda idx, pct, msg: cap["progress"].append((idx, pct, msg)))
     worker.file_finished.connect(lambda idx, out, err: cap["finished"].append((idx, out, err)))
-    worker.file_skipped.connect(lambda idx, out: cap["skipped"].append((idx, out)))
+    worker.file_skipped.connect(lambda idx, out, reason: cap["skipped"].append((idx, out, reason)))
     worker.queue_finished.connect(lambda _outcome: cap["queue_finished"].append(True))
     return cap
 
@@ -392,7 +400,10 @@ def test_worker_keeps_existing_exact_nfc_nfd_output_twins(qapp, tmp_path, supply
     worker.run()
     worker.wait(2000)
 
-    assert cap["skipped"] == [(0, output_paths[0]), (1, output_paths[1])]
+    assert cap["skipped"] == [
+        (0, output_paths[0], "Skipped, exists"),
+        (1, output_paths[1], "Skipped, exists"),
+    ]
     assert cap["finished"] == []
     assert service.condense_calls == []
 
@@ -417,7 +428,7 @@ def test_skip_if_exists_no_overwrite(qapp, tmp_path):
     worker.run()
     worker.wait(2000)
 
-    assert cap["skipped"] == [(0, existing)]
+    assert cap["skipped"] == [(0, existing, "Skipped, exists")]
     assert cap["finished"] == []
     assert cap["queue_finished"] == [True]
     assert service.condense_calls == []
@@ -783,6 +794,37 @@ def test_encoder_unavailable_stops_queue(qapp, tmp_path):
     assert len(service.condense_calls) == 1
 
 
+def test_inert_aselect_stops_queue(qapp, tmp_path):
+    """An ffmpeg whose aselect does not filter dooms every file — stop the queue.
+
+    Otherwise each file "succeeds" and writes the whole source track, so the user
+    gets a queue of full-length files named like condensed ones.
+    """
+    config = _make_config(tmp_path)
+    m1 = tmp_path / "ep01.mkv"
+    m2 = tmp_path / "ep02.mkv"
+    m1.write_bytes(b"")
+    m2.write_bytes(b"")
+    s1 = _write_srt(tmp_path / "ep01.srt", [(1000, 2000, "a")])
+    s2 = _write_srt(tmp_path / "ep02.srt", [(1000, 2000, "b")])
+
+    service = _FakeService(filter_error=True)
+    worker = _make_worker([CondenseItem(m1, s1), CondenseItem(m2, s2)], config, service=service)
+    cap = _capture(worker)
+    worker.run()
+    worker.wait(2000)
+
+    assert len(cap["finished"]) == 1
+    idx, out, err = cap["finished"][0]
+    assert idx == 0 and out is None
+    assert "aselect" in err
+    assert 1 not in cap["started"]
+    assert cap["queue_finished"] == [True]
+    # A broken ffmpeg is a tool error, not a user cancel.
+    assert worker.is_cancelled is False
+    assert len(service.condense_calls) == 1
+
+
 # ---------------------------------------------------------------------------
 # Embedded-sub temp deleted in per-file finally (success + failure)
 # ---------------------------------------------------------------------------
@@ -968,7 +1010,7 @@ def test_queue_finished_on_empty_list(qapp, tmp_path):
 
 
 def test_file_skipped_signal_exists(qapp, tmp_path):
-    """CondenseWorker exposes a file_skipped(int, object) signal."""
+    """CondenseWorker exposes a file_skipped(int, object, str) signal."""
     worker = _make_worker([], _make_config(tmp_path), service=_FakeService())
     assert hasattr(worker, "file_skipped")
 

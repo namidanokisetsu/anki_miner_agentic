@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="id_ID">
-  <context>
+    <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -24,8 +24,8 @@
         <translation>Mining kartu kosakata bahasa Jepang dari video ke Anki — tangkapan layar, audio, dan definisi, secara otomatis.</translation>
     </message>
     <message>
-        <source>About Anki Miner</source>
-        <translation>Tentang Anki Miner</translation>
+        <source>About Anki Miner Agentic</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>GitHub</source>
@@ -648,16 +648,14 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Is Already Running</source>
-        <translation>Anki Miner Sudah Berjalan</translation>
+        <source>Anki Miner Agentic Is Already Running</source>
+        <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation>Salinan lain Anki Miner tampaknya sedang berjalan. Menjalankan dua salinan sekaligus dapat merusak basis data kata yang dikenal dan statistik.
-
-Tetap lanjutkan?</translation>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>Continue anyway</source>
@@ -732,12 +730,12 @@ Format yang didukung: AJT (index.json + media/), NHK16 (entries.json + audio/), 
         <translation>Dibatalkan sebelum paket yang tersisa.</translation>
     </message>
     <message>
-        <source>Audio Packs Added</source>
-        <translation>Paket Audio Ditambahkan</translation>
-    </message>
-    <message>
         <source>Done.</source>
         <translation>Selesai.</translation>
+    </message>
+    <message>
+        <source>Audio Packs Added</source>
+        <translation>Paket Audio Ditambahkan</translation>
     </message>
     <message>
         <source>The import finished, but the settings could not be updated.</source>
@@ -760,6 +758,38 @@ Format yang didukung: AJT (index.json + media/), NHK16 (entries.json + audio/), 
         <translation>Proses impor selesai tanpa hasil akhir.</translation>
     </message>
     <message>
+        <source>Choose Android audio database</source>
+        <translation>Pilih database audio Android</translation>
+    </message>
+    <message>
+        <source>Android database (*.db);;SQLite database (*.sqlite *.sqlite3)</source>
+        <translation>Database Android (*.db);;Database SQLite (*.sqlite *.sqlite3)</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Added</source>
+        <translation>Database Audio Android Ditambahkan</translation>
+    </message>
+    <message>
+        <source>Registered %1 (%2 entries).</source>
+        <translation>Mendaftarkan %1 (%2 entri).</translation>
+    </message>
+    <message>
+        <source>Registering Android audio database…</source>
+        <translation>Mendaftarkan database audio Android…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be added.</source>
+        <translation>Database audio Android tidak dapat ditambahkan.</translation>
+    </message>
+    <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>Impor lain masih berlangsung. Tunggu hingga selesai lalu coba lagi.</translation>
+    </message>
+    <message>
+        <source>Choose Android audio database to re-import</source>
+        <translation>Pilih database audio Android untuk diimpor ulang</translation>
+    </message>
+    <message>
         <source>Choose audio pack folder to re-import</source>
         <translation>Pilih folder paket audio untuk diimpor ulang</translation>
     </message>
@@ -768,8 +798,16 @@ Format yang didukung: AJT (index.json + media/), NHK16 (entries.json + audio/), 
         <translation>Sumber daya terindeks sedang digunakan oleh mining, pemanasan awal saat startup, atau pengisian ulang kartu. Tunggu hingga tugas yang aktif selesai lalu coba lagi.</translation>
     </message>
     <message>
-        <source>Audio Pack Re-imported</source>
-        <translation>Paket Audio Diimpor Ulang</translation>
+        <source>Re-importing Android audio database…</source>
+        <translation>Mengimpor ulang database audio Android…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be re-imported.</source>
+        <translation>Database audio Android tidak dapat diimpor ulang.</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Re-imported</source>
+        <translation>Database Audio Android Diimpor Ulang</translation>
     </message>
     <message>
         <source>Re-imported %1 successfully.</source>
@@ -784,8 +822,58 @@ Format yang didukung: AJT (index.json + media/), NHK16 (entries.json + audio/), 
         <translation>Paket audio tidak dapat diimpor ulang.</translation>
     </message>
     <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Impor lain masih berlangsung. Tunggu hingga selesai lalu coba lagi.</translation>
+        <source>Audio Pack Re-imported</source>
+        <translation>Paket Audio Diimpor Ulang</translation>
+    </message>
+    <message>
+        <source>The audio pack folder could not be scanned.</source>
+        <translation>Folder paket audio tidak dapat dipindai.</translation>
+    </message>
+    <message>
+        <source>No audio packs eligible for automatic repair were found.
+
+Skipped (source folder or database not found; use per-row Re-import…):
+</source>
+        <translation>Tidak ditemukan paket audio yang memenuhi syarat untuk perbaikan otomatis.
+
+Dilewati (folder sumber atau database tidak ditemukan; gunakan Impor Ulang… per baris):
+</translation>
+    </message>
+    <message>
+        <source>No audio packs in the chain.</source>
+        <translation>Tidak ada paket audio dalam rantai.</translation>
+    </message>
+    <message>
+        <source>Nothing to reimport</source>
+        <translation>Tidak ada yang perlu diimpor ulang</translation>
+    </message>
+    <message>
+        <source>Audio pack %1 of %2: %3</source>
+        <translation>Paket audio %1 dari %2: %3</translation>
+    </message>
+    <message>
+        <source>Re-imported %1 audio pack(s):</source>
+        <translation>Mengimpor ulang %1 paket audio:</translation>
+    </message>
+    <message>
+        <source>Skipped (source folder or database not found; use per-row Re-import…):</source>
+        <translation>Dilewati (folder sumber atau database tidak ditemukan; gunakan Impor Ulang… per baris):</translation>
+    </message>
+    <message>
+        <source>Cancelled before the batch finished.</source>
+        <translation>Dibatalkan sebelum batch selesai.</translation>
+    </message>
+    <message>
+        <source>Nothing to do.</source>
+        <translation>Tidak ada yang perlu dilakukan.</translation>
+    </message>
+    <message>
+        <source>Audio Packs Re-imported</source>
+        <translation>Paket Audio Diimpor Ulang</translation>
+    </message>
+    <message>
+        <source>Some audio packs could not be re-imported.</source>
+        <translation>Beberapa paket audio tidak dapat diimpor ulang.</translation>
     </message>
 </context><context>
     <name>AudioPackSettingsPanel</name>
@@ -846,6 +934,14 @@ Format yang didukung: AJT (index.json + media/), NHK16 (entries.json + audio/), 
         <translation>Tambahkan kembali paket audio yang ditemukan di folder penyimpanan yang tidak ada dalam daftar di atas. Tidak perlu impor ulang.</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>Impor Ulang Semua</translation>
+    </message>
+    <message>
+        <source>Rebuild every audio pack in the list from the folder or database it was imported from. Needed after an app upgrade changes the index format.</source>
+        <translation>Membangun ulang setiap paket audio dalam daftar dari folder atau database tempat paket itu diimpor. Diperlukan setelah pemutakhiran aplikasi mengubah format indeks.</translation>
+    </message>
+    <message>
         <source>Sources are tried top to bottom — the first one that has audio for a word wins.</source>
         <translation>Sumber dicoba dari atas ke bawah — yang pertama memiliki audio untuk suatu kata akan dipakai.</translation>
     </message>
@@ -880,6 +976,10 @@ Format yang didukung: AJT (index.json + media/), NHK16 (entries.json + audio/), 
     <message>
         <source>Audio Pack…</source>
         <translation>Paket Audio…</translation>
+    </message>
+    <message>
+        <source>Android Audio Database…</source>
+        <translation>Database Audio Android…</translation>
     </message>
     <message>
         <source>Online Source…</source>
@@ -1262,6 +1362,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>series</source>
         <translation>seri</translation>
+    </message>
+    <message>
+        <source>Every series in the queue is already complete. Select the ones you want to mine again, then click Run selected.</source>
+        <translation>Setiap seri dalam antrean sudah selesai. Pilih seri yang ingin Anda mining lagi, lalu klik Jalankan yang dipilih.</translation>
     </message>
     <message>
         <source>No valid series in the queue to process.</source>
@@ -2172,10 +2276,6 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>{count} bidang aksen nada dipertahankan — bacaan hanya dapat ditebak dari kata saja, sehingga penimpaan dapat menerapkan aksen homograf yang salah. Petakan bidang Bacaan Ekspresi atau Furigana untuk menimpanya.</translation>
     </message>
     <message>
-        <source>{count} sort value(s) are the 9999999 no-frequency-found placeholder.</source>
-        <translation>{count} nilai pengurutan merupakan nilai penanda 9999999 untuk frekuensi yang tidak ditemukan.</translation>
-    </message>
-    <message>
         <source>Not on this note type (stale mapping): {fields}. Fix in Settings → Anki field mapping.</source>
         <translation>Tidak ada pada tipe catatan ini (pemetaan usang): {fields}. Perbaiki di pemetaan bidang Pengaturan → Anki.</translation>
     </message>
@@ -2330,6 +2430,14 @@ Tindakan ini akan mengubah {notes} catatan ({fields} bidang) dan menandainya den
     <message>
         <source>Complete — %1 files processed</source>
         <translation>Selesai — %1 berkas diproses</translation>
+    </message>
+    <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Selesai — %1 diproses, %2 dilewati</translation>
+    </message>
+    <message>
+        <source>Nothing condensed — all %1 skipped because their output already exists. Enable Overwrite to condense again.</source>
+        <translation>Tidak ada yang dipadatkan — semua %1 dilewati karena keluarannya sudah ada. Aktifkan Timpa untuk memadatkan ulang.</translation>
     </message>
     <message>
         <source>Select Output Folder</source>
@@ -3168,12 +3276,20 @@ Tindakan ini akan mengubah {notes} catatan ({fields} bidang) dan menandainya den
         <translation>%1 berkas media tidak dapat diimpor.</translation>
     </message>
     <message>
-        <source>Choose Yomitan dictionary zip</source>
+        <source>Choose Yomitan dictionary zips</source>
         <translation>Pilih zip kamus Yomitan</translation>
     </message>
     <message>
         <source>Yomitan zip (*.zip)</source>
         <translation>Zip Yomitan (*.zip)</translation>
+    </message>
+    <message>
+        <source>Dictionary %1 of %2: %3</source>
+        <translation>Kamus %1 dari %2: %3</translation>
+    </message>
+    <message>
+        <source>The dictionary could not be imported.</source>
+        <translation>Kamus tidak dapat diimpor.</translation>
     </message>
     <message>
         <source>Dictionary added</source>
@@ -3184,24 +3300,32 @@ Tindakan ini akan mengubah {notes} catatan ({fields} bidang) dan menandainya den
         <translation>Mengimpor %1 (%2 entri)</translation>
     </message>
     <message>
+        <source>Imported %1 dictionaries:</source>
+        <translation>Mengimpor %1 kamus:</translation>
+    </message>
+    <message>
+        <source>Failed:</source>
+        <translation>Gagal:</translation>
+    </message>
+    <message>
+        <source>Cancelled before remaining dictionaries.</source>
+        <translation>Dibatalkan sebelum kamus yang tersisa.</translation>
+    </message>
+    <message>
+        <source>Done.</source>
+        <translation>Selesai.</translation>
+    </message>
+    <message>
+        <source>Dictionaries added</source>
+        <translation>Kamus ditambahkan</translation>
+    </message>
+    <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation>Impor selesai, tetapi pengaturan tidak dapat diperbarui.</translation>
     </message>
     <message>
-        <source>Importing dictionary…</source>
-        <translation>Mengimpor kamus…</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Batal</translation>
-    </message>
-    <message>
-        <source>The dictionary could not be imported.</source>
-        <translation>Kamus tidak dapat diimpor.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Impor lain masih berlangsung. Tunggu hingga selesai lalu coba lagi.</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -3240,6 +3364,10 @@ Tindakan ini akan mengubah {notes} catatan ({fields} bidang) dan menandainya den
         <translation>Kamus tidak dapat diimpor ulang.</translation>
     </message>
     <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>Impor lain masih berlangsung. Tunggu hingga selesai lalu coba lagi.</translation>
+    </message>
+    <message>
         <source>No JMdict XML at %1. Download from EDRDG and place it there.</source>
         <translation>Tidak ada XML JMdict di %1. Unduh dari EDRDG dan letakkan di sana.</translation>
     </message>
@@ -3270,10 +3398,6 @@ Dilewati (tidak memenuhi syarat untuk perbaikan otomatis; gunakan Impor Ulang…
         <translation>Tidak ada yang perlu diimpor ulang</translation>
     </message>
     <message>
-        <source>Dictionary %1 of %2: %3</source>
-        <translation>Kamus %1 dari %2: %3</translation>
-    </message>
-    <message>
         <source>Reimported %1 dictionary/dictionaries:</source>
         <translation>%1 kamus diimpor ulang:</translation>
     </message>
@@ -3282,20 +3406,8 @@ Dilewati (tidak memenuhi syarat untuk perbaikan otomatis; gunakan Impor Ulang…
         <translation>Dilewati (tidak memenuhi syarat untuk perbaikan otomatis; gunakan Impor Ulang… per baris):</translation>
     </message>
     <message>
-        <source>Failed:</source>
-        <translation>Gagal:</translation>
-    </message>
-    <message>
-        <source>Cancelled before remaining dictionaries.</source>
-        <translation>Dibatalkan sebelum kamus yang tersisa.</translation>
-    </message>
-    <message>
         <source>Reimport All</source>
         <translation>Impor Ulang Semua</translation>
-    </message>
-    <message>
-        <source>Done.</source>
-        <translation>Selesai.</translation>
     </message>
     <message>
         <source>Nothing to restore</source>
@@ -3700,10 +3812,6 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
     <message>
         <source>Collapsed %1 duplicate-expression word(s)</source>
         <translation>Menggabungkan %1 kata dengan ekspresi duplikat</translation>
-    </message>
-    <message>
-        <source>Skipped %1 word(s) already carded under another spelling</source>
-        <translation>Melewati %1 kata yang sudah berkartu dengan ejaan lain</translation>
     </message>
     <message>
         <source>Frequency filter: removed %1 words outside ranks %2-%3</source>
@@ -4324,92 +4432,6 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
         <translation>Dek yang dikecualikan dari deteksi kata yang dikenal:</translation>
     </message>
 </context><context>
-    <name>FrequencyImportFlow</name>
-    <message>
-        <source> This is a word-based source; its level labels show on the card but don't affect frequency-rank filtering.</source>
-        <translation> Ini adalah sumber berbasis kata; label tingkatnya tampil di kartu tetapi tidak memengaruhi pemfilteran peringkat frekuensi.</translation>
-    </message>
-    <message>
-        <source>Choose frequency source</source>
-        <translation>Pilih sumber frekuensi</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> (melewati %1 entri yang rusak)</translation>
-    </message>
-    <message>
-        <source> This is an occurrence-based source; its counts were converted to ranks.</source>
-        <translation> Ini adalah sumber berbasis kemunculan; jumlahnya dikonversi menjadi peringkat.</translation>
-    </message>
-    <message>
-        <source>Frequency Source Added</source>
-        <translation>Sumber Frekuensi Ditambahkan</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>Mengimpor %1 entri dari '%2'.</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>Impor selesai, tetapi pengaturan tidak dapat diperbarui.</translation>
-    </message>
-    <message>
-        <source>Importing frequency source…</source>
-        <translation>Mengimpor sumber frekuensi…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Batal</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be imported.</source>
-        <translation>Sumber frekuensi tidak dapat diimpor.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Impor lain masih berlangsung. Tunggu hingga selesai lalu coba lagi.</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>Membatalkan…</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>Proses impor selesai tanpa hasil akhir.</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>Folder itu tidak dapat dipindai.</translation>
-    </message>
-    <message>
-        <source>Choose frequency source to re-import</source>
-        <translation>Pilih sumber frekuensi untuk diimpor ulang</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>Sumber daya terindeks sedang digunakan oleh mining, pemanasan awal saat startup, atau pengisian ulang kartu. Tunggu hingga tugas yang aktif selesai lalu coba lagi.</translation>
-    </message>
-    <message>
-        <source>Frequency Source Re-imported</source>
-        <translation>Sumber Frekuensi Diimpor Ulang</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>Berhasil mengimpor ulang %1.</translation>
-    </message>
-    <message>
-        <source>Re-importing frequency source…</source>
-        <translation>Mengimpor ulang sumber frekuensi…</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be re-imported.</source>
-        <translation>Sumber frekuensi tidak dapat diimpor ulang.</translation>
-    </message>
-    <message>
-        <source>Frequency source (%1);;All Files (*)</source>
-        <translation>Sumber frekuensi (%1);;Semua Berkas (*)</translation>
-    </message>
-</context><context>
     <name>FrequencySettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -4458,6 +4480,14 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
     <message>
         <source>Re-add frequency sources found in the storage folder that aren't in the list above. No re-import needed.</source>
         <translation>Tambahkan kembali sumber frekuensi yang ditemukan di folder penyimpanan yang tidak ada dalam daftar di atas. Tidak perlu impor ulang.</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>Impor Ulang Semua</translation>
+    </message>
+    <message>
+        <source>Rebuild every frequency source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>Membangun ulang setiap sumber frekuensi dalam daftar dari salinan yang disimpan saat diimpor. Diperlukan setelah pemutakhiran aplikasi mengubah format indeks.</translation>
     </message>
     <message>
         <source>Every enabled source counts: filtering uses the lowest rank, Frequency Sort the harmonic mean. Order only sets the card's source list.</source>
@@ -4510,6 +4540,14 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
     <message>
         <source>Enable or disable %1</source>
         <translation>Aktifkan atau nonaktifkan %1</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>Impor ulang</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ perlu impor ulang (pemutakhiran aplikasi)</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -5104,16 +5142,40 @@ Lanjutkan?</translation>
         <translation>Kartu yang di-mining tidak dapat ditata ulang.</translation>
     </message>
     <message>
-        <source>These dictionaries need re-importing after an app upgrade (their index format changed):</source>
-        <translation>Kamus berikut perlu diimpor ulang setelah pembaruan aplikasi (format indeksnya berubah):</translation>
+        <source>Dictionaries:</source>
+        <translation>Kamus:</translation>
     </message>
     <message>
-        <source>Mining is blocked for them until you do. Re-import them now?</source>
-        <translation>Mining diblokir untuk kamus tersebut sampai Anda melakukannya. Impor ulang sekarang?</translation>
+        <source>Frequency sources:</source>
+        <translation>Sumber frekuensi:</translation>
     </message>
     <message>
-        <source>Dictionaries need re-importing</source>
-        <translation>Kamus perlu diimpor ulang</translation>
+        <source>Pitch accent sources:</source>
+        <translation>Sumber aksen nada:</translation>
+    </message>
+    <message>
+        <source>Audio packs:</source>
+        <translation>Paket audio:</translation>
+    </message>
+    <message>
+        <source>These resources need re-importing after an app upgrade (their index format changed):</source>
+        <translation>Sumber daya berikut perlu diimpor ulang setelah pemutakhiran aplikasi (format indeksnya berubah):</translation>
+    </message>
+    <message>
+        <source>Mining is blocked until you do.</source>
+        <translation>Mining diblokir sampai Anda melakukannya.</translation>
+    </message>
+    <message>
+        <source>Resources need re-importing</source>
+        <translation>Sumber daya perlu diimpor ulang</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>Impor Ulang Semua</translation>
+    </message>
+    <message>
+        <source>Later</source>
+        <translation>Nanti</translation>
     </message>
     <message>
         <source>System validation passed</source>
@@ -5456,84 +5518,6 @@ Anda dapat menyempurnakannya nanti di Pengaturan → Anki.</translation>
         <translation>Pustaka penghapus keheningan berhasil dipasang.</translation>
     </message>
 </context><context>
-    <name>PitchImportFlow</name>
-    <message>
-        <source>Choose pitch accent source</source>
-        <translation>Pilih sumber aksen nada</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> (melewati %1 entri yang rusak)</translation>
-    </message>
-    <message>
-        <source>Pitch Source Added</source>
-        <translation>Sumber Aksen Nada Ditambahkan</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>Mengimpor %1 entri dari '%2'.</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>Impor selesai, tetapi pengaturan tidak dapat diperbarui.</translation>
-    </message>
-    <message>
-        <source>Importing pitch source…</source>
-        <translation>Mengimpor sumber aksen nada…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Batal</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be imported.</source>
-        <translation>Sumber aksen nada tidak dapat diimpor.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Impor lain masih berlangsung. Tunggu hingga selesai lalu coba lagi.</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>Membatalkan…</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>Proses impor selesai tanpa hasil akhir.</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>Folder itu tidak dapat dipindai.</translation>
-    </message>
-    <message>
-        <source>Choose pitch source to re-import</source>
-        <translation>Pilih sumber aksen nada untuk diimpor ulang</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>Sumber daya terindeks sedang digunakan oleh mining, pemanasan awal saat startup, atau pengisian ulang kartu. Tunggu hingga tugas yang aktif selesai lalu coba lagi.</translation>
-    </message>
-    <message>
-        <source>Pitch Source Re-imported</source>
-        <translation>Sumber Aksen Nada Diimpor Ulang</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>Berhasil mengimpor ulang %1.</translation>
-    </message>
-    <message>
-        <source>Re-importing pitch source…</source>
-        <translation>Mengimpor ulang sumber aksen nada…</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be re-imported.</source>
-        <translation>Sumber aksen nada tidak dapat diimpor ulang.</translation>
-    </message>
-    <message>
-        <source>Pitch accent source (%1);;All Files (*)</source>
-        <translation>Sumber aksen nada (%1);;Semua Berkas (*)</translation>
-    </message>
-</context><context>
     <name>PitchSettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -5584,6 +5568,14 @@ Anda dapat menyempurnakannya nanti di Pengaturan → Anki.</translation>
         <translation>Tambahkan kembali sumber aksen nada yang ditemukan di folder penyimpanan yang tidak ada dalam daftar di atas. Tidak perlu impor ulang.</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>Impor Ulang Semua</translation>
+    </message>
+    <message>
+        <source>Rebuild every pitch source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>Membangun ulang setiap sumber aksen nada dalam daftar dari salinan yang disimpan saat diimpor. Diperlukan setelah pemutakhiran aplikasi mengubah format indeks.</translation>
+    </message>
+    <message>
         <source>Checked top to bottom — the first source with a pitch entry for a word wins.</source>
         <translation>Diperiksa dari atas ke bawah — sumber pertama yang memiliki entri aksen nada untuk suatu kata menang.</translation>
     </message>
@@ -5626,6 +5618,14 @@ Anda dapat menyempurnakannya nanti di Pengaturan → Anki.</translation>
     <message>
         <source>Enable or disable %1</source>
         <translation>Aktifkan atau nonaktifkan %1</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>Impor ulang</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ perlu impor ulang (pemutakhiran aplikasi)</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -6032,6 +6032,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>Add Series</source>
         <translation>Tambah Seri</translation>
+    </message>
+    <message>
+        <source>Mine the selected rows, in list order. A completed row is mined again from scratch.</source>
+        <translation>Mining baris yang dipilih, sesuai urutan daftar. Baris yang sudah selesai akan di-mining ulang dari awal.</translation>
     </message>
     <message>
         <source>Process Queue</source>
@@ -6566,8 +6570,8 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>Teks yang Ditempel</translation>
     </message>
     <message>
-        <source>Paste Japanese text and mine it into Anki cards — no screenshots or audio.</source>
-        <translation>Tempelkan teks bahasa Jepang dan lakukan mining menjadi kartu Anki — tanpa tangkapan layar atau audio.</translation>
+        <source>Paste Japanese text and mine it into Anki cards — no audio is extracted.</source>
+        <translation>Tempel teks Jepang lalu mining jadi kartu Anki — tanpa ekstraksi audio.</translation>
     </message>
     <message>
         <source>Paste text here…</source>
@@ -6576,6 +6580,22 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>Drop or paste text here; files are not supported.</source>
         <translation>Jatuhkan atau tempel teks di sini; berkas tidak didukung.</translation>
+    </message>
+    <message>
+        <source>Card Image:</source>
+        <translation>Gambar Kartu:</translation>
+    </message>
+    <message>
+        <source>Images</source>
+        <translation>Gambar</translation>
+    </message>
+    <message>
+        <source>This field takes an image file.</source>
+        <translation>Bidang ini menerima file gambar.</translation>
+    </message>
+    <message>
+        <source>Optional. This image goes in the Picture field of every card from this text.</source>
+        <translation>Opsional. Gambar ini masuk ke bidang Picture pada setiap kartu dari teks ini.</translation>
     </message>
     <message>
         <source>Mine</source>
@@ -6596,6 +6616,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>Paste some text first.</source>
         <translation>Tempel teks terlebih dahulu.</translation>
+    </message>
+    <message>
+        <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
+        <translation>Gambar itu tidak dapat dibaca. Pilih gambar lain, atau kosongkan bidang untuk mining tanpa gambar.</translation>
     </message>
     <message>
         <source>Starting…</source>
@@ -7021,6 +7045,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <source>Details</source>
         <translation>Detail</translation>
     </message>
+    <message>
+        <source>Dismiss</source>
+        <translation>Tutup</translation>
+    </message>
 </context><context>
     <name>SettingsSearchBox</name>
     <message>
@@ -7134,6 +7162,18 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>Tampilan &amp; Bahasa</translation>
     </message>
     <message>
+        <source>Nothing to restore</source>
+        <translation>Tidak ada yang perlu dipulihkan</translation>
+    </message>
+    <message>
+        <source>Every audio pack found in the storage folder is already listed.
+
+A pack that stopped working after an app upgrade is repaired by Re-import on its row, not by restoring it.</source>
+        <translation>Setiap paket audio yang ditemukan di folder penyimpanan sudah tercantum dalam daftar.
+
+Paket yang berhenti berfungsi setelah pemutakhiran aplikasi diperbaiki dengan Impor ulang pada barisnya, bukan dengan memulihkannya.</translation>
+    </message>
+    <message>
         <source>The audio packs could not be restored.</source>
         <translation>Paket audio tidak dapat dipulihkan.</translation>
     </message>
@@ -7142,12 +7182,28 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>Paket audio terpasang tidak dapat diperiksa.</translation>
     </message>
     <message>
+        <source>Every frequency source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>Setiap sumber frekuensi yang ditemukan di folder penyimpanan sudah tercantum dalam daftar.
+
+Sumber yang berhenti berfungsi setelah pemutakhiran aplikasi diperbaiki dengan Impor Ulang Semua, bukan dengan memulihkannya.</translation>
+    </message>
+    <message>
         <source>The frequency sources could not be restored.</source>
         <translation>Sumber frekuensi tidak dapat dipulihkan.</translation>
     </message>
     <message>
         <source>Installed frequency sources could not be checked.</source>
         <translation>Sumber frekuensi terpasang tidak dapat diperiksa.</translation>
+    </message>
+    <message>
+        <source>Every pitch accent source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>Setiap sumber aksen nada yang ditemukan di folder penyimpanan sudah tercantum dalam daftar.
+
+Sumber yang berhenti berfungsi setelah pemutakhiran aplikasi diperbaiki dengan Impor Ulang Semua, bukan dengan memulihkannya.</translation>
     </message>
     <message>
         <source>The pitch accent sources could not be restored.</source>
@@ -7598,6 +7654,14 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Selesai — %1 berkas diproses</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Selesai — %1 diproses, %2 dilewati</translation>
+    </message>
+    <message>
+        <source>No subtitles generated — all %1 skipped because their output already exists. Enable Overwrite to regenerate.</source>
+        <translation>Tidak ada subtitel dibuat — semua %1 dilewati karena keluarannya sudah ada. Aktifkan Timpa untuk membuat ulang.</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>Pilih Folder Keluaran</translation>
     </message>
@@ -7840,6 +7904,14 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Selesai — %1 berkas diproses</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Selesai — %1 diproses, %2 dilewati</translation>
+    </message>
+    <message>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
+        <translation>Tidak ada berkas diatur ulang waktunya — semua %1 dilewati. Aktifkan Timpa untuk mengatur ulang waktu di tempat, atau pilih folder keluaran lain.</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>Pilih Folder Keluaran</translation>
     </message>
@@ -7856,8 +7928,8 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Masukan</translation>
     </message>
     <message>
-        <source>alass not found; install it or set its path in Settings to enable retiming.</source>
-        <translation>alass tidak ditemukan; instal alass atau atur jalurnya di Pengaturan untuk mengaktifkan penyesuaian waktu.</translation>
+        <source>alass not found; retiming uses ffsubsync only. Install alass in Settings for a fallback engine.</source>
+        <translation>alass tidak ditemukan; penyesuaian waktu hanya menggunakan ffsubsync. Pasang alass di Pengaturan untuk mesin cadangan.</translation>
     </message>
     <message>
         <source>Resync a subtitle file to its video by matching audio.</source>
@@ -7920,6 +7992,18 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Folder Subtitel:</translation>
     </message>
     <message>
+        <source>Matched pairs:</source>
+        <translation>Pasangan yang cocok:</translation>
+    </message>
+    <message>
+        <source>%1  —  no matching subtitle</source>
+        <translation>%1  —  tidak ada subtitel yang cocok</translation>
+    </message>
+    <message>
+        <source>Matched pairs (%1):</source>
+        <translation>Pasangan yang cocok (%1):</translation>
+    </message>
+    <message>
         <source>Output</source>
         <translation>Keluaran</translation>
     </message>
@@ -7944,12 +8028,8 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Jika tidak dicentang, pasangan yang subtitel keluarannya sudah ada akan dilewati, bukan ditimpa.</translation>
     </message>
     <message>
-        <source>Split penalty, frame-rate correction and single-offset mode:</source>
-        <translation>Penalti pemisahan, koreksi laju bingkai, dan mode offset tunggal:</translation>
-    </message>
-    <message>
-        <source>Alignment Settings</source>
-        <translation>Pengaturan Penyelarasan</translation>
+        <source>Alignment is automatic; an untrustworthy result never replaces the original file.</source>
+        <translation>Penyelarasan berjalan otomatis; hasil yang tidak dapat dipercaya tidak akan pernah menggantikan berkas asli.</translation>
     </message>
     <message>
         <source>Retime Subtitles</source>
@@ -8062,8 +8142,8 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Dibatalkan</translation>
     </message>
     <message>
-        <source>Retiming failed for %1</source>
-        <translation>Penyesuaian waktu gagal untuk %1</translation>
+        <source>No trustworthy sync for %1; original kept unchanged</source>
+        <translation>Tidak ada hasil penyelarasan yang dapat dipercaya untuk %1; berkas asli dibiarkan tidak berubah</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8268,38 +8348,6 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Tidak ada biner alass yang diterbitkan untuk macOS. Instal dengan Homebrew:</translation>
     </message>
     <message>
-        <source>Split penalty</source>
-        <translation>Penalti pemisahan</translation>
-    </message>
-    <message>
-        <source>How reluctant alignment is to cut a subtitle into separately-timed segments. Lower values create more cut points for ad breaks. Useful range 1-20; default 7.</source>
-        <translation>Seberapa enggan penyelarasan memotong subtitel menjadi segmen dengan waktu terpisah. Nilai lebih rendah menghasilkan lebih banyak titik potong untuk jeda iklan. Rentang berguna 1-20; default 7.</translation>
-    </message>
-    <message>
-        <source>Correct frame-rate differences</source>
-        <translation>Koreksi perbedaan laju bingkai</translation>
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation>Laju bingkai</translation>
-    </message>
-    <message>
-        <source>Enable only for subtitles from a different-framerate release. On a subtitle that is merely offset this stretches the timing and makes it worse.</source>
-        <translation>Aktifkan hanya untuk subtitel dari rilis dengan laju bingkai berbeda. Pada subtitel yang hanya bergeser (offset), ini akan meregangkan waktu dan justru memperburuknya.</translation>
-    </message>
-    <message>
-        <source>Shift by a single offset only</source>
-        <translation>Geser dengan satu offset saja</translation>
-    </message>
-    <message>
-        <source>Single offset</source>
-        <translation>Offset tunggal</translation>
-    </message>
-    <message>
-        <source>Shift the entire subtitle by one amount; never cut it into separately-timed segments. Suits Japanese media, which rarely has ad-break cuts. Uncheck to allow segmented alignment.</source>
-        <translation>Geser seluruh subtitel dengan satu nilai; tidak pernah memotongnya menjadi segmen dengan waktu terpisah. Cocok untuk media Jepang, yang jarang memiliki potongan jeda iklan. Hapus centang untuk mengizinkan penyelarasan tersegmentasi.</translation>
-    </message>
-    <message>
         <source>Subtitle generation needs the faster-whisper engine. This packaged app cannot be extended with ASR. Use the ASR-capable AppImage, or run the command below and then launch the separate pipx-installed Anki Miner:</source>
         <translation>Pembuatan subtitel memerlukan mesin faster-whisper. Aplikasi paket ini tidak dapat diperluas dengan ASR. Gunakan AppImage yang mendukung ASR, atau jalankan perintah di bawah ini lalu luncurkan Anki Miner terpisah yang terpasang via pipx:</translation>
     </message>
@@ -8424,6 +8472,18 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
     <message>
         <source>Offline dictionary</source>
         <translation>Kamus luring</translation>
+    </message>
+    <message>
+        <source>Frequency lists</source>
+        <translation>Daftar frekuensi</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>Aksen nada</translation>
+    </message>
+    <message>
+        <source>Audio packs</source>
+        <translation>Paket audio</translation>
     </message>
     <message>
         <source>yt-dlp (YouTube mining)</source>
@@ -8700,6 +8760,14 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Kemunculan</translation>
     </message>
     <message>
+        <source>How many times this word appears in this episode.
+
+The “Sentences” picker offers one option per subtitle line, so it usually lists fewer: repeats on the same line count once here, and lines where the word takes a form that would change the card’s Word are skipped.</source>
+        <translation>Berapa kali kata ini muncul di episode ini.
+
+Pemilih “Kalimat” menyediakan satu opsi per baris subtitel, jadi biasanya daftarnya lebih sedikit: pengulangan pada baris yang sama dihitung sekali di sini, dan baris yang membuat kata muncul dalam bentuk yang akan mengubah “Kata (di-mining)” pada kartu akan dilewati.</translation>
+    </message>
+    <message>
         <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S sertakan/kecualikan · Spasi putar/jeda · Ctrl+A sertakan yang terlihat · Ctrl+D kecualikan yang terlihat · Ctrl+Enter konfirmasi</translation>
     </message>
@@ -8718,10 +8786,14 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
     <message>
         <source>%1
 
-(%2 sentences available — focus the row, then pick one under “Sentences”)</source>
+(%2 example sentences to pick from — focus the row, then choose one under “Sentences”)</source>
         <translation>%1
 
-(%2 kalimat tersedia — fokuskan baris, lalu pilih satu di bawah “Kalimat”)</translation>
+(%2 contoh kalimat untuk dipilih — fokuskan barisnya, lalu pilih satu di bagian “Kalimat”)</translation>
+    </message>
+    <message>
+        <source>Sentences (%1)</source>
+        <translation>Kalimat (%1)</translation>
     </message>
     <message>
         <source>No page image for this word</source>
@@ -8872,6 +8944,18 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
     <message>
         <source>Checks once a day on startup and downloads into Anki Miner's own folder. Leaving this off means YouTube mining will eventually stop working.</source>
         <translation>Memeriksa sekali sehari saat memulai dan mengunduh ke folder Anki Miner sendiri. Jika dinonaktifkan, mining YouTube pada akhirnya akan berhenti berfungsi.</translation>
+    </message>
+    <message>
+        <source>Use pre-release yt-dlp builds</source>
+        <translation>Gunakan build pra-rilis yt-dlp</translation>
+    </message>
+    <message>
+        <source>Pre-release</source>
+        <translation>Pra-rilis</translation>
+    </message>
+    <message>
+        <source>Updates install yt-dlp's nightly channel, which fixes YouTube breakage days before a stable release. Turning this off keeps the installed build until a newer stable version replaces it.</source>
+        <translation>Pembaruan memasang kanal nightly yt-dlp, yang memperbaiki kerusakan YouTube beberapa hari sebelum rilis stabil. Jika dimatikan, build yang terpasang tetap dipakai sampai digantikan versi stabil yang lebih baru.</translation>
     </message>
     <message>
         <source>Optional: path to your own yt-dlp executable...</source>
@@ -9038,8 +9122,8 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner — Unexpected Error</source>
-        <translation>Anki Miner — Kesalahan Tak Terduga</translation>
+        <source>Anki Miner Agentic — Unexpected Error</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>%1: %2

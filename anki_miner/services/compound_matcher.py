@@ -72,6 +72,10 @@ _MAX_SPAN_CHARS = 16
 _MAX_NAME_SPAN_CHARS = 24
 _MAX_SPAN_TOKENS = 5
 
+# One span may offer more than one lookup candidate, tried in order (first
+# attested wins). Spans that offer a single candidate behave exactly as before.
+Alternatives = tuple[tuple[str, str], ...]
+
 # Existence-cache bound (positive AND negative results). Clear-on-cap keeps
 # whole-corpus Deck Builder runs from growing without limit.
 _EXIST_CACHE_CAP = 200_000
@@ -106,6 +110,19 @@ def _pos2(token) -> str | None:
     except AttributeError:
         return None
     return str(pos2) if pos2 else None
+
+
+def _c_form(token) -> str:
+    """Inflection form, or "" when absent.
+
+    Synthetic tokens carry no ``cForm``, and fugashi maps unidic's ``*``
+    placeholder to None — both must read as "no inflection form", never crash.
+    """
+    try:
+        c_form = token.feature.cForm
+    except AttributeError:
+        return ""
+    return str(c_form) if c_form and c_form != "*" else ""
 
 
 class CompoundDictionaryMatcher:
@@ -157,10 +174,10 @@ class CompoundDictionaryMatcher:
             if self._can_start(token):
                 # Longest span first — Yomitan ranks by source length.
                 for j in range(min(i + self._max_span - 1, n - 1), i, -1):
-                    entries = candidates.get((i, j))
-                    if entries is None:
+                    alternatives = candidates.get((i, j))
+                    if not alternatives:
                         continue
-                    for candidate, kind in entries:
+                    for candidate, kind in alternatives:
                         if not self._exist_cache.get(candidate):
                             continue
                         synthetic = self._build_synthetic(tokens[i : j + 1], candidate, kind)
@@ -203,13 +220,13 @@ class CompoundDictionaryMatcher:
             next_index += 1
         return spans
 
-    def _generate_candidates(self, text: str, tokens: list) -> dict[tuple[int, int], tuple[tuple[str, str], ...]]:
+    def _generate_candidates(self, text: str, tokens: list) -> dict[tuple[int, int], Alternatives]:
         """Map ``(start, end)`` span to ordered ``(candidate_string, kind)`` variants.
 
         kind "A" = deinflected tail (joined surfaces + tail orthBase);
-        kind "B" = plain surface join (non-inflectable tail only — for an
-        inflected tail the surface join is an inflected string, and matching
-        it would ship inflected-headword card fronts like 気をつけて).
+        kind "B" = plain surface join. Inflectable tails normally omit it to
+        avoid shipping fronts like 気をつけて; the narrowly safe honorific-prefix
+        exception is documented in ``_candidate_for_tail``.
 
         The raw-source candidate remains first. A second candidate may replace
         kana-only nominal components with UniDic's same-reading kanji lemma.
@@ -219,7 +236,7 @@ class CompoundDictionaryMatcher:
         dictionary headword.
         """
         n = len(tokens)
-        out: dict[tuple[int, int], tuple[tuple[str, str], ...]] = {}
+        out: dict[tuple[int, int], Alternatives] = {}
         source_spans = self._source_spans(text, tokens)
         for i in range(n - 1):
             start_span = source_spans.get(i)
@@ -243,11 +260,10 @@ class CompoundDictionaryMatcher:
                 # but the span may still extend past them (気に|する|な: the
                 # (0..2) span ending on する is reachable through the な).
                 if self._can_end(tail):
-                    candidate, kind = self._candidate_for_tail(prefix, tail, joined)
+                    entries = list(self._candidate_for_tail(prefix, tail, joined, tokens[i]))
                     canonical_candidate = self._canonical_candidate_for_tail(canonical_prefix, tail)
-                    entries = [(candidate, kind)]
-                    if canonical_candidate != candidate:
-                        entries.append((canonical_candidate, kind))
+                    if all(canonical_candidate != candidate for candidate, _kind in entries):
+                        entries.append((canonical_candidate, entries[0][1]))
                     out[(i, j)] = tuple(entries)
                 prefix = joined
                 canonical_prefix += self._canonical_component(tail)
@@ -282,15 +298,39 @@ class CompoundDictionaryMatcher:
         return canonical_prefix + cls._canonical_component(tail)
 
     @staticmethod
-    def _candidate_for_tail(prefix: str, tail, joined: str) -> tuple[str, str]:
-        """Return the lookup candidate and synthetic-token kind for one span."""
-        if _pos1(tail) in _INFLECTABLE_POS1:
-            return prefix + extract_orth_base(tail), "A"
-        return joined, "B"
+    def _candidate_for_tail(prefix: str, tail, joined: str, head) -> Alternatives:
+        """Lookup candidates for one span, in preference order (first attested wins).
 
-    def _resolve(self, candidates: dict[tuple[int, int], tuple[tuple[str, str], ...]]) -> None:
-        """One batched lookup for all uncached candidate strings."""
-        current = {candidate for entries in candidates.values() for candidate, _kind in entries}
+        An inflectable tail normally yields ONLY the deinflected kind-A candidate:
+        its raw surface join is an inflected string, and attesting that would ship
+        気をつけて as a card front (the reason ``_INFLECTABLE_POS1`` exists).
+
+        The one exception is a 接頭辞-headed span whose tail is in 連用形 — the
+        standard honorific-nominalization pattern (ご存じ, お願い, お帰り). unidic
+        tags 存じ as a 連用形 verb whose orthBase is the archaic 存ずる, so kind A
+        builds ご存ずる, which no dictionary attests; 存じ then mines alone and the
+        じる/ずる resolver ships 存じる. The surface join ご存じ IS an attested noun
+        headword, so it is offered as a second alternative. This cannot leak
+        inflected fronts: 接頭辞 is structurally incapable of being an inflected
+        form, and the 連用形 gate blocks te-/past-form tails. Widening it past
+        接頭辞 heads would re-open the 気をつけて hole.
+
+        kind A stays FIRST so a span that attests both keeps its pre-fix front.
+        """
+        if _pos1(tail) not in _INFLECTABLE_POS1:
+            return ((joined, "B"),)
+        alternatives: Alternatives = ((prefix + extract_orth_base(tail), "A"),)
+        if _pos1(head) == "接頭辞" and _c_form(tail).startswith("連用形"):
+            alternatives += ((joined, "B"),)
+        return alternatives
+
+    def _resolve(self, candidates: dict[tuple[int, int], Alternatives]) -> None:
+        """One batched lookup for all uncached candidate strings.
+
+        ``_exist_cache`` is keyed by candidate STRING, so a span offering two
+        alternatives is two independent entries resolved in the same batch.
+        """
+        current = {c for alternatives in candidates.values() for c, _kind in alternatives}
         verdicts = {c: self._exist_cache[c] for c in current if c in self._exist_cache}
         unknown = {c for c in current if c not in verdicts}
         if not unknown:
@@ -335,6 +375,9 @@ class CompoundDictionaryMatcher:
             # would smuggle 接尾辞 onto the synthetic and the inclusion gate
             # would reject the whole attested compound — those chains are
             # lexicalized nouns, so they take the nominal default instead.
+            # A 接頭辞 + 連用形-verb kind B (ご存じ) lands here too and takes the
+            # nominal default, which is exactly right: the attested headword is
+            # a noun, and inheriting 動詞 would make mined_form the verb front.
             tail_pos1 = _pos1(span[-1])
             tail_pos2 = _pos2(span[-1])
             if tail_pos1 in ("名詞", "形状詞", "代名詞"):
@@ -378,8 +421,8 @@ class NameSpanMatcher(CompoundDictionaryMatcher):
         return canonical_prefix + str(tail.surface)
 
     @staticmethod
-    def _candidate_for_tail(prefix: str, tail, joined: str) -> tuple[str, str]:
-        return joined, "B"
+    def _candidate_for_tail(prefix: str, tail, joined: str, head) -> Alternatives:
+        return ((joined, "B"),)
 
     def _can_start(self, token) -> bool:
         # Exact raw-name attestation, not UniDic POS, licenses this boundary.

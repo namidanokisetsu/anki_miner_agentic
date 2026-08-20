@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="vi_VN">
-  <context>
+    <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -24,8 +24,8 @@
         <translation>Khai thác thẻ từ vựng tiếng Nhật từ video vào Anki — ảnh chụp màn hình, âm thanh và định nghĩa, tự động.</translation>
     </message>
     <message>
-        <source>About Anki Miner</source>
-        <translation>Giới thiệu Anki Miner</translation>
+        <source>About Anki Miner Agentic</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>GitHub</source>
@@ -648,16 +648,14 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Is Already Running</source>
-        <translation>Anki Miner đang chạy</translation>
+        <source>Anki Miner Agentic Is Already Running</source>
+        <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation>Có vẻ một bản Anki Miner khác đang chạy. Chạy hai bản cùng lúc có thể làm hỏng CSDL từ đã biết và CSDL thống kê.
-
-Vẫn tiếp tục?</translation>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>Continue anyway</source>
@@ -732,12 +730,12 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>Đã hủy trước các gói còn lại.</translation>
     </message>
     <message>
-        <source>Audio Packs Added</source>
-        <translation>Đã thêm gói âm thanh</translation>
-    </message>
-    <message>
         <source>Done.</source>
         <translation>Xong.</translation>
+    </message>
+    <message>
+        <source>Audio Packs Added</source>
+        <translation>Đã thêm gói âm thanh</translation>
     </message>
     <message>
         <source>The import finished, but the settings could not be updated.</source>
@@ -760,6 +758,38 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>Tiến trình nhập đã kết thúc mà không có kết quả hoàn tất.</translation>
     </message>
     <message>
+        <source>Choose Android audio database</source>
+        <translation>Chọn cơ sở dữ liệu âm thanh Android</translation>
+    </message>
+    <message>
+        <source>Android database (*.db);;SQLite database (*.sqlite *.sqlite3)</source>
+        <translation>Cơ sở dữ liệu Android (*.db);;Cơ sở dữ liệu SQLite (*.sqlite *.sqlite3)</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Added</source>
+        <translation>Đã thêm cơ sở dữ liệu âm thanh Android</translation>
+    </message>
+    <message>
+        <source>Registered %1 (%2 entries).</source>
+        <translation>Đã đăng ký %1 (%2 mục).</translation>
+    </message>
+    <message>
+        <source>Registering Android audio database…</source>
+        <translation>Đang đăng ký cơ sở dữ liệu âm thanh Android…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be added.</source>
+        <translation>Không thể thêm cơ sở dữ liệu âm thanh Android.</translation>
+    </message>
+    <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>Một lượt nhập khác vẫn đang hoàn tất. Vui lòng đợi rồi thử lại.</translation>
+    </message>
+    <message>
+        <source>Choose Android audio database to re-import</source>
+        <translation>Chọn cơ sở dữ liệu âm thanh Android để nhập lại</translation>
+    </message>
+    <message>
         <source>Choose audio pack folder to re-import</source>
         <translation>Chọn thư mục gói âm thanh để nhập lại</translation>
     </message>
@@ -768,8 +798,16 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>Tài nguyên đã lập chỉ mục đang được sử dụng cho khai thác, làm nóng khi khởi động, hoặc điền dữ liệu còn thiếu cho thẻ. Hãy đợi tác vụ đang hoạt động hoàn tất rồi thử lại.</translation>
     </message>
     <message>
-        <source>Audio Pack Re-imported</source>
-        <translation>Đã nhập lại gói âm thanh</translation>
+        <source>Re-importing Android audio database…</source>
+        <translation>Đang nhập lại cơ sở dữ liệu âm thanh Android…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be re-imported.</source>
+        <translation>Không thể nhập lại cơ sở dữ liệu âm thanh Android.</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Re-imported</source>
+        <translation>Đã nhập lại cơ sở dữ liệu âm thanh Android</translation>
     </message>
     <message>
         <source>Re-imported %1 successfully.</source>
@@ -784,8 +822,58 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>Không thể nhập lại gói âm thanh.</translation>
     </message>
     <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Một lượt nhập khác vẫn đang hoàn tất. Vui lòng đợi rồi thử lại.</translation>
+        <source>Audio Pack Re-imported</source>
+        <translation>Đã nhập lại gói âm thanh</translation>
+    </message>
+    <message>
+        <source>The audio pack folder could not be scanned.</source>
+        <translation>Không thể quét thư mục gói âm thanh.</translation>
+    </message>
+    <message>
+        <source>No audio packs eligible for automatic repair were found.
+
+Skipped (source folder or database not found; use per-row Re-import…):
+</source>
+        <translation>Không tìm thấy gói âm thanh nào đủ điều kiện để tự động sửa chữa.
+
+Đã bỏ qua (không tìm thấy thư mục nguồn hoặc cơ sở dữ liệu; hãy dùng Nhập lại… theo từng dòng):
+</translation>
+    </message>
+    <message>
+        <source>No audio packs in the chain.</source>
+        <translation>Không có gói âm thanh nào trong chuỗi.</translation>
+    </message>
+    <message>
+        <source>Nothing to reimport</source>
+        <translation>Không có gì để nhập lại</translation>
+    </message>
+    <message>
+        <source>Audio pack %1 of %2: %3</source>
+        <translation>Gói âm thanh %1 trên %2: %3</translation>
+    </message>
+    <message>
+        <source>Re-imported %1 audio pack(s):</source>
+        <translation>Đã nhập lại %1 gói âm thanh:</translation>
+    </message>
+    <message>
+        <source>Skipped (source folder or database not found; use per-row Re-import…):</source>
+        <translation>Đã bỏ qua (không tìm thấy thư mục nguồn hoặc cơ sở dữ liệu; hãy dùng Nhập lại… theo từng dòng):</translation>
+    </message>
+    <message>
+        <source>Cancelled before the batch finished.</source>
+        <translation>Đã hủy trước khi lượt xử lý hoàn tất.</translation>
+    </message>
+    <message>
+        <source>Nothing to do.</source>
+        <translation>Không có gì để làm.</translation>
+    </message>
+    <message>
+        <source>Audio Packs Re-imported</source>
+        <translation>Đã nhập lại các gói âm thanh</translation>
+    </message>
+    <message>
+        <source>Some audio packs could not be re-imported.</source>
+        <translation>Một số gói âm thanh không thể nhập lại.</translation>
     </message>
 </context><context>
     <name>AudioPackSettingsPanel</name>
@@ -846,6 +934,14 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>Thêm lại các gói âm thanh tìm thấy trong thư mục lưu trữ mà chưa có trong danh sách trên. Không cần nhập lại.</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>Nhập lại tất cả</translation>
+    </message>
+    <message>
+        <source>Rebuild every audio pack in the list from the folder or database it was imported from. Needed after an app upgrade changes the index format.</source>
+        <translation>Xây dựng lại mọi gói âm thanh trong danh sách từ thư mục hoặc cơ sở dữ liệu đã nhập từ đó. Cần thiết sau khi ứng dụng nâng cấp làm thay đổi định dạng chỉ mục.</translation>
+    </message>
+    <message>
         <source>Sources are tried top to bottom — the first one that has audio for a word wins.</source>
         <translation>Các nguồn được thử từ trên xuống — nguồn đầu tiên có âm thanh cho một từ sẽ được dùng.</translation>
     </message>
@@ -880,6 +976,10 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
     <message>
         <source>Audio Pack…</source>
         <translation>Gói âm thanh…</translation>
+    </message>
+    <message>
+        <source>Android Audio Database…</source>
+        <translation>Cơ sở dữ liệu âm thanh Android…</translation>
     </message>
     <message>
         <source>Online Source…</source>
@@ -1262,6 +1362,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>series</source>
         <translation>loạt phim</translation>
+    </message>
+    <message>
+        <source>Every series in the queue is already complete. Select the ones you want to mine again, then click Run selected.</source>
+        <translation>Mọi loạt phim trong hàng đợi đều đã hoàn tất. Hãy chọn những loạt phim bạn muốn khai thác lại, rồi nhấn Chạy mục đã chọn.</translation>
     </message>
     <message>
         <source>No valid series in the queue to process.</source>
@@ -2172,10 +2276,6 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Đã giữ {count} trường trọng âm cao độ — cách đọc chỉ có thể đoán từ riêng từ đó, vì vậy ghi đè có thể áp dụng trọng âm của từ đồng hình sai. Ánh xạ trường Cách đọc biểu thức hoặc Furigana để ghi đè chúng.</translation>
     </message>
     <message>
-        <source>{count} sort value(s) are the 9999999 no-frequency-found placeholder.</source>
-        <translation>Có {count} giá trị sắp xếp là giá trị giữ chỗ 9999999 cho trường hợp không tìm thấy tần suất.</translation>
-    </message>
-    <message>
         <source>Not on this note type (stale mapping): {fields}. Fix in Settings → Anki field mapping.</source>
         <translation>Không có trên loại ghi chú này (ánh xạ cũ): {fields}. Hãy sửa trong ánh xạ trường Cài đặt → Anki.</translation>
     </message>
@@ -2330,6 +2430,14 @@ Thao tác này sẽ sửa đổi {notes} ghi chú ({fields} trường) và gắn
     <message>
         <source>Complete — %1 files processed</source>
         <translation>Hoàn tất — đã xử lý %1 tệp</translation>
+    </message>
+    <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Hoàn tất — đã xử lý %1, đã bỏ qua %2</translation>
+    </message>
+    <message>
+        <source>Nothing condensed — all %1 skipped because their output already exists. Enable Overwrite to condense again.</source>
+        <translation>Không có gì được cô đọng — tất cả %1 đã bỏ qua do đầu ra đã tồn tại. Bật Ghi đè để cô đọng lại.</translation>
     </message>
     <message>
         <source>Select Output Folder</source>
@@ -3168,12 +3276,20 @@ Thao tác này sẽ sửa đổi {notes} ghi chú ({fields} trường) và gắn
         <translation>Không thể nhập %1 tệp phương tiện.</translation>
     </message>
     <message>
-        <source>Choose Yomitan dictionary zip</source>
-        <translation>Chọn tệp zip từ điển Yomitan</translation>
+        <source>Choose Yomitan dictionary zips</source>
+        <translation>Chọn các tệp zip từ điển Yomitan</translation>
     </message>
     <message>
         <source>Yomitan zip (*.zip)</source>
         <translation>Zip Yomitan (*.zip)</translation>
+    </message>
+    <message>
+        <source>Dictionary %1 of %2: %3</source>
+        <translation>Từ điển %1 trên %2: %3</translation>
+    </message>
+    <message>
+        <source>The dictionary could not be imported.</source>
+        <translation>Không thể nhập từ điển.</translation>
     </message>
     <message>
         <source>Dictionary added</source>
@@ -3184,24 +3300,32 @@ Thao tác này sẽ sửa đổi {notes} ghi chú ({fields} trường) và gắn
         <translation>Đã nhập %1 (%2 mục)</translation>
     </message>
     <message>
+        <source>Imported %1 dictionaries:</source>
+        <translation>Đã nhập %1 từ điển:</translation>
+    </message>
+    <message>
+        <source>Failed:</source>
+        <translation>Thất bại:</translation>
+    </message>
+    <message>
+        <source>Cancelled before remaining dictionaries.</source>
+        <translation>Đã hủy trước khi xử lý các từ điển còn lại.</translation>
+    </message>
+    <message>
+        <source>Done.</source>
+        <translation>Xong.</translation>
+    </message>
+    <message>
+        <source>Dictionaries added</source>
+        <translation>Đã thêm từ điển</translation>
+    </message>
+    <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation>Đã hoàn tất nhập, nhưng không thể cập nhật cài đặt.</translation>
     </message>
     <message>
-        <source>Importing dictionary…</source>
-        <translation>Đang nhập từ điển…</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Hủy</translation>
-    </message>
-    <message>
-        <source>The dictionary could not be imported.</source>
-        <translation>Không thể nhập từ điển.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Một lượt nhập khác vẫn đang hoàn tất. Vui lòng đợi rồi thử lại.</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -3240,6 +3364,10 @@ Thao tác này sẽ sửa đổi {notes} ghi chú ({fields} trường) và gắn
         <translation>Không thể nhập lại từ điển.</translation>
     </message>
     <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>Một lượt nhập khác vẫn đang hoàn tất. Vui lòng đợi rồi thử lại.</translation>
+    </message>
+    <message>
         <source>No JMdict XML at %1. Download from EDRDG and place it there.</source>
         <translation>Không có JMdict XML tại %1. Hãy tải về từ EDRDG và đặt tại đó.</translation>
     </message>
@@ -3270,10 +3398,6 @@ Skipped (not eligible for automatic repair; use per-row Re-import…):
         <translation>Không có gì để nhập lại</translation>
     </message>
     <message>
-        <source>Dictionary %1 of %2: %3</source>
-        <translation>Từ điển %1 trên %2: %3</translation>
-    </message>
-    <message>
         <source>Reimported %1 dictionary/dictionaries:</source>
         <translation>Đã nhập lại %1 từ điển:</translation>
     </message>
@@ -3282,20 +3406,8 @@ Skipped (not eligible for automatic repair; use per-row Re-import…):
         <translation>Đã bỏ qua (không đủ điều kiện để tự động sửa chữa; hãy dùng Nhập lại… theo từng dòng):</translation>
     </message>
     <message>
-        <source>Failed:</source>
-        <translation>Thất bại:</translation>
-    </message>
-    <message>
-        <source>Cancelled before remaining dictionaries.</source>
-        <translation>Đã hủy trước khi xử lý các từ điển còn lại.</translation>
-    </message>
-    <message>
         <source>Reimport All</source>
         <translation>Nhập lại tất cả</translation>
-    </message>
-    <message>
-        <source>Done.</source>
-        <translation>Xong.</translation>
     </message>
     <message>
         <source>Nothing to restore</source>
@@ -3700,10 +3812,6 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
     <message>
         <source>Collapsed %1 duplicate-expression word(s)</source>
         <translation>Đã gộp %1 từ có biểu thức trùng lặp</translation>
-    </message>
-    <message>
-        <source>Skipped %1 word(s) already carded under another spelling</source>
-        <translation>Đã bỏ qua %1 từ đã có thẻ dưới cách viết khác</translation>
     </message>
     <message>
         <source>Frequency filter: removed %1 words outside ranks %2-%3</source>
@@ -4324,92 +4432,6 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
         <translation>Bộ thẻ loại trừ khỏi việc phát hiện từ đã biết:</translation>
     </message>
 </context><context>
-    <name>FrequencyImportFlow</name>
-    <message>
-        <source> This is a word-based source; its level labels show on the card but don't affect frequency-rank filtering.</source>
-        <translation> Đây là nguồn dựa trên từ; nhãn cấp độ của nó hiển thị trên thẻ nhưng không ảnh hưởng đến việc lọc theo hạng tần suất.</translation>
-    </message>
-    <message>
-        <source>Choose frequency source</source>
-        <translation>Chọn nguồn tần suất</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> (đã bỏ qua %1 mục sai định dạng)</translation>
-    </message>
-    <message>
-        <source> This is an occurrence-based source; its counts were converted to ranks.</source>
-        <translation> Đây là nguồn dựa trên số lần xuất hiện; số đếm của nó đã được chuyển thành thứ hạng.</translation>
-    </message>
-    <message>
-        <source>Frequency Source Added</source>
-        <translation>Đã thêm nguồn tần suất</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>Đã nhập %1 mục từ '%2'.</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>Đã hoàn tất nhập, nhưng không thể cập nhật cài đặt.</translation>
-    </message>
-    <message>
-        <source>Importing frequency source…</source>
-        <translation>Đang nhập nguồn tần suất…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Hủy</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be imported.</source>
-        <translation>Không thể nhập nguồn tần suất.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Một lượt nhập khác vẫn đang hoàn tất. Vui lòng đợi rồi thử lại.</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>Đang hủy…</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>Tiến trình nhập đã kết thúc mà không có kết quả hoàn tất.</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>Không thể quét thư mục đó.</translation>
-    </message>
-    <message>
-        <source>Choose frequency source to re-import</source>
-        <translation>Chọn nguồn tần suất để nhập lại</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>Tài nguyên đã lập chỉ mục đang được sử dụng cho khai thác, làm nóng khi khởi động, hoặc điền dữ liệu còn thiếu cho thẻ. Hãy đợi tác vụ đang hoạt động hoàn tất rồi thử lại.</translation>
-    </message>
-    <message>
-        <source>Frequency Source Re-imported</source>
-        <translation>Đã nhập lại nguồn tần suất</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>Đã nhập lại %1 thành công.</translation>
-    </message>
-    <message>
-        <source>Re-importing frequency source…</source>
-        <translation>Đang nhập lại nguồn tần suất…</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be re-imported.</source>
-        <translation>Không thể nhập lại nguồn tần suất.</translation>
-    </message>
-    <message>
-        <source>Frequency source (%1);;All Files (*)</source>
-        <translation>Nguồn tần suất (%1);;Tất cả tệp (*)</translation>
-    </message>
-</context><context>
     <name>FrequencySettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -4458,6 +4480,14 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
     <message>
         <source>Re-add frequency sources found in the storage folder that aren't in the list above. No re-import needed.</source>
         <translation>Thêm lại các nguồn tần suất tìm thấy trong thư mục lưu trữ mà chưa có trong danh sách trên. Không cần nhập lại.</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>Nhập lại tất cả</translation>
+    </message>
+    <message>
+        <source>Rebuild every frequency source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>Xây dựng lại mọi nguồn tần suất trong danh sách từ bản sao đã lưu khi nhập. Cần thiết sau khi ứng dụng nâng cấp làm thay đổi định dạng chỉ mục.</translation>
     </message>
     <message>
         <source>Every enabled source counts: filtering uses the lowest rank, Frequency Sort the harmonic mean. Order only sets the card's source list.</source>
@@ -4510,6 +4540,14 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
     <message>
         <source>Enable or disable %1</source>
         <translation>Bật hoặc tắt %1</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>Nhập lại</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ cần nhập lại (ứng dụng đã nâng cấp)</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -5104,16 +5142,40 @@ Tiếp tục?</translation>
         <translation>Không thể chỉnh kiểu các thẻ đã khai thác.</translation>
     </message>
     <message>
-        <source>These dictionaries need re-importing after an app upgrade (their index format changed):</source>
-        <translation>Các từ điển sau cần được nhập lại sau khi nâng cấp ứng dụng (định dạng chỉ mục của chúng đã thay đổi):</translation>
+        <source>Dictionaries:</source>
+        <translation>Từ điển:</translation>
     </message>
     <message>
-        <source>Mining is blocked for them until you do. Re-import them now?</source>
-        <translation>Việc khai thác bị chặn cho đến khi việc này được thực hiện. Nhập lại ngay bây giờ?</translation>
+        <source>Frequency sources:</source>
+        <translation>Nguồn tần suất:</translation>
     </message>
     <message>
-        <source>Dictionaries need re-importing</source>
-        <translation>Cần nhập lại từ điển</translation>
+        <source>Pitch accent sources:</source>
+        <translation>Nguồn trọng âm cao độ:</translation>
+    </message>
+    <message>
+        <source>Audio packs:</source>
+        <translation>Gói âm thanh:</translation>
+    </message>
+    <message>
+        <source>These resources need re-importing after an app upgrade (their index format changed):</source>
+        <translation>Các tài nguyên này cần được nhập lại sau khi ứng dụng nâng cấp (định dạng chỉ mục của chúng đã thay đổi):</translation>
+    </message>
+    <message>
+        <source>Mining is blocked until you do.</source>
+        <translation>Khai thác bị chặn cho đến khi việc nhập lại hoàn tất.</translation>
+    </message>
+    <message>
+        <source>Resources need re-importing</source>
+        <translation>Tài nguyên cần được nhập lại</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>Nhập lại tất cả</translation>
+    </message>
+    <message>
+        <source>Later</source>
+        <translation>Để sau</translation>
     </message>
     <message>
         <source>System validation passed</source>
@@ -5456,84 +5518,6 @@ Bạn có thể tinh chỉnh sau trong Cài đặt → Anki.</translation>
         <translation>Đã cài đặt thư viện loại bỏ khoảng lặng thành công.</translation>
     </message>
 </context><context>
-    <name>PitchImportFlow</name>
-    <message>
-        <source>Choose pitch accent source</source>
-        <translation>Chọn nguồn trọng âm cao độ</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> (đã bỏ qua %1 mục sai định dạng)</translation>
-    </message>
-    <message>
-        <source>Pitch Source Added</source>
-        <translation>Đã thêm nguồn trọng âm cao độ</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>Đã nhập %1 mục từ '%2'.</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>Đã hoàn tất nhập, nhưng không thể cập nhật cài đặt.</translation>
-    </message>
-    <message>
-        <source>Importing pitch source…</source>
-        <translation>Đang nhập nguồn trọng âm cao độ…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Hủy</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be imported.</source>
-        <translation>Không thể nhập nguồn trọng âm cao độ.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Một lượt nhập khác vẫn đang hoàn tất. Vui lòng đợi rồi thử lại.</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>Đang hủy…</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>Tiến trình nhập đã kết thúc mà không có kết quả hoàn tất.</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>Không thể quét thư mục đó.</translation>
-    </message>
-    <message>
-        <source>Choose pitch source to re-import</source>
-        <translation>Chọn nguồn trọng âm cao độ để nhập lại</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>Tài nguyên đã lập chỉ mục đang được sử dụng cho khai thác, làm nóng khi khởi động, hoặc điền dữ liệu còn thiếu cho thẻ. Hãy đợi tác vụ đang hoạt động hoàn tất rồi thử lại.</translation>
-    </message>
-    <message>
-        <source>Pitch Source Re-imported</source>
-        <translation>Đã nhập lại nguồn trọng âm cao độ</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>Đã nhập lại %1 thành công.</translation>
-    </message>
-    <message>
-        <source>Re-importing pitch source…</source>
-        <translation>Đang nhập lại nguồn trọng âm cao độ…</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be re-imported.</source>
-        <translation>Không thể nhập lại nguồn trọng âm cao độ.</translation>
-    </message>
-    <message>
-        <source>Pitch accent source (%1);;All Files (*)</source>
-        <translation>Nguồn trọng âm cao độ (%1);;Tất cả tệp (*)</translation>
-    </message>
-</context><context>
     <name>PitchSettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -5584,6 +5568,14 @@ Bạn có thể tinh chỉnh sau trong Cài đặt → Anki.</translation>
         <translation>Thêm lại các nguồn trọng âm cao độ tìm thấy trong thư mục lưu trữ mà chưa có trong danh sách trên. Không cần nhập lại.</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>Nhập lại tất cả</translation>
+    </message>
+    <message>
+        <source>Rebuild every pitch source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>Xây dựng lại mọi nguồn trọng âm cao độ trong danh sách từ bản sao đã lưu khi nhập. Cần thiết sau khi ứng dụng nâng cấp làm thay đổi định dạng chỉ mục.</translation>
+    </message>
+    <message>
         <source>Checked top to bottom — the first source with a pitch entry for a word wins.</source>
         <translation>Được kiểm tra từ trên xuống dưới — nguồn đầu tiên có mục trọng âm cao độ cho một từ sẽ thắng.</translation>
     </message>
@@ -5626,6 +5618,14 @@ Bạn có thể tinh chỉnh sau trong Cài đặt → Anki.</translation>
     <message>
         <source>Enable or disable %1</source>
         <translation>Bật hoặc tắt %1</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>Nhập lại</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ cần nhập lại (ứng dụng đã nâng cấp)</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -6032,6 +6032,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>Add Series</source>
         <translation>Thêm series</translation>
+    </message>
+    <message>
+        <source>Mine the selected rows, in list order. A completed row is mined again from scratch.</source>
+        <translation>Khai thác các hàng đã chọn theo thứ tự danh sách. Một hàng đã hoàn tất sẽ được khai thác lại từ đầu.</translation>
     </message>
     <message>
         <source>Process Queue</source>
@@ -6566,8 +6570,8 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Văn bản đã dán</translation>
     </message>
     <message>
-        <source>Paste Japanese text and mine it into Anki cards — no screenshots or audio.</source>
-        <translation>Dán văn bản tiếng Nhật và khai thác thành thẻ Anki — không có ảnh chụp màn hình hay âm thanh.</translation>
+        <source>Paste Japanese text and mine it into Anki cards — no audio is extracted.</source>
+        <translation>Dán văn bản tiếng Nhật và khai thác nó thành thẻ Anki — không trích xuất âm thanh.</translation>
     </message>
     <message>
         <source>Paste text here…</source>
@@ -6576,6 +6580,22 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>Drop or paste text here; files are not supported.</source>
         <translation>Thả hoặc dán văn bản vào đây; tệp không được hỗ trợ.</translation>
+    </message>
+    <message>
+        <source>Card Image:</source>
+        <translation>Ảnh thẻ:</translation>
+    </message>
+    <message>
+        <source>Images</source>
+        <translation>Hình ảnh</translation>
+    </message>
+    <message>
+        <source>This field takes an image file.</source>
+        <translation>Trường này nhận tệp hình ảnh.</translation>
+    </message>
+    <message>
+        <source>Optional. This image goes in the Picture field of every card from this text.</source>
+        <translation>Tùy chọn. Hình ảnh này sẽ được đưa vào trường Picture của mọi thẻ từ văn bản này.</translation>
     </message>
     <message>
         <source>Mine</source>
@@ -6596,6 +6616,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>Paste some text first.</source>
         <translation>Hãy dán văn bản trước.</translation>
+    </message>
+    <message>
+        <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
+        <translation>Không thể đọc hình ảnh đó. Chọn ảnh khác, hoặc xóa trường để khai thác mà không cần ảnh.</translation>
     </message>
     <message>
         <source>Starting…</source>
@@ -7021,6 +7045,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <source>Details</source>
         <translation>Chi tiết</translation>
     </message>
+    <message>
+        <source>Dismiss</source>
+        <translation>Đóng</translation>
+    </message>
 </context><context>
     <name>SettingsSearchBox</name>
     <message>
@@ -7134,6 +7162,18 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Diện mạo &amp; Ngôn ngữ</translation>
     </message>
     <message>
+        <source>Nothing to restore</source>
+        <translation>Không có gì để khôi phục</translation>
+    </message>
+    <message>
+        <source>Every audio pack found in the storage folder is already listed.
+
+A pack that stopped working after an app upgrade is repaired by Re-import on its row, not by restoring it.</source>
+        <translation>Mọi gói âm thanh tìm thấy trong thư mục lưu trữ đều đã có trong danh sách.
+
+Gói không còn hoạt động sau khi ứng dụng nâng cấp được sửa bằng Nhập lại trên dòng của gói đó, không phải bằng cách khôi phục nó.</translation>
+    </message>
+    <message>
         <source>The audio packs could not be restored.</source>
         <translation>Không thể khôi phục các gói âm thanh.</translation>
     </message>
@@ -7142,12 +7182,28 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Không thể kiểm tra các gói âm thanh đã cài đặt.</translation>
     </message>
     <message>
+        <source>Every frequency source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>Mọi nguồn tần suất tìm thấy trong thư mục lưu trữ đều đã có trong danh sách.
+
+Nguồn không còn hoạt động sau khi ứng dụng nâng cấp được sửa bằng Nhập lại tất cả, không phải bằng cách khôi phục nó.</translation>
+    </message>
+    <message>
         <source>The frequency sources could not be restored.</source>
         <translation>Không thể khôi phục các nguồn tần suất.</translation>
     </message>
     <message>
         <source>Installed frequency sources could not be checked.</source>
         <translation>Không thể kiểm tra các nguồn tần suất đã cài đặt.</translation>
+    </message>
+    <message>
+        <source>Every pitch accent source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>Mọi nguồn trọng âm cao độ tìm thấy trong thư mục lưu trữ đều đã có trong danh sách.
+
+Nguồn không còn hoạt động sau khi ứng dụng nâng cấp được sửa bằng Nhập lại tất cả, không phải bằng cách khôi phục nó.</translation>
     </message>
     <message>
         <source>The pitch accent sources could not be restored.</source>
@@ -7598,6 +7654,14 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Hoàn tất — đã xử lý %1 tệp</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Hoàn tất — đã xử lý %1, đã bỏ qua %2</translation>
+    </message>
+    <message>
+        <source>No subtitles generated — all %1 skipped because their output already exists. Enable Overwrite to regenerate.</source>
+        <translation>Không có phụ đề nào được tạo — tất cả %1 đã bỏ qua do đầu ra đã tồn tại. Bật Ghi đè để tạo lại.</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>Chọn thư mục đầu ra</translation>
     </message>
@@ -7840,6 +7904,14 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Hoàn tất — đã xử lý %1 tệp</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Hoàn tất — đã xử lý %1, đã bỏ qua %2</translation>
+    </message>
+    <message>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
+        <translation>Không có tệp nào được định thời lại — tất cả %1 đã bỏ qua. Bật Ghi đè để định thời lại tại chỗ, hoặc chọn thư mục đầu ra khác.</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>Chọn thư mục đầu ra</translation>
     </message>
@@ -7856,8 +7928,8 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Đầu vào</translation>
     </message>
     <message>
-        <source>alass not found; install it or set its path in Settings to enable retiming.</source>
-        <translation>Không tìm thấy alass; cài đặt nó hoặc đặt đường dẫn trong Cài đặt để bật chỉnh lại thời gian.</translation>
+        <source>alass not found; retiming uses ffsubsync only. Install alass in Settings for a fallback engine.</source>
+        <translation>Không tìm thấy alass; việc chỉnh lại thời gian chỉ dùng ffsubsync. Hãy cài đặt alass trong Cài đặt để có công cụ dự phòng.</translation>
     </message>
     <message>
         <source>Resync a subtitle file to its video by matching audio.</source>
@@ -7920,6 +7992,18 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Thư mục phụ đề:</translation>
     </message>
     <message>
+        <source>Matched pairs:</source>
+        <translation>Cặp đã khớp:</translation>
+    </message>
+    <message>
+        <source>%1  —  no matching subtitle</source>
+        <translation>%1  —  không có phụ đề khớp</translation>
+    </message>
+    <message>
+        <source>Matched pairs (%1):</source>
+        <translation>Cặp đã khớp (%1):</translation>
+    </message>
+    <message>
         <source>Output</source>
         <translation>Đầu ra</translation>
     </message>
@@ -7944,12 +8028,8 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Khi không được chọn, các cặp có phụ đề đầu ra đã tồn tại sẽ bị bỏ qua, không ghi đè.</translation>
     </message>
     <message>
-        <source>Split penalty, frame-rate correction and single-offset mode:</source>
-        <translation>Phạt khi chia đoạn, sửa khác biệt tốc độ khung hình và chế độ độ lệch đơn:</translation>
-    </message>
-    <message>
-        <source>Alignment Settings</source>
-        <translation>Cài đặt căn chỉnh</translation>
+        <source>Alignment is automatic; an untrustworthy result never replaces the original file.</source>
+        <translation>Việc căn chỉnh diễn ra tự động; kết quả không đáng tin cậy sẽ không bao giờ thay thế tệp gốc.</translation>
     </message>
     <message>
         <source>Retime Subtitles</source>
@@ -8062,8 +8142,8 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Đã hủy</translation>
     </message>
     <message>
-        <source>Retiming failed for %1</source>
-        <translation>Chỉnh lại thời gian thất bại cho %1</translation>
+        <source>No trustworthy sync for %1; original kept unchanged</source>
+        <translation>Không có kết quả đồng bộ đáng tin cậy cho %1; tệp gốc được giữ nguyên</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8268,38 +8348,6 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Không có tệp nhị phân alass nào được phát hành cho macOS. Cài đặt nó bằng Homebrew:</translation>
     </message>
     <message>
-        <source>Split penalty</source>
-        <translation>Phạt khi chia đoạn</translation>
-    </message>
-    <message>
-        <source>How reluctant alignment is to cut a subtitle into separately-timed segments. Lower values create more cut points for ad breaks. Useful range 1-20; default 7.</source>
-        <translation>Mức độ ngần ngại của việc căn chỉnh khi cắt phụ đề thành các đoạn có thời gian riêng. Giá trị thấp hơn tạo nhiều điểm cắt hơn cho quảng cáo xen giữa. Khoảng hữu ích 1-20; mặc định 7.</translation>
-    </message>
-    <message>
-        <source>Correct frame-rate differences</source>
-        <translation>Sửa khác biệt tốc độ khung hình</translation>
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation>Tốc độ khung hình</translation>
-    </message>
-    <message>
-        <source>Enable only for subtitles from a different-framerate release. On a subtitle that is merely offset this stretches the timing and makes it worse.</source>
-        <translation>Chỉ bật cho phụ đề từ bản phát hành có tốc độ khung hình khác. Với phụ đề chỉ bị lệch thời gian, việc này sẽ kéo giãn thời gian và làm cho tệ hơn.</translation>
-    </message>
-    <message>
-        <source>Shift by a single offset only</source>
-        <translation>Chỉ dịch theo một độ lệch duy nhất</translation>
-    </message>
-    <message>
-        <source>Single offset</source>
-        <translation>Độ lệch đơn</translation>
-    </message>
-    <message>
-        <source>Shift the entire subtitle by one amount; never cut it into separately-timed segments. Suits Japanese media, which rarely has ad-break cuts. Uncheck to allow segmented alignment.</source>
-        <translation>Dịch toàn bộ phụ đề theo một khoảng duy nhất; không bao giờ cắt thành các đoạn có thời gian riêng. Phù hợp với nội dung tiếng Nhật, vốn hiếm khi có điểm cắt quảng cáo. Bỏ chọn để cho phép căn chỉnh theo từng đoạn.</translation>
-    </message>
-    <message>
         <source>Subtitle generation needs the faster-whisper engine. This packaged app cannot be extended with ASR. Use the ASR-capable AppImage, or run the command below and then launch the separate pipx-installed Anki Miner:</source>
         <translation>Tạo phụ đề cần công cụ faster-whisper. Ứng dụng đóng gói này không thể được mở rộng với ASR. Hãy dùng AppImage có hỗ trợ ASR, hoặc chạy lệnh bên dưới rồi khởi chạy Anki Miner cài đặt riêng qua pipx:</translation>
     </message>
@@ -8424,6 +8472,18 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
     <message>
         <source>Offline dictionary</source>
         <translation>Từ điển ngoại tuyến</translation>
+    </message>
+    <message>
+        <source>Frequency lists</source>
+        <translation>Danh sách tần suất</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>Trọng âm cao độ</translation>
+    </message>
+    <message>
+        <source>Audio packs</source>
+        <translation>Gói âm thanh</translation>
     </message>
     <message>
         <source>yt-dlp (YouTube mining)</source>
@@ -8700,6 +8760,14 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Số lần xuất hiện</translation>
     </message>
     <message>
+        <source>How many times this word appears in this episode.
+
+The “Sentences” picker offers one option per subtitle line, so it usually lists fewer: repeats on the same line count once here, and lines where the word takes a form that would change the card’s Word are skipped.</source>
+        <translation>Số lần từ này xuất hiện trong tập phim.
+
+Khung chọn “Câu” đưa ra một lựa chọn cho mỗi dòng phụ đề nên thường liệt kê ít hơn: các lần lặp trong cùng một dòng chỉ được tính một lần ở đây, và những dòng mà từ mang dạng làm thay đổi “Từ (đã khai thác)” của thẻ sẽ bị bỏ qua.</translation>
+    </message>
+    <message>
         <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S bao gồm/loại trừ · Phím cách phát/tạm dừng · Ctrl+A bao gồm phần hiển thị · Ctrl+D loại trừ phần hiển thị · Ctrl+Enter xác nhận</translation>
     </message>
@@ -8718,10 +8786,14 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
     <message>
         <source>%1
 
-(%2 sentences available — focus the row, then pick one under “Sentences”)</source>
+(%2 example sentences to pick from — focus the row, then choose one under “Sentences”)</source>
         <translation>%1
 
-(%2 câu khả dụng — tập trung vào hàng, rồi chọn một câu dưới “Câu”)</translation>
+(%2 câu ví dụ để chọn — chọn dòng, rồi chọn một câu trong mục “Câu”)</translation>
+    </message>
+    <message>
+        <source>Sentences (%1)</source>
+        <translation>Câu (%1)</translation>
     </message>
     <message>
         <source>No page image for this word</source>
@@ -8872,6 +8944,18 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
     <message>
         <source>Checks once a day on startup and downloads into Anki Miner's own folder. Leaving this off means YouTube mining will eventually stop working.</source>
         <translation>Kiểm tra mỗi ngày một lần khi khởi động và tải vào thư mục riêng của Anki Miner. Nếu tắt, khai thác YouTube cuối cùng sẽ ngừng hoạt động.</translation>
+    </message>
+    <message>
+        <source>Use pre-release yt-dlp builds</source>
+        <translation>Dùng bản tiền phát hành của yt-dlp</translation>
+    </message>
+    <message>
+        <source>Pre-release</source>
+        <translation>Bản tiền phát hành</translation>
+    </message>
+    <message>
+        <source>Updates install yt-dlp's nightly channel, which fixes YouTube breakage days before a stable release. Turning this off keeps the installed build until a newer stable version replaces it.</source>
+        <translation>Các bản cập nhật sẽ cài kênh nightly của yt-dlp, giúp sửa lỗi YouTube sớm hơn bản ổn định vài ngày. Nếu tắt, bản đã cài sẽ được giữ nguyên cho đến khi có bản ổn định mới hơn thay thế.</translation>
     </message>
     <message>
         <source>Optional: path to your own yt-dlp executable...</source>
@@ -9038,8 +9122,8 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner — Unexpected Error</source>
-        <translation>Anki Miner — Lỗi Không Mong Đợi</translation>
+        <source>Anki Miner Agentic — Unexpected Error</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>%1: %2

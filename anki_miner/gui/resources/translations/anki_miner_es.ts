@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="es_ES">
-  <context>
+    <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -24,8 +24,8 @@
         <translation>Mina tarjetas de vocabulario japonés desde vídeos a Anki: capturas de pantalla, audio y definiciones, de forma automática.</translation>
     </message>
     <message>
-        <source>About Anki Miner</source>
-        <translation>Acerca de Anki Miner</translation>
+        <source>About Anki Miner Agentic</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>GitHub</source>
@@ -649,16 +649,14 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Is Already Running</source>
-        <translation>Anki Miner ya se está ejecutando</translation>
+        <source>Anki Miner Agentic Is Already Running</source>
+        <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation>Parece que otra copia de Anki Miner ya se está ejecutando. Ejecutar dos copias a la vez puede dañar las bases de datos de palabras conocidas y de estadísticas.
-
-¿Desea continuar de todos modos?</translation>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>Continue anyway</source>
@@ -733,12 +731,12 @@ Formatos compatibles: AJT (index.json + media/), NHK16 (entries.json + audio/), 
         <translation>Cancelado antes de los paquetes restantes.</translation>
     </message>
     <message>
-        <source>Audio Packs Added</source>
-        <translation>Paquetes de audio agregados</translation>
-    </message>
-    <message>
         <source>Done.</source>
         <translation>Listo.</translation>
+    </message>
+    <message>
+        <source>Audio Packs Added</source>
+        <translation>Paquetes de audio agregados</translation>
     </message>
     <message>
         <source>The import finished, but the settings could not be updated.</source>
@@ -761,6 +759,38 @@ Formatos compatibles: AJT (index.json + media/), NHK16 (entries.json + audio/), 
         <translation>El proceso de importación finalizó sin un resultado de finalización.</translation>
     </message>
     <message>
+        <source>Choose Android audio database</source>
+        <translation>Elegir base de datos de audio de Android</translation>
+    </message>
+    <message>
+        <source>Android database (*.db);;SQLite database (*.sqlite *.sqlite3)</source>
+        <translation>Base de datos de Android (*.db);;Base de datos SQLite (*.sqlite *.sqlite3)</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Added</source>
+        <translation>Base de datos de audio de Android agregada</translation>
+    </message>
+    <message>
+        <source>Registered %1 (%2 entries).</source>
+        <translation>Se registró %1 (%2 entradas).</translation>
+    </message>
+    <message>
+        <source>Registering Android audio database…</source>
+        <translation>Registrando base de datos de audio de Android…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be added.</source>
+        <translation>No se pudo agregar la base de datos de audio de Android.</translation>
+    </message>
+    <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>Todavía hay otra importación en curso. Espere a que termine e inténtelo de nuevo.</translation>
+    </message>
+    <message>
+        <source>Choose Android audio database to re-import</source>
+        <translation>Elija la base de datos de audio de Android para reimportar</translation>
+    </message>
+    <message>
         <source>Choose audio pack folder to re-import</source>
         <translation>Elija la carpeta del paquete de audio para reimportar</translation>
     </message>
@@ -769,8 +799,16 @@ Formatos compatibles: AJT (index.json + media/), NHK16 (entries.json + audio/), 
         <translation>Los recursos indexados están en uso por la minería, el precalentamiento de inicio o el relleno de tarjetas. Espere a que la tarea activa finalice y vuelva a intentarlo.</translation>
     </message>
     <message>
-        <source>Audio Pack Re-imported</source>
-        <translation>Paquete de audio reimportado</translation>
+        <source>Re-importing Android audio database…</source>
+        <translation>Reimportando base de datos de audio de Android…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be re-imported.</source>
+        <translation>No se pudo volver a importar la base de datos de audio de Android.</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Re-imported</source>
+        <translation>Base de datos de audio de Android reimportada</translation>
     </message>
     <message>
         <source>Re-imported %1 successfully.</source>
@@ -785,8 +823,58 @@ Formatos compatibles: AJT (index.json + media/), NHK16 (entries.json + audio/), 
         <translation>No se pudo volver a importar el paquete de audio.</translation>
     </message>
     <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Todavía hay otra importación en curso. Espere a que termine e inténtelo de nuevo.</translation>
+        <source>Audio Pack Re-imported</source>
+        <translation>Paquete de audio reimportado</translation>
+    </message>
+    <message>
+        <source>The audio pack folder could not be scanned.</source>
+        <translation>No se pudo analizar la carpeta del paquete de audio.</translation>
+    </message>
+    <message>
+        <source>No audio packs eligible for automatic repair were found.
+
+Skipped (source folder or database not found; use per-row Re-import…):
+</source>
+        <translation>No se encontraron paquetes de audio aptos para la reparación automática.
+
+Omitidos (no se encontró la carpeta o base de datos de origen; use Reimportar… en cada fila):
+</translation>
+    </message>
+    <message>
+        <source>No audio packs in the chain.</source>
+        <translation>No hay paquetes de audio en la cadena.</translation>
+    </message>
+    <message>
+        <source>Nothing to reimport</source>
+        <translation>Nada que reimportar</translation>
+    </message>
+    <message>
+        <source>Audio pack %1 of %2: %3</source>
+        <translation>Paquete de audio %1 de %2: %3</translation>
+    </message>
+    <message>
+        <source>Re-imported %1 audio pack(s):</source>
+        <translation>Se reimportaron %1 paquete(s) de audio:</translation>
+    </message>
+    <message>
+        <source>Skipped (source folder or database not found; use per-row Re-import…):</source>
+        <translation>Omitidos (no se encontró la carpeta o base de datos de origen; use Reimportar… en cada fila):</translation>
+    </message>
+    <message>
+        <source>Cancelled before the batch finished.</source>
+        <translation>Cancelado antes de que terminara el lote.</translation>
+    </message>
+    <message>
+        <source>Nothing to do.</source>
+        <translation>Nada que hacer.</translation>
+    </message>
+    <message>
+        <source>Audio Packs Re-imported</source>
+        <translation>Paquetes de audio reimportados</translation>
+    </message>
+    <message>
+        <source>Some audio packs could not be re-imported.</source>
+        <translation>Algunos paquetes de audio no se pudieron volver a importar.</translation>
     </message>
 </context><context>
     <name>AudioPackSettingsPanel</name>
@@ -847,6 +935,14 @@ Formatos compatibles: AJT (index.json + media/), NHK16 (entries.json + audio/), 
         <translation>Vuelva a añadir los paquetes de audio que estén en la carpeta de almacenamiento pero no en la lista de arriba. No hace falta reimportar.</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>Reimportar todo</translation>
+    </message>
+    <message>
+        <source>Rebuild every audio pack in the list from the folder or database it was imported from. Needed after an app upgrade changes the index format.</source>
+        <translation>Reconstruye todos los paquetes de audio de la lista a partir de la carpeta o base de datos desde la que se importaron. Necesario después de que una actualización de la aplicación cambie el formato del índice.</translation>
+    </message>
+    <message>
         <source>Sources are tried top to bottom — the first one that has audio for a word wins.</source>
         <translation>Las fuentes se prueban de arriba abajo; gana la primera que tenga audio para una palabra.</translation>
     </message>
@@ -881,6 +977,10 @@ Formatos compatibles: AJT (index.json + media/), NHK16 (entries.json + audio/), 
     <message>
         <source>Audio Pack…</source>
         <translation>Paquete de audio…</translation>
+    </message>
+    <message>
+        <source>Android Audio Database…</source>
+        <translation>Base de datos de audio de Android…</translation>
     </message>
     <message>
         <source>Online Source…</source>
@@ -1263,6 +1363,10 @@ Los archivos de índice en el disco quedarán sin modificar porque no se pudo co
     <message>
         <source>series</source>
         <translation>series</translation>
+    </message>
+    <message>
+        <source>Every series in the queue is already complete. Select the ones you want to mine again, then click Run selected.</source>
+        <translation>Todas las series de la cola ya están completadas. Seleccione las que desea minar de nuevo y luego haga clic en Ejecutar seleccionados.</translation>
     </message>
     <message>
         <source>No valid series in the queue to process.</source>
@@ -2174,10 +2278,6 @@ Los archivos de índice en el disco quedarán sin modificar porque no se pudo co
         <translation>Se conservaron {count} campo(s) de acento tonal: la lectura solo se pudo adivinar a partir de la palabra, así que sobrescribir podría haber aplicado el acento del homógrafo incorrecto. Asigne un campo de lectura de expresión o furigana para sobrescribirlos.</translation>
     </message>
     <message>
-        <source>{count} sort value(s) are the 9999999 no-frequency-found placeholder.</source>
-        <translation>Valores de ordenación con el marcador 9999999 de frecuencia no encontrada: {count}.</translation>
-    </message>
-    <message>
         <source>Not on this note type (stale mapping): {fields}. Fix in Settings → Anki field mapping.</source>
         <translation>No están en este tipo de nota (asignación obsoleta): {fields}. Corríjalo en la asignación de campos de Configuración → Anki.</translation>
     </message>
@@ -2332,6 +2432,14 @@ Número de notas que se modificarán: {notes}. Número de campos que se modifica
     <message>
         <source>Complete — %1 files processed</source>
         <translation>Completado — %1 archivos procesados</translation>
+    </message>
+    <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Completado — %1 procesados, %2 omitidos</translation>
+    </message>
+    <message>
+        <source>Nothing condensed — all %1 skipped because their output already exists. Enable Overwrite to condense again.</source>
+        <translation>Nada condensado — los %1 se omitieron porque su salida ya existe. Active Sobrescribir para condensar de nuevo.</translation>
     </message>
     <message>
         <source>Select Output Folder</source>
@@ -3170,12 +3278,20 @@ Número de notas que se modificarán: {notes}. Número de campos que se modifica
         <translation>No se pudieron importar %1 archivo(s) multimedia.</translation>
     </message>
     <message>
-        <source>Choose Yomitan dictionary zip</source>
-        <translation>Elija el zip del diccionario Yomitan</translation>
+        <source>Choose Yomitan dictionary zips</source>
+        <translation>Elija los zips de diccionarios Yomitan</translation>
     </message>
     <message>
         <source>Yomitan zip (*.zip)</source>
         <translation>Zip de Yomitan (*.zip)</translation>
+    </message>
+    <message>
+        <source>Dictionary %1 of %2: %3</source>
+        <translation>Diccionario %1 de %2: %3</translation>
+    </message>
+    <message>
+        <source>The dictionary could not be imported.</source>
+        <translation>No se pudo importar el diccionario.</translation>
     </message>
     <message>
         <source>Dictionary added</source>
@@ -3186,24 +3302,32 @@ Número de notas que se modificarán: {notes}. Número de campos que se modifica
         <translation>Se importó %1 (%2 entradas)</translation>
     </message>
     <message>
+        <source>Imported %1 dictionaries:</source>
+        <translation>Se importaron %1 diccionarios:</translation>
+    </message>
+    <message>
+        <source>Failed:</source>
+        <translation>Fallidos:</translation>
+    </message>
+    <message>
+        <source>Cancelled before remaining dictionaries.</source>
+        <translation>Cancelado antes de los diccionarios restantes.</translation>
+    </message>
+    <message>
+        <source>Done.</source>
+        <translation>Listo.</translation>
+    </message>
+    <message>
+        <source>Dictionaries added</source>
+        <translation>Diccionarios añadidos</translation>
+    </message>
+    <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation>La importación terminó, pero no se pudieron actualizar los ajustes.</translation>
     </message>
     <message>
-        <source>Importing dictionary…</source>
-        <translation>Importando diccionario…</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>The dictionary could not be imported.</source>
-        <translation>No se pudo importar el diccionario.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Todavía hay otra importación en curso. Espera a que termine e inténtalo de nuevo.</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -3242,6 +3366,10 @@ Número de notas que se modificarán: {notes}. Número de campos que se modifica
         <translation>No se pudo volver a importar el diccionario.</translation>
     </message>
     <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>Todavía hay otra importación en curso. Espera a que termine e inténtalo de nuevo.</translation>
+    </message>
+    <message>
         <source>No JMdict XML at %1. Download from EDRDG and place it there.</source>
         <translation>No hay XML de JMdict en %1. Descárguelo de EDRDG y colóquelo allí.</translation>
     </message>
@@ -3272,10 +3400,6 @@ Omitidos (no aptos para la reparación automática; use Reimportar… en cada fi
         <translation>Nada que reimportar</translation>
     </message>
     <message>
-        <source>Dictionary %1 of %2: %3</source>
-        <translation>Diccionario %1 de %2: %3</translation>
-    </message>
-    <message>
         <source>Reimported %1 dictionary/dictionaries:</source>
         <translation>Se reimportaron %1 diccionario(s):</translation>
     </message>
@@ -3284,20 +3408,8 @@ Omitidos (no aptos para la reparación automática; use Reimportar… en cada fi
         <translation>Omitidos (no aptos para la reparación automática; use Reimportar… en cada fila):</translation>
     </message>
     <message>
-        <source>Failed:</source>
-        <translation>Fallidos:</translation>
-    </message>
-    <message>
-        <source>Cancelled before remaining dictionaries.</source>
-        <translation>Cancelado antes de los diccionarios restantes.</translation>
-    </message>
-    <message>
         <source>Reimport All</source>
         <translation>Reimportar todo</translation>
-    </message>
-    <message>
-        <source>Done.</source>
-        <translation>Listo.</translation>
     </message>
     <message>
         <source>Nothing to restore</source>
@@ -3706,10 +3818,6 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
     <message>
         <source>Collapsed %1 duplicate-expression word(s)</source>
         <translation>Se agruparon %1 palabra(s) de expresión duplicada</translation>
-    </message>
-    <message>
-        <source>Skipped %1 word(s) already carded under another spelling</source>
-        <translation>Se omitieron %1 palabra(s) ya en tarjeta bajo otra grafía</translation>
     </message>
     <message>
         <source>Frequency filter: removed %1 words outside ranks %2-%3</source>
@@ -4337,92 +4445,6 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
         <translation>Mazo a excluir de la detección de palabras conocidas:</translation>
     </message>
 </context><context>
-    <name>FrequencyImportFlow</name>
-    <message>
-        <source> This is a word-based source; its level labels show on the card but don't affect frequency-rank filtering.</source>
-        <translation> Esta es una fuente basada en palabras; sus etiquetas de nivel se muestran en la tarjeta pero no afectan el filtrado por rango de frecuencia.</translation>
-    </message>
-    <message>
-        <source>Choose frequency source</source>
-        <translation>Elegir fuente de frecuencia</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> (se omitieron %1 entradas con formato incorrecto)</translation>
-    </message>
-    <message>
-        <source> This is an occurrence-based source; its counts were converted to ranks.</source>
-        <translation> Esta es una fuente basada en ocurrencias; sus recuentos se convirtieron en rangos.</translation>
-    </message>
-    <message>
-        <source>Frequency Source Added</source>
-        <translation>Fuente de frecuencia añadida</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>Se importaron %1 entradas de «%2».</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>La importación terminó, pero no se pudieron actualizar los ajustes.</translation>
-    </message>
-    <message>
-        <source>Importing frequency source…</source>
-        <translation>Importando fuente de frecuencia…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be imported.</source>
-        <translation>No se pudo importar la fuente de frecuencia.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Todavía hay otra importación en curso. Espera a que termine e inténtalo de nuevo.</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>Cancelando…</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>El proceso de importación finalizó sin un resultado de finalización.</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>No se pudo analizar esa carpeta.</translation>
-    </message>
-    <message>
-        <source>Choose frequency source to re-import</source>
-        <translation>Elegir fuente de frecuencia para reimportar</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>Los recursos indexados están en uso por la minería, el precalentamiento de inicio o el relleno de tarjetas. Espere a que la tarea activa finalice y vuelva a intentarlo.</translation>
-    </message>
-    <message>
-        <source>Frequency Source Re-imported</source>
-        <translation>Fuente de frecuencia reimportada</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>%1 se reimportó correctamente.</translation>
-    </message>
-    <message>
-        <source>Re-importing frequency source…</source>
-        <translation>Reimportando fuente de frecuencia…</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be re-imported.</source>
-        <translation>No se pudo volver a importar la fuente de frecuencia.</translation>
-    </message>
-    <message>
-        <source>Frequency source (%1);;All Files (*)</source>
-        <translation>Fuente de frecuencia (%1);;Todos los archivos (*)</translation>
-    </message>
-</context><context>
     <name>FrequencySettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -4471,6 +4493,14 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
     <message>
         <source>Re-add frequency sources found in the storage folder that aren't in the list above. No re-import needed.</source>
         <translation>Vuelva a añadir las fuentes de frecuencia que estén en la carpeta de almacenamiento pero no en la lista de arriba. No hace falta reimportar.</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>Reimportar todo</translation>
+    </message>
+    <message>
+        <source>Rebuild every frequency source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>Reconstruye todas las fuentes de frecuencia de la lista a partir de la copia guardada al importarlas. Necesario después de que una actualización de la aplicación cambie el formato del índice.</translation>
     </message>
     <message>
         <source>Every enabled source counts: filtering uses the lowest rank, Frequency Sort the harmonic mean. Order only sets the card's source list.</source>
@@ -4523,6 +4553,14 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
     <message>
         <source>Enable or disable %1</source>
         <translation>Activar o desactivar %1</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>Reimportar</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ se requiere reimportar (actualización de la aplicación)</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -5117,16 +5155,40 @@ Cierre primero el explorador de tarjetas de Anki y cualquier editor de notas abi
         <translation>No se pudieron restilizar las tarjetas minadas.</translation>
     </message>
     <message>
-        <source>These dictionaries need re-importing after an app upgrade (their index format changed):</source>
-        <translation>Estos diccionarios deben reimportarse después de una actualización de la aplicación (su formato de índice cambió):</translation>
+        <source>Dictionaries:</source>
+        <translation>Diccionarios:</translation>
     </message>
     <message>
-        <source>Mining is blocked for them until you do. Re-import them now?</source>
-        <translation>La minería está bloqueada para ellos hasta que lo haga. ¿Reimportarlos ahora?</translation>
+        <source>Frequency sources:</source>
+        <translation>Fuentes de frecuencia:</translation>
     </message>
     <message>
-        <source>Dictionaries need re-importing</source>
-        <translation>Los diccionarios deben reimportarse</translation>
+        <source>Pitch accent sources:</source>
+        <translation>Fuentes de acento tonal:</translation>
+    </message>
+    <message>
+        <source>Audio packs:</source>
+        <translation>Paquetes de audio:</translation>
+    </message>
+    <message>
+        <source>These resources need re-importing after an app upgrade (their index format changed):</source>
+        <translation>Estos recursos deben reimportarse después de una actualización de la aplicación (su formato de índice cambió):</translation>
+    </message>
+    <message>
+        <source>Mining is blocked until you do.</source>
+        <translation>La minería está bloqueada hasta que lo haga.</translation>
+    </message>
+    <message>
+        <source>Resources need re-importing</source>
+        <translation>Se requiere reimportar recursos</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>Reimportar todo</translation>
+    </message>
+    <message>
+        <source>Later</source>
+        <translation>Más tarde</translation>
     </message>
     <message>
         <source>System validation passed</source>
@@ -5469,84 +5531,6 @@ Puede ajustar esto más tarde en Ajustes → Anki.</translation>
         <translation>Biblioteca de eliminación de silencios instalada correctamente.</translation>
     </message>
 </context><context>
-    <name>PitchImportFlow</name>
-    <message>
-        <source>Choose pitch accent source</source>
-        <translation>Elegir fuente de acento tonal</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> (se omitieron %1 entradas con formato incorrecto)</translation>
-    </message>
-    <message>
-        <source>Pitch Source Added</source>
-        <translation>Fuente de acento tonal añadida</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>Se importaron %1 entradas de «%2».</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>La importación terminó, pero no se pudieron actualizar los ajustes.</translation>
-    </message>
-    <message>
-        <source>Importing pitch source…</source>
-        <translation>Importando fuente de acento tonal…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be imported.</source>
-        <translation>No se pudo importar la fuente de acento tonal.</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>Todavía hay otra importación en curso. Espere a que termine e inténtelo de nuevo.</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>Cancelando…</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>El proceso de importación finalizó sin un resultado de finalización.</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>No se pudo analizar esa carpeta.</translation>
-    </message>
-    <message>
-        <source>Choose pitch source to re-import</source>
-        <translation>Elegir fuente de acento tonal para volver a importar</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>Los recursos indexados están en uso por la minería, el precalentamiento de inicio o el relleno de tarjetas. Espere a que la tarea activa finalice y vuelva a intentarlo.</translation>
-    </message>
-    <message>
-        <source>Pitch Source Re-imported</source>
-        <translation>Fuente de acento tonal importada de nuevo</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>%1 se reimportó correctamente.</translation>
-    </message>
-    <message>
-        <source>Re-importing pitch source…</source>
-        <translation>Volviendo a importar fuente de acento tonal…</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be re-imported.</source>
-        <translation>No se pudo volver a importar la fuente de acento tonal.</translation>
-    </message>
-    <message>
-        <source>Pitch accent source (%1);;All Files (*)</source>
-        <translation>Fuente de acento tonal (%1);;Todos los archivos (*)</translation>
-    </message>
-</context><context>
     <name>PitchSettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -5597,6 +5581,14 @@ Puede ajustar esto más tarde en Ajustes → Anki.</translation>
         <translation>Vuelva a añadir las fuentes de acento tonal que estén en la carpeta de almacenamiento pero no en la lista de arriba. No hace falta reimportar.</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>Reimportar todo</translation>
+    </message>
+    <message>
+        <source>Rebuild every pitch source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>Reconstruye todas las fuentes de acento tonal de la lista a partir de la copia guardada al importarlas. Necesario después de que una actualización de la aplicación cambie el formato del índice.</translation>
+    </message>
+    <message>
         <source>Checked top to bottom — the first source with a pitch entry for a word wins.</source>
         <translation>Se comprueban de arriba abajo: la primera fuente con una entrada de acento tonal para una palabra gana.</translation>
     </message>
@@ -5639,6 +5631,14 @@ Puede ajustar esto más tarde en Ajustes → Anki.</translation>
     <message>
         <source>Enable or disable %1</source>
         <translation>Activar o desactivar %1</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>Reimportar</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ se requiere reimportar (actualización de la aplicación)</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -6045,6 +6045,10 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
     <message>
         <source>Add Series</source>
         <translation>Añadir serie</translation>
+    </message>
+    <message>
+        <source>Mine the selected rows, in list order. A completed row is mined again from scratch.</source>
+        <translation>Mine las filas seleccionadas en orden de lista. Una fila completada se vuelve a minar desde cero.</translation>
     </message>
     <message>
         <source>Process Queue</source>
@@ -6579,8 +6583,8 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
         <translation>Texto pegado</translation>
     </message>
     <message>
-        <source>Paste Japanese text and mine it into Anki cards — no screenshots or audio.</source>
-        <translation>Pegue texto en japonés y mínelo en tarjetas de Anki, sin capturas de pantalla ni audio.</translation>
+        <source>Paste Japanese text and mine it into Anki cards — no audio is extracted.</source>
+        <translation>Pegue texto en japonés y conviértalo en tarjetas de Anki — no se extrae audio.</translation>
     </message>
     <message>
         <source>Paste text here…</source>
@@ -6589,6 +6593,22 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
     <message>
         <source>Drop or paste text here; files are not supported.</source>
         <translation>Suelte o pegue texto aquí; los archivos no son compatibles.</translation>
+    </message>
+    <message>
+        <source>Card Image:</source>
+        <translation>Imagen de tarjeta:</translation>
+    </message>
+    <message>
+        <source>Images</source>
+        <translation>Imágenes</translation>
+    </message>
+    <message>
+        <source>This field takes an image file.</source>
+        <translation>Este campo acepta un archivo de imagen.</translation>
+    </message>
+    <message>
+        <source>Optional. This image goes in the Picture field of every card from this text.</source>
+        <translation>Opcional. Esta imagen se coloca en el campo Picture de cada tarjeta generada a partir de este texto.</translation>
     </message>
     <message>
         <source>Mine</source>
@@ -6609,6 +6629,10 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
     <message>
         <source>Paste some text first.</source>
         <translation>Primero pegue algún texto.</translation>
+    </message>
+    <message>
+        <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
+        <translation>No se puede leer esa imagen. Elija otra, o borre el campo para minar sin ella.</translation>
     </message>
     <message>
         <source>Starting…</source>
@@ -7034,6 +7058,10 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
         <source>Details</source>
         <translation>Detalles</translation>
     </message>
+    <message>
+        <source>Dismiss</source>
+        <translation>Descartar</translation>
+    </message>
 </context><context>
     <name>SettingsSearchBox</name>
     <message>
@@ -7147,6 +7175,18 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
         <translation>Apariencia e idioma</translation>
     </message>
     <message>
+        <source>Nothing to restore</source>
+        <translation>Nada que restaurar</translation>
+    </message>
+    <message>
+        <source>Every audio pack found in the storage folder is already listed.
+
+A pack that stopped working after an app upgrade is repaired by Re-import on its row, not by restoring it.</source>
+        <translation>Todos los paquetes de audio que se encuentran en la carpeta de almacenamiento ya están en la lista.
+
+Un paquete que dejó de funcionar tras una actualización de la aplicación se repara con Reimportar en su fila, no restaurándolo.</translation>
+    </message>
+    <message>
         <source>The audio packs could not be restored.</source>
         <translation>No se pudieron restaurar los paquetes de audio.</translation>
     </message>
@@ -7155,12 +7195,28 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
         <translation>No se pudieron comprobar los paquetes de audio instalados.</translation>
     </message>
     <message>
+        <source>Every frequency source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>Todas las fuentes de frecuencia que se encuentran en la carpeta de almacenamiento ya están en la lista.
+
+Una fuente que dejó de funcionar tras una actualización de la aplicación se repara con Reimportar todo, no restaurándola.</translation>
+    </message>
+    <message>
         <source>The frequency sources could not be restored.</source>
         <translation>No se pudieron restaurar las fuentes de frecuencia.</translation>
     </message>
     <message>
         <source>Installed frequency sources could not be checked.</source>
         <translation>No se pudieron comprobar las fuentes de frecuencia instaladas.</translation>
+    </message>
+    <message>
+        <source>Every pitch accent source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>Todas las fuentes de acento tonal que se encuentran en la carpeta de almacenamiento ya están en la lista.
+
+Una fuente que dejó de funcionar tras una actualización de la aplicación se repara con Reimportar todo, no restaurándola.</translation>
     </message>
     <message>
         <source>The pitch accent sources could not be restored.</source>
@@ -7613,6 +7669,14 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Completado — %1 archivos procesados</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Completado — %1 procesados, %2 omitidos</translation>
+    </message>
+    <message>
+        <source>No subtitles generated — all %1 skipped because their output already exists. Enable Overwrite to regenerate.</source>
+        <translation>No se generaron subtítulos — los %1 se omitieron porque su salida ya existe. Active Sobrescribir para regenerar.</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>Seleccionar carpeta de salida</translation>
     </message>
@@ -7855,6 +7919,14 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Completado — %1 archivos procesados</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>Completado — %1 procesados, %2 omitidos</translation>
+    </message>
+    <message>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
+        <translation>No se resincronizó ningún archivo — los %1 se omitieron. Active Sobrescribir para volver a sincronizar en el mismo lugar, o elija otra carpeta de salida.</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>Seleccionar carpeta de salida</translation>
     </message>
@@ -7871,8 +7943,8 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Entrada</translation>
     </message>
     <message>
-        <source>alass not found; install it or set its path in Settings to enable retiming.</source>
-        <translation>alass no encontrado; instálelo o configure su ruta en Ajustes para habilitar la resincronización.</translation>
+        <source>alass not found; retiming uses ffsubsync only. Install alass in Settings for a fallback engine.</source>
+        <translation>No se encontró alass; la resincronización usa solo ffsubsync. Instale alass en Ajustes para tener un motor de respaldo.</translation>
     </message>
     <message>
         <source>Resync a subtitle file to its video by matching audio.</source>
@@ -7935,6 +8007,18 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Carpeta de subtítulos:</translation>
     </message>
     <message>
+        <source>Matched pairs:</source>
+        <translation>Pares coincidentes:</translation>
+    </message>
+    <message>
+        <source>%1  —  no matching subtitle</source>
+        <translation>%1  —  sin subtítulo coincidente</translation>
+    </message>
+    <message>
+        <source>Matched pairs (%1):</source>
+        <translation>Pares coincidentes (%1):</translation>
+    </message>
+    <message>
         <source>Output</source>
         <translation>Salida</translation>
     </message>
@@ -7959,12 +8043,8 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Si no está marcado, los pares cuyo subtítulo de salida ya existe se omiten, no se sobrescriben.</translation>
     </message>
     <message>
-        <source>Split penalty, frame-rate correction and single-offset mode:</source>
-        <translation>Penalización de corte, corrección de tasa de fotogramas y modo de desfase único:</translation>
-    </message>
-    <message>
-        <source>Alignment Settings</source>
-        <translation>Ajustes de alineación</translation>
+        <source>Alignment is automatic; an untrustworthy result never replaces the original file.</source>
+        <translation>La alineación es automática; un resultado poco fiable nunca reemplaza el archivo original.</translation>
     </message>
     <message>
         <source>Retime Subtitles</source>
@@ -8077,8 +8157,8 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Cancelado</translation>
     </message>
     <message>
-        <source>Retiming failed for %1</source>
-        <translation>Error al resincronizar %1</translation>
+        <source>No trustworthy sync for %1; original kept unchanged</source>
+        <translation>No hay sincronía fiable para %1; el original se mantiene sin modificar</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8283,38 +8363,6 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>No se publica ningún binario de alass para macOS. Instálelo con Homebrew:</translation>
     </message>
     <message>
-        <source>Split penalty</source>
-        <translation>Penalización de corte</translation>
-    </message>
-    <message>
-        <source>How reluctant alignment is to cut a subtitle into separately-timed segments. Lower values create more cut points for ad breaks. Useful range 1-20; default 7.</source>
-        <translation>Cuán reacia es la alineación a cortar un subtítulo en segmentos con tiempos separados. Valores más bajos crean más puntos de corte para cortes publicitarios. Rango útil 1-20; por defecto 7.</translation>
-    </message>
-    <message>
-        <source>Correct frame-rate differences</source>
-        <translation>Corregir diferencias de tasa de fotogramas</translation>
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation>Tasa de fotogramas</translation>
-    </message>
-    <message>
-        <source>Enable only for subtitles from a different-framerate release. On a subtitle that is merely offset this stretches the timing and makes it worse.</source>
-        <translation>Actívelo solo para subtítulos de una edición con tasa de fotogramas distinta. En un subtítulo que solo está desfasado, esto estira los tiempos y lo empeora.</translation>
-    </message>
-    <message>
-        <source>Shift by a single offset only</source>
-        <translation>Desplazar por un único desfase</translation>
-    </message>
-    <message>
-        <source>Single offset</source>
-        <translation>Desfase único</translation>
-    </message>
-    <message>
-        <source>Shift the entire subtitle by one amount; never cut it into separately-timed segments. Suits Japanese media, which rarely has ad-break cuts. Uncheck to allow segmented alignment.</source>
-        <translation>Desplace todo el subtítulo por una sola cantidad; nunca lo corte en segmentos con tiempos separados. Adecuado para medios en japonés, que rara vez tienen cortes publicitarios. Desmárquelo para permitir la alineación segmentada.</translation>
-    </message>
-    <message>
         <source>Subtitle generation needs the faster-whisper engine. This packaged app cannot be extended with ASR. Use the ASR-capable AppImage, or run the command below and then launch the separate pipx-installed Anki Miner:</source>
         <translation>La generación de subtítulos necesita el motor faster-whisper. Esta aplicación empaquetada no se puede ampliar con ASR. Use el AppImage con capacidad de ASR, o ejecute el comando de abajo y luego inicie el Anki Miner instalado por separado con pipx:</translation>
     </message>
@@ -8439,6 +8487,18 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
     <message>
         <source>Offline dictionary</source>
         <translation>Diccionario sin conexión</translation>
+    </message>
+    <message>
+        <source>Frequency lists</source>
+        <translation>Listas de frecuencia</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>Acento tonal</translation>
+    </message>
+    <message>
+        <source>Audio packs</source>
+        <translation>Paquetes de audio</translation>
     </message>
     <message>
         <source>yt-dlp (YouTube mining)</source>
@@ -8715,6 +8775,14 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Apariciones</translation>
     </message>
     <message>
+        <source>How many times this word appears in this episode.
+
+The “Sentences” picker offers one option per subtitle line, so it usually lists fewer: repeats on the same line count once here, and lines where the word takes a form that would change the card’s Word are skipped.</source>
+        <translation>Cuántas veces aparece esta palabra en este episodio.
+
+El selector «Frases» ofrece una opción por línea de subtítulos, así que suele listar menos: las repeticiones en la misma línea cuentan una sola vez aquí, y se omiten las líneas donde la palabra adopta una forma que cambiaría la «Palabra (minada)» de la tarjeta.</translation>
+    </message>
+    <message>
         <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S incluir/excluir · Espacio reproducir/pausar · Ctrl+A incluir visibles · Ctrl+D excluir visibles · Ctrl+Intro confirmar</translation>
     </message>
@@ -8733,10 +8801,14 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
     <message>
         <source>%1
 
-(%2 sentences available — focus the row, then pick one under “Sentences”)</source>
+(%2 example sentences to pick from — focus the row, then choose one under “Sentences”)</source>
         <translation>%1
 
-(%2 frases disponibles; enfoque la fila y luego elija una en «Frases»)</translation>
+(%2 frases de ejemplo para elegir — enfoque la fila y luego elija una en «Frases»)</translation>
+    </message>
+    <message>
+        <source>Sentences (%1)</source>
+        <translation>Frases (%1)</translation>
     </message>
     <message>
         <source>No page image for this word</source>
@@ -8887,6 +8959,18 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
     <message>
         <source>Checks once a day on startup and downloads into Anki Miner's own folder. Leaving this off means YouTube mining will eventually stop working.</source>
         <translation>Comprueba una vez al día al iniciar y descarga en la propia carpeta de Anki Miner. Dejarlo desactivado significa que la minería de YouTube acabará dejando de funcionar.</translation>
+    </message>
+    <message>
+        <source>Use pre-release yt-dlp builds</source>
+        <translation>Usar versiones preliminares de yt-dlp</translation>
+    </message>
+    <message>
+        <source>Pre-release</source>
+        <translation>Preliminar</translation>
+    </message>
+    <message>
+        <source>Updates install yt-dlp's nightly channel, which fixes YouTube breakage days before a stable release. Turning this off keeps the installed build until a newer stable version replaces it.</source>
+        <translation>Las actualizaciones instalan el canal nightly de yt-dlp, que corrige los fallos de YouTube días antes de una versión estable. Si se desactiva, la versión instalada se conserva hasta que la reemplace una versión estable más reciente.</translation>
     </message>
     <message>
         <source>Optional: path to your own yt-dlp executable...</source>
@@ -9053,8 +9137,8 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner — Unexpected Error</source>
-        <translation>Anki Miner — Error inesperado</translation>
+        <source>Anki Miner Agentic — Unexpected Error</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>%1: %2

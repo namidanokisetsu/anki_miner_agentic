@@ -537,6 +537,36 @@ class TestGetDefinitionsBatchFastPath:
         assert results == ["definition:ひく", "definition:はじく"]
         assert calls == [[("弾く", "ひく")], [("弾く", "はじく")]]
 
+    def test_lemma_context_forwarded_to_offline_batch_providers(self, test_config):
+        """The token lemma reaches lookup_many so the storage-side Rule A' scope
+        can prefer the right lexeme for a kana front (ゆう → 言う, not 有/夕)."""
+        seen: list[dict[str, str] | None] = []
+        provider = make_batch_provider("lemma-aware")
+
+        def lookup_many(pairs, scope_homographs=True, lemmas=None):
+            seen.append(lemmas)
+            return {word: "hit" for word, _ in pairs}
+
+        provider.lookup_many.side_effect = lookup_many
+        service = DefinitionService(test_config, providers=[provider])
+
+        results = service.get_definitions_batch(
+            [("ゆう", "ゆう")],
+            lemma_context={"ゆう": "言う"},
+        )
+        assert results == ["hit"]
+        assert seen == [{"ゆう": "言う"}]
+
+    def test_no_lemma_context_keeps_legacy_call_shape(self, test_config):
+        """Without lemma_context the provider is called WITHOUT the lemmas kwarg,
+        so older lookup_many stubs/providers keep working."""
+        provider = make_batch_provider("legacy", table={"x": "hit"})
+        service = DefinitionService(test_config, providers=[provider])
+
+        assert service.get_definitions_batch([("x", None)]) == ["hit"]
+        _args, kwargs = provider.lookup_many.call_args
+        assert "lemmas" not in kwargs
+
     def test_cancellation_stops_before_next_provider(self, test_config):
         cancelled = False
         first = make_batch_provider("first")
@@ -791,6 +821,26 @@ class TestGetGlossariesBatchFastPath:
 
         assert results == ["<div>ひく</div>", "<div>はじく</div>"]
         assert calls == [[("弾く", "ひく")], [("弾く", "はじく")]]
+
+    def test_lemma_context_forwarded_to_offline_glossary_providers(self, test_config):
+        """Glossary batch threads the token lemma exactly like the definition
+        batch, so a kana front's concatenated glossary scopes to its lexeme."""
+        seen: list[dict[str, str] | None] = []
+        provider = make_batch_offline_provider("lemma-aware")
+
+        def lookup_many(pairs, scope_homographs=True, lemmas=None):
+            seen.append(lemmas)
+            return {word: "<div>hit</div>" for word, _ in pairs}
+
+        provider.lookup_many.side_effect = lookup_many
+        service = DefinitionService(test_config, providers=[provider])
+
+        results = service.get_glossaries_batch(
+            [("ゆう", "ゆう")],
+            lemma_context={"ゆう": "言う"},
+        )
+        assert results == ["<div>hit</div>"]
+        assert seen == [{"ゆう": "言う"}]
 
     def test_cancellation_stops_before_next_online_request(self, test_config):
         cancelled = False
@@ -1434,6 +1484,34 @@ class TestOfflineDeinflectionTermsExist:
         ]
 
         assert service.offline_deinflection_terms_exist(candidates) == {"決まる"}
+
+    def test_zero_conditions_is_a_wildcard_not_a_noninflecting_filter(self, test_config, tmp_path: Path):
+        """conditions=0 matches EVERY entry, whatever its rules.
+
+        ``conditions_match`` treats 0 as the wildcard (it is the "not a
+        deinflection hypothesis" case), so probing with 0 degrades to plain
+        existence. This is worth pinning because it reads like the opposite:
+        a rules="" ROW yields flags 0 and matches only a zero-condition
+        hypothesis, which invites using ``conditions=0`` to ask "is this term
+        attested as a non-inflecting (noun) headword". It cannot answer that.
+        The masu-stem nominalizer and the 接頭辞 surface join both deliberately
+        gate on POS + plain attestation instead — see
+        services/masu_stem_nominalizer.py and compound_matcher._candidate_for_tail.
+        """
+        provider = _seed_rows(
+            tmp_path,
+            "d",
+            "D",
+            [
+                DictRow(term="差し入れ", reading="さしいれ", content=_gloss("supplies"), rules=""),
+                DictRow(term="差し入れる", reading="さしいれる", content=_gloss("insert"), rules="v1"),
+            ],
+        )
+        service = DefinitionService(test_config, providers=[provider])
+
+        both = service.offline_deinflection_terms_exist([("差し入れ", 0), ("差し入れる", 0)])
+
+        assert both == {"差し入れ", "差し入れる"}
 
 
 class TestGetDefinitionsBatchFallback:

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_TW">
-  <context>
+    <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -24,8 +24,8 @@
         <translation>自動從影片採集日文單字卡片到 Anki——螢幕截圖、音訊與釋義。</translation>
     </message>
     <message>
-        <source>About Anki Miner</source>
-        <translation>關於 Anki Miner</translation>
+        <source>About Anki Miner Agentic</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>GitHub</source>
@@ -648,16 +648,14 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Is Already Running</source>
-        <translation>Anki Miner 已在執行中</translation>
+        <source>Anki Miner Agentic Is Already Running</source>
+        <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation>另一個 Anki Miner 似乎正在執行中。同時執行兩個副本可能會損毀已知單字資料庫與統計資料庫。
-
-仍要繼續嗎？</translation>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>Continue anyway</source>
@@ -732,12 +730,12 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>在處理剩餘音訊包前已取消。</translation>
     </message>
     <message>
-        <source>Audio Packs Added</source>
-        <translation>已新增音訊包</translation>
-    </message>
-    <message>
         <source>Done.</source>
         <translation>完成。</translation>
+    </message>
+    <message>
+        <source>Audio Packs Added</source>
+        <translation>已新增音訊包</translation>
     </message>
     <message>
         <source>The import finished, but the settings could not be updated.</source>
@@ -760,6 +758,38 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>匯入工作已結束，但未傳回完成結果。</translation>
     </message>
     <message>
+        <source>Choose Android audio database</source>
+        <translation>選擇 Android 音訊資料庫</translation>
+    </message>
+    <message>
+        <source>Android database (*.db);;SQLite database (*.sqlite *.sqlite3)</source>
+        <translation>Android 資料庫 (*.db);;SQLite 資料庫 (*.sqlite *.sqlite3)</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Added</source>
+        <translation>已新增 Android 音訊資料庫</translation>
+    </message>
+    <message>
+        <source>Registered %1 (%2 entries).</source>
+        <translation>已註冊 %1（%2 個項目）。</translation>
+    </message>
+    <message>
+        <source>Registering Android audio database…</source>
+        <translation>正在註冊 Android 音訊資料庫…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be added.</source>
+        <translation>無法新增 Android 音訊資料庫。</translation>
+    </message>
+    <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>另一項匯入作業尚未完成，請稍候完成後再試一次。</translation>
+    </message>
+    <message>
+        <source>Choose Android audio database to re-import</source>
+        <translation>選擇要重新匯入的 Android 音訊資料庫</translation>
+    </message>
+    <message>
         <source>Choose audio pack folder to re-import</source>
         <translation>選擇要重新匯入的音訊包資料夾</translation>
     </message>
@@ -768,8 +798,16 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>索引資源正被採集、啟動預熱或卡片回填使用中。請等待進行中的工作完成後再試一次。</translation>
     </message>
     <message>
-        <source>Audio Pack Re-imported</source>
-        <translation>音訊包已重新匯入</translation>
+        <source>Re-importing Android audio database…</source>
+        <translation>正在重新匯入 Android 音訊資料庫…</translation>
+    </message>
+    <message>
+        <source>The Android audio database could not be re-imported.</source>
+        <translation>無法重新匯入 Android 音訊資料庫。</translation>
+    </message>
+    <message>
+        <source>Android Audio Database Re-imported</source>
+        <translation>Android 音訊資料庫已重新匯入</translation>
     </message>
     <message>
         <source>Re-imported %1 successfully.</source>
@@ -784,8 +822,58 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>無法重新匯入音訊包。</translation>
     </message>
     <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>另一項匯入作業尚未完成，請稍候完成後再試一次。</translation>
+        <source>Audio Pack Re-imported</source>
+        <translation>音訊包已重新匯入</translation>
+    </message>
+    <message>
+        <source>The audio pack folder could not be scanned.</source>
+        <translation>無法掃描音訊包資料夾。</translation>
+    </message>
+    <message>
+        <source>No audio packs eligible for automatic repair were found.
+
+Skipped (source folder or database not found; use per-row Re-import…):
+</source>
+        <translation>找不到符合自動修復資格的音訊包。
+
+已略過（找不到來源資料夾或資料庫；請使用逐列的重新匯入…）：
+</translation>
+    </message>
+    <message>
+        <source>No audio packs in the chain.</source>
+        <translation>鏈中沒有音訊包。</translation>
+    </message>
+    <message>
+        <source>Nothing to reimport</source>
+        <translation>無可重新匯入的項目</translation>
+    </message>
+    <message>
+        <source>Audio pack %1 of %2: %3</source>
+        <translation>音訊包 %1／%2：%3</translation>
+    </message>
+    <message>
+        <source>Re-imported %1 audio pack(s):</source>
+        <translation>已重新匯入 %1 個音訊包：</translation>
+    </message>
+    <message>
+        <source>Skipped (source folder or database not found; use per-row Re-import…):</source>
+        <translation>已略過（找不到來源資料夾或資料庫；請使用逐列的重新匯入…）：</translation>
+    </message>
+    <message>
+        <source>Cancelled before the batch finished.</source>
+        <translation>在批次完成前已取消。</translation>
+    </message>
+    <message>
+        <source>Nothing to do.</source>
+        <translation>沒有可執行的操作。</translation>
+    </message>
+    <message>
+        <source>Audio Packs Re-imported</source>
+        <translation>音訊包已重新匯入</translation>
+    </message>
+    <message>
+        <source>Some audio packs could not be re-imported.</source>
+        <translation>部分音訊包無法重新匯入。</translation>
     </message>
 </context><context>
     <name>AudioPackSettingsPanel</name>
@@ -846,6 +934,14 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
         <translation>重新加入儲存資料夾中找到、但未列在上方清單的音訊包。無需重新匯入。</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>全部重新匯入</translation>
+    </message>
+    <message>
+        <source>Rebuild every audio pack in the list from the folder or database it was imported from. Needed after an app upgrade changes the index format.</source>
+        <translation>從匯入來源的資料夾或資料庫，重建清單中的每個音訊包。應用程式升級導致索引格式變更後，需要執行此操作。</translation>
+    </message>
+    <message>
         <source>Sources are tried top to bottom — the first one that has audio for a word wins.</source>
         <translation>來源會由上而下嘗試 — 第一個含有該單字音訊的來源會被採用。</translation>
     </message>
@@ -880,6 +976,10 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
     <message>
         <source>Audio Pack…</source>
         <translation>音訊包…</translation>
+    </message>
+    <message>
+        <source>Android Audio Database…</source>
+        <translation>Android 音訊資料庫…</translation>
     </message>
     <message>
         <source>Online Source…</source>
@@ -1262,6 +1362,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>series</source>
         <translation>系列</translation>
+    </message>
+    <message>
+        <source>Every series in the queue is already complete. Select the ones you want to mine again, then click Run selected.</source>
+        <translation>佇列中的所有系列皆已完成。請選取你想再次採集的系列，然後點擊「執行選取項目」。</translation>
     </message>
     <message>
         <source>No valid series in the queue to process.</source>
@@ -2172,10 +2276,6 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>已保留 {count} 個高低音調欄位 — 讀音只能從單字本身推測，覆寫可能套用到錯誤同形詞的音調。請對應「表達式讀音」或「振假名」欄位以覆寫它們。</translation>
     </message>
     <message>
-        <source>{count} sort value(s) are the 9999999 no-frequency-found placeholder.</source>
-        <translation>有 {count} 個排序值為代表找不到頻率的預留值 9999999。</translation>
-    </message>
-    <message>
         <source>Not on this note type (stale mapping): {fields}. Fix in Settings → Anki field mapping.</source>
         <translation>此筆記類型上不存在（對應已過期）：{fields}。請在「設定 → Anki」的欄位對應中修正。</translation>
     </message>
@@ -2330,6 +2430,14 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
     <message>
         <source>Complete — %1 files processed</source>
         <translation>完成 — 已處理 %1 個檔案</translation>
+    </message>
+    <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>完成 — 已處理 %1 個，已略過 %2 個</translation>
+    </message>
+    <message>
+        <source>Nothing condensed — all %1 skipped because their output already exists. Enable Overwrite to condense again.</source>
+        <translation>未濃縮任何檔案 — 全部 %1 個因輸出已存在而略過。啟用覆寫即可重新濃縮。</translation>
     </message>
     <message>
         <source>Select Output Folder</source>
@@ -3168,12 +3276,20 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>有 %1 個媒體檔案無法匯入。</translation>
     </message>
     <message>
-        <source>Choose Yomitan dictionary zip</source>
+        <source>Choose Yomitan dictionary zips</source>
         <translation>選擇 Yomitan 字典 zip</translation>
     </message>
     <message>
         <source>Yomitan zip (*.zip)</source>
         <translation>Yomitan zip（*.zip）</translation>
+    </message>
+    <message>
+        <source>Dictionary %1 of %2: %3</source>
+        <translation>字典 %1／%2：%3</translation>
+    </message>
+    <message>
+        <source>The dictionary could not be imported.</source>
+        <translation>無法匯入字典。</translation>
     </message>
     <message>
         <source>Dictionary added</source>
@@ -3184,24 +3300,32 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>已匯入 %1（%2 筆條目）</translation>
     </message>
     <message>
+        <source>Imported %1 dictionaries:</source>
+        <translation>已匯入 %1 部字典：</translation>
+    </message>
+    <message>
+        <source>Failed:</source>
+        <translation>失敗：</translation>
+    </message>
+    <message>
+        <source>Cancelled before remaining dictionaries.</source>
+        <translation>在處理其餘字典前已取消。</translation>
+    </message>
+    <message>
+        <source>Done.</source>
+        <translation>完成。</translation>
+    </message>
+    <message>
+        <source>Dictionaries added</source>
+        <translation>已新增字典</translation>
+    </message>
+    <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation>匯入已完成，但無法更新設定。</translation>
     </message>
     <message>
-        <source>Importing dictionary…</source>
-        <translation>正在匯入字典…</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>取消</translation>
-    </message>
-    <message>
-        <source>The dictionary could not be imported.</source>
-        <translation>無法匯入字典。</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>另一項匯入作業尚未完成，請稍候完成後再試一次。</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -3240,6 +3364,10 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>無法重新匯入字典。</translation>
     </message>
     <message>
+        <source>Another import is still finishing. Wait for it to finish and try again.</source>
+        <translation>另一項匯入作業尚未完成，請稍候完成後再試一次。</translation>
+    </message>
+    <message>
         <source>No JMdict XML at %1. Download from EDRDG and place it there.</source>
         <translation>%1 沒有 JMdict XML。請從 EDRDG 下載並放置於該處。</translation>
     </message>
@@ -3270,10 +3398,6 @@ Skipped (not eligible for automatic repair; use per-row Re-import…):
         <translation>無可重新匯入的項目</translation>
     </message>
     <message>
-        <source>Dictionary %1 of %2: %3</source>
-        <translation>字典 %1／%2：%3</translation>
-    </message>
-    <message>
         <source>Reimported %1 dictionary/dictionaries:</source>
         <translation>已重新匯入 %1 部字典：</translation>
     </message>
@@ -3282,20 +3406,8 @@ Skipped (not eligible for automatic repair; use per-row Re-import…):
         <translation>已略過（不符合自動修復資格；請使用逐列的重新匯入…）：</translation>
     </message>
     <message>
-        <source>Failed:</source>
-        <translation>失敗：</translation>
-    </message>
-    <message>
-        <source>Cancelled before remaining dictionaries.</source>
-        <translation>在處理其餘字典前已取消。</translation>
-    </message>
-    <message>
         <source>Reimport All</source>
         <translation>全部重新匯入</translation>
-    </message>
-    <message>
-        <source>Done.</source>
-        <translation>完成。</translation>
     </message>
     <message>
         <source>Nothing to restore</source>
@@ -3700,10 +3812,6 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Collapsed %1 duplicate-expression word(s)</source>
         <translation>已合併 %1 個重複表達的單字</translation>
-    </message>
-    <message>
-        <source>Skipped %1 word(s) already carded under another spelling</source>
-        <translation>已略過 %1 個以其他拼寫方式製卡的單字</translation>
     </message>
     <message>
         <source>Frequency filter: removed %1 words outside ranks %2-%3</source>
@@ -4324,92 +4432,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>從已知單字偵測中排除的牌組：</translation>
     </message>
 </context><context>
-    <name>FrequencyImportFlow</name>
-    <message>
-        <source> This is a word-based source; its level labels show on the card but don't affect frequency-rank filtering.</source>
-        <translation> 這是以單字為基礎的來源；其等級標籤會顯示在卡片上，但不影響頻率排名篩選。</translation>
-    </message>
-    <message>
-        <source>Choose frequency source</source>
-        <translation>選擇頻率來源</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> （已跳過 %1 筆格式錯誤的項目）</translation>
-    </message>
-    <message>
-        <source> This is an occurrence-based source; its counts were converted to ranks.</source>
-        <translation> 這是以出現次數為基準的來源；其計數已轉換為排名。</translation>
-    </message>
-    <message>
-        <source>Frequency Source Added</source>
-        <translation>已新增頻率來源</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>已從「%2」匯入 %1 個項目。</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>匯入已完成，但無法更新設定。</translation>
-    </message>
-    <message>
-        <source>Importing frequency source…</source>
-        <translation>正在匯入頻率來源…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be imported.</source>
-        <translation>無法匯入頻率來源。</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>另一項匯入作業尚未完成，請稍候完成後再試一次。</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>取消中……</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>匯入工作已結束，但未傳回完成結果。</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>無法掃描該資料夾。</translation>
-    </message>
-    <message>
-        <source>Choose frequency source to re-import</source>
-        <translation>選擇要重新匯入的頻率來源</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>索引資源正被採集、啟動預熱或卡片回填使用中。請等待進行中的工作完成後再試一次。</translation>
-    </message>
-    <message>
-        <source>Frequency Source Re-imported</source>
-        <translation>已重新匯入頻率來源</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>已成功重新匯入 %1。</translation>
-    </message>
-    <message>
-        <source>Re-importing frequency source…</source>
-        <translation>正在重新匯入頻率來源…</translation>
-    </message>
-    <message>
-        <source>The frequency source could not be re-imported.</source>
-        <translation>無法重新匯入頻率來源。</translation>
-    </message>
-    <message>
-        <source>Frequency source (%1);;All Files (*)</source>
-        <translation>頻率來源 (%1);;所有檔案 (*)</translation>
-    </message>
-</context><context>
     <name>FrequencySettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -4458,6 +4480,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Re-add frequency sources found in the storage folder that aren't in the list above. No re-import needed.</source>
         <translation>重新加入儲存資料夾中找到、但未列在上方清單的頻率來源。無需重新匯入。</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>全部重新匯入</translation>
+    </message>
+    <message>
+        <source>Rebuild every frequency source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>從匯入時儲存的副本，重建清單中的每個頻率來源。應用程式升級導致索引格式變更後，需要執行此操作。</translation>
     </message>
     <message>
         <source>Every enabled source counts: filtering uses the lowest rank, Frequency Sort the harmonic mean. Order only sets the card's source list.</source>
@@ -4510,6 +4540,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Enable or disable %1</source>
         <translation>啟用或停用 %1</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>重新匯入</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ 需要重新匯入（應用程式已升級）</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -5104,16 +5142,40 @@ Continue?</source>
         <translation>無法重新套用已採集卡片的樣式。</translation>
     </message>
     <message>
-        <source>These dictionaries need re-importing after an app upgrade (their index format changed):</source>
-        <translation>應用程式升級後，下列字典需要重新匯入（其索引格式已變更）：</translation>
+        <source>Dictionaries:</source>
+        <translation>字典：</translation>
     </message>
     <message>
-        <source>Mining is blocked for them until you do. Re-import them now?</source>
-        <translation>在您完成之前，將無法對它們進行採集。是否要立即重新匯入？</translation>
+        <source>Frequency sources:</source>
+        <translation>頻率來源：</translation>
     </message>
     <message>
-        <source>Dictionaries need re-importing</source>
-        <translation>字典需要重新匯入</translation>
+        <source>Pitch accent sources:</source>
+        <translation>高低音調來源：</translation>
+    </message>
+    <message>
+        <source>Audio packs:</source>
+        <translation>音訊包：</translation>
+    </message>
+    <message>
+        <source>These resources need re-importing after an app upgrade (their index format changed):</source>
+        <translation>這些資源在應用程式升級後需要重新匯入（其索引格式已變更）：</translation>
+    </message>
+    <message>
+        <source>Mining is blocked until you do.</source>
+        <translation>在完成重新匯入前，將無法進行採集。</translation>
+    </message>
+    <message>
+        <source>Resources need re-importing</source>
+        <translation>資源需要重新匯入</translation>
+    </message>
+    <message>
+        <source>Reimport All</source>
+        <translation>全部重新匯入</translation>
+    </message>
+    <message>
+        <source>Later</source>
+        <translation>稍後</translation>
     </message>
     <message>
         <source>System validation passed</source>
@@ -5456,84 +5518,6 @@ You can fine-tune these later in Settings → Anki.</source>
         <translation>靜音移除函式庫安裝成功。</translation>
     </message>
 </context><context>
-    <name>PitchImportFlow</name>
-    <message>
-        <source>Choose pitch accent source</source>
-        <translation>選擇高低音調來源</translation>
-    </message>
-    <message>
-        <source> (skipped %1 malformed entries)</source>
-        <translation> （已跳過 %1 筆格式錯誤的項目）</translation>
-    </message>
-    <message>
-        <source>Pitch Source Added</source>
-        <translation>已新增高低音調來源</translation>
-    </message>
-    <message>
-        <source>Imported %1 entries from '%2'.</source>
-        <translation>已從「%2」匯入 %1 個項目。</translation>
-    </message>
-    <message>
-        <source>The import finished, but the settings could not be updated.</source>
-        <translation>匯入已完成，但無法更新設定。</translation>
-    </message>
-    <message>
-        <source>Importing pitch source…</source>
-        <translation>正在匯入高低音調來源…</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be imported.</source>
-        <translation>無法匯入高低音調來源。</translation>
-    </message>
-    <message>
-        <source>Another import is still finishing. Wait for it to finish and try again.</source>
-        <translation>另一項匯入作業尚未完成，請稍候完成後再試一次。</translation>
-    </message>
-    <message>
-        <source>Cancelling…</source>
-        <translation>取消中……</translation>
-    </message>
-    <message>
-        <source>The import worker finished without a completion result.</source>
-        <translation>匯入工作已結束，但未傳回完成結果。</translation>
-    </message>
-    <message>
-        <source>That folder could not be scanned.</source>
-        <translation>無法掃描該資料夾。</translation>
-    </message>
-    <message>
-        <source>Choose pitch source to re-import</source>
-        <translation>選擇要重新匯入的高低音調來源</translation>
-    </message>
-    <message>
-        <source>Indexed resources are in use by mining, startup prewarm, or card backfill. Wait for the active task to finish and try again.</source>
-        <translation>索引資源正被採集、啟動預熱或卡片回填使用中。請等待進行中的工作完成後再試一次。</translation>
-    </message>
-    <message>
-        <source>Pitch Source Re-imported</source>
-        <translation>已重新匯入高低音調來源</translation>
-    </message>
-    <message>
-        <source>Re-imported %1 successfully.</source>
-        <translation>已成功重新匯入 %1。</translation>
-    </message>
-    <message>
-        <source>Re-importing pitch source…</source>
-        <translation>正在重新匯入高低音調來源…</translation>
-    </message>
-    <message>
-        <source>The pitch source could not be re-imported.</source>
-        <translation>無法重新匯入高低音調來源。</translation>
-    </message>
-    <message>
-        <source>Pitch accent source (%1);;All Files (*)</source>
-        <translation>高低音調來源（%1）;;所有檔案（*）</translation>
-    </message>
-</context><context>
     <name>PitchSettingsPanel</name>
     <message>
         <source>Loading…</source>
@@ -5584,6 +5568,14 @@ You can fine-tune these later in Settings → Anki.</source>
         <translation>重新加入儲存資料夾中找到、但未列在上方清單的高低音調來源。無需重新匯入。</translation>
     </message>
     <message>
+        <source>Reimport All</source>
+        <translation>全部重新匯入</translation>
+    </message>
+    <message>
+        <source>Rebuild every pitch source in the list from the copy saved when it was imported. Needed after an app upgrade changes the index format.</source>
+        <translation>從匯入時儲存的副本，重建清單中的每個高低音調來源。應用程式升級導致索引格式變更後，需要執行此操作。</translation>
+    </message>
+    <message>
         <source>Checked top to bottom — the first source with a pitch entry for a word wins.</source>
         <translation>由上而下依序檢查 — 第一個找到該詞高低音調條目的來源勝出。</translation>
     </message>
@@ -5626,6 +5618,14 @@ You can fine-tune these later in Settings → Anki.</source>
     <message>
         <source>Enable or disable %1</source>
         <translation>啟用或停用 %1</translation>
+    </message>
+    <message>
+        <source>Re-import</source>
+        <translation>重新匯入</translation>
+    </message>
+    <message>
+        <source>⚠ re-import required (app upgrade)</source>
+        <translation>⚠ 需要重新匯入（應用程式已升級）</translation>
     </message>
     <message>
         <source>⚠ missing — re-import</source>
@@ -6032,6 +6032,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Add Series</source>
         <translation>加入系列</translation>
+    </message>
+    <message>
+        <source>Mine the selected rows, in list order. A completed row is mined again from scratch.</source>
+        <translation>依清單順序採集選取的列。已完成的列會從頭重新採集。</translation>
     </message>
     <message>
         <source>Process Queue</source>
@@ -6566,8 +6570,8 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>貼上的文字</translation>
     </message>
     <message>
-        <source>Paste Japanese text and mine it into Anki cards — no screenshots or audio.</source>
-        <translation>貼上日文文字並採集成 Anki 卡片——不含螢幕截圖或音訊。</translation>
+        <source>Paste Japanese text and mine it into Anki cards — no audio is extracted.</source>
+        <translation>貼上日文文字並將其採集為 Anki 卡片 — 不會擷取音訊。</translation>
     </message>
     <message>
         <source>Paste text here…</source>
@@ -6576,6 +6580,22 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Drop or paste text here; files are not supported.</source>
         <translation>將文字拖放或貼到此處；不支援檔案。</translation>
+    </message>
+    <message>
+        <source>Card Image:</source>
+        <translation>卡片圖片：</translation>
+    </message>
+    <message>
+        <source>Images</source>
+        <translation>圖片</translation>
+    </message>
+    <message>
+        <source>This field takes an image file.</source>
+        <translation>此欄位需要圖片檔案。</translation>
+    </message>
+    <message>
+        <source>Optional. This image goes in the Picture field of every card from this text.</source>
+        <translation>選填。此圖片將加入此文字產生的每張卡片的 Picture 欄位。</translation>
     </message>
     <message>
         <source>Mine</source>
@@ -6596,6 +6616,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Paste some text first.</source>
         <translation>請先貼上文字。</translation>
+    </message>
+    <message>
+        <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
+        <translation>此圖片無法讀取。請另選一張圖片，或清除此欄位以在不使用圖片的情況下採集。</translation>
     </message>
     <message>
         <source>Starting…</source>
@@ -7021,6 +7045,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <source>Details</source>
         <translation>詳細資料</translation>
     </message>
+    <message>
+        <source>Dismiss</source>
+        <translation>關閉</translation>
+    </message>
 </context><context>
     <name>SettingsSearchBox</name>
     <message>
@@ -7134,6 +7162,18 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>外觀與語言</translation>
     </message>
     <message>
+        <source>Nothing to restore</source>
+        <translation>無可還原的項目</translation>
+    </message>
+    <message>
+        <source>Every audio pack found in the storage folder is already listed.
+
+A pack that stopped working after an app upgrade is repaired by Re-import on its row, not by restoring it.</source>
+        <translation>儲存資料夾中找到的每個音訊包皆已列出。
+
+若某音訊包在應用程式升級後停止運作，應使用該列的「重新匯入」修復，而非透過還原解決。</translation>
+    </message>
+    <message>
         <source>The audio packs could not be restored.</source>
         <translation>音訊包無法還原。</translation>
     </message>
@@ -7142,12 +7182,28 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>無法檢查已安裝的音訊包。</translation>
     </message>
     <message>
+        <source>Every frequency source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>儲存資料夾中找到的每個頻率來源皆已列出。
+
+若某來源在應用程式升級後停止運作，應使用「全部重新匯入」修復，而非透過還原解決。</translation>
+    </message>
+    <message>
         <source>The frequency sources could not be restored.</source>
         <translation>頻率來源無法還原。</translation>
     </message>
     <message>
         <source>Installed frequency sources could not be checked.</source>
         <translation>無法檢查已安裝的頻率來源。</translation>
+    </message>
+    <message>
+        <source>Every pitch accent source found in the storage folder is already listed.
+
+A source that stopped working after an app upgrade is repaired by Reimport All, not by restoring it.</source>
+        <translation>儲存資料夾中找到的每個高低音調來源皆已列出。
+
+若某來源在應用程式升級後停止運作，應使用「全部重新匯入」修復，而非透過還原解決。</translation>
     </message>
     <message>
         <source>The pitch accent sources could not be restored.</source>
@@ -7598,6 +7654,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>完成 — 已處理 %1 個檔案</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>完成 — 已處理 %1 個，已略過 %2 個</translation>
+    </message>
+    <message>
+        <source>No subtitles generated — all %1 skipped because their output already exists. Enable Overwrite to regenerate.</source>
+        <translation>未產生任何字幕 — 全部 %1 個因輸出已存在而略過。啟用覆寫即可重新產生。</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>選擇輸出資料夾</translation>
     </message>
@@ -7840,6 +7904,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>完成 — 已處理 %1 個檔案</translation>
     </message>
     <message>
+        <source>Complete — %1 processed, %2 skipped</source>
+        <translation>完成 — 已處理 %1 個，已略過 %2 個</translation>
+    </message>
+    <message>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
+        <translation>未重新校時任何檔案 — 全部 %1 個已略過。啟用覆寫以就地重新校時，或選擇其他輸出資料夾。</translation>
+    </message>
+    <message>
         <source>Select Output Folder</source>
         <translation>選擇輸出資料夾</translation>
     </message>
@@ -7856,8 +7928,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>輸入</translation>
     </message>
     <message>
-        <source>alass not found; install it or set its path in Settings to enable retiming.</source>
-        <translation>找不到 alass；請安裝它或在「設定」中指定其路徑以啟用重新校時。</translation>
+        <source>alass not found; retiming uses ffsubsync only. Install alass in Settings for a fallback engine.</source>
+        <translation>找不到 alass；重新校時僅使用 ffsubsync。請在設定中安裝 alass 以取得備援引擎。</translation>
     </message>
     <message>
         <source>Resync a subtitle file to its video by matching audio.</source>
@@ -7920,6 +7992,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>字幕資料夾：</translation>
     </message>
     <message>
+        <source>Matched pairs:</source>
+        <translation>相符的配對：</translation>
+    </message>
+    <message>
+        <source>%1  —  no matching subtitle</source>
+        <translation>%1  —  沒有相符的字幕</translation>
+    </message>
+    <message>
+        <source>Matched pairs (%1):</source>
+        <translation>相符的配對（%1）：</translation>
+    </message>
+    <message>
         <source>Output</source>
         <translation>輸出</translation>
     </message>
@@ -7944,12 +8028,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>未勾選時，輸出字幕已存在的配對會被略過而非覆寫。</translation>
     </message>
     <message>
-        <source>Split penalty, frame-rate correction and single-offset mode:</source>
-        <translation>分割懲罰值、影格率修正與單一偏移模式：</translation>
-    </message>
-    <message>
-        <source>Alignment Settings</source>
-        <translation>對齊設定</translation>
+        <source>Alignment is automatic; an untrustworthy result never replaces the original file.</source>
+        <translation>對齊會自動進行；不可靠的結果絕不會覆寫原始檔案。</translation>
     </message>
     <message>
         <source>Retime Subtitles</source>
@@ -8062,8 +8142,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>已取消</translation>
     </message>
     <message>
-        <source>Retiming failed for %1</source>
-        <translation>%1 重新校時失敗</translation>
+        <source>No trustworthy sync for %1; original kept unchanged</source>
+        <translation>%1 沒有可信賴的同步結果；原始檔案保持不變</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8268,38 +8348,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>macOS 未發布 alass 執行檔。請以 Homebrew 安裝：</translation>
     </message>
     <message>
-        <source>Split penalty</source>
-        <translation>分割懲罰值</translation>
-    </message>
-    <message>
-        <source>How reluctant alignment is to cut a subtitle into separately-timed segments. Lower values create more cut points for ad breaks. Useful range 1-20; default 7.</source>
-        <translation>對齊工具將字幕切割為個別計時片段的保守程度。數值越低，會為廣告時段建立越多切點。實用範圍為 1-20；預設值為 7。</translation>
-    </message>
-    <message>
-        <source>Correct frame-rate differences</source>
-        <translation>修正影格率差異</translation>
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation>影格率</translation>
-    </message>
-    <message>
-        <source>Enable only for subtitles from a different-framerate release. On a subtitle that is merely offset this stretches the timing and makes it worse.</source>
-        <translation>僅在字幕來自不同影格率版本時啟用。若字幕只是單純偏移，此選項會拉伸時間軸，使情況更糟。</translation>
-    </message>
-    <message>
-        <source>Shift by a single offset only</source>
-        <translation>僅以單一偏移量位移</translation>
-    </message>
-    <message>
-        <source>Single offset</source>
-        <translation>單一偏移</translation>
-    </message>
-    <message>
-        <source>Shift the entire subtitle by one amount; never cut it into separately-timed segments. Suits Japanese media, which rarely has ad-break cuts. Uncheck to allow segmented alignment.</source>
-        <translation>以單一數值位移整份字幕，絕不將其切割為個別計時片段。適合日文媒體，因為日文媒體很少有廣告時段切點。取消勾選可允許分段對齊。</translation>
-    </message>
-    <message>
         <source>Subtitle generation needs the faster-whisper engine. This packaged app cannot be extended with ASR. Use the ASR-capable AppImage, or run the command below and then launch the separate pipx-installed Anki Miner:</source>
         <translation>字幕生成功能需要 faster-whisper 引擎。此封裝版應用程式無法擴充 ASR 功能。請使用支援 ASR 的 AppImage，或執行下方指令，然後啟動另外以 pipx 安裝的 Anki Miner：</translation>
     </message>
@@ -8424,6 +8472,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>Offline dictionary</source>
         <translation>離線字典</translation>
+    </message>
+    <message>
+        <source>Frequency lists</source>
+        <translation>頻率清單</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>高低音調</translation>
+    </message>
+    <message>
+        <source>Audio packs</source>
+        <translation>音訊包</translation>
     </message>
     <message>
         <source>yt-dlp (YouTube mining)</source>
@@ -8700,6 +8760,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>出現次數</translation>
     </message>
     <message>
+        <source>How many times this word appears in this episode.
+
+The “Sentences” picker offers one option per subtitle line, so it usually lists fewer: repeats on the same line count once here, and lines where the word takes a form that would change the card’s Word are skipped.</source>
+        <translation>此單字在本集出現的次數。
+
+「句子」選單每一行字幕只提供一個選項，因此列出的通常較少：同一行中的重複在這裡只算一次，而單字以會改變卡片「單字（已採集）」的形式出現的行會被略過。</translation>
+    </message>
+    <message>
         <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S 包含／排除 · Space 播放／暫停 · Ctrl+A 包含可見項目 · Ctrl+D 排除可見項目 · Ctrl+Enter 確認</translation>
     </message>
@@ -8718,10 +8786,14 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>%1
 
-(%2 sentences available — focus the row, then pick one under “Sentences”)</source>
+(%2 example sentences to pick from — focus the row, then choose one under “Sentences”)</source>
         <translation>%1
 
-（有 %2 個句子可選——聚焦該列，再於「句子」下選擇一個）</translation>
+（可選的例句有 %2 個 — 先選取該列，再於「句子」中挑一個）</translation>
+    </message>
+    <message>
+        <source>Sentences (%1)</source>
+        <translation>句子（%1）</translation>
     </message>
     <message>
         <source>No page image for this word</source>
@@ -8872,6 +8944,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>Checks once a day on startup and downloads into Anki Miner's own folder. Leaving this off means YouTube mining will eventually stop working.</source>
         <translation>每天在啟動時檢查一次，並下載到 Anki Miner 自己的資料夾。關閉此選項表示 YouTube 採集最終會停止運作。</translation>
+    </message>
+    <message>
+        <source>Use pre-release yt-dlp builds</source>
+        <translation>使用 yt-dlp 預先發布版本</translation>
+    </message>
+    <message>
+        <source>Pre-release</source>
+        <translation>預先發布</translation>
+    </message>
+    <message>
+        <source>Updates install yt-dlp's nightly channel, which fixes YouTube breakage days before a stable release. Turning this off keeps the installed build until a newer stable version replaces it.</source>
+        <translation>更新時將安裝 yt-dlp 的 nightly 頻道版本，可在穩定版發布前幾天修復 YouTube 故障。關閉後，已安裝的版本會保留，直到被更新的穩定版取代。</translation>
     </message>
     <message>
         <source>Optional: path to your own yt-dlp executable...</source>
@@ -9038,8 +9122,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner — Unexpected Error</source>
-        <translation>Anki Miner — 非預期的錯誤</translation>
+        <source>Anki Miner Agentic — Unexpected Error</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>%1: %2
