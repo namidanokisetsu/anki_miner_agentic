@@ -27,9 +27,11 @@ from .models import (
     canonical_json,
     content_id,
 )
+from .policy import DIFFICULTY_POLICY_VERSION, REVIEW_BATCH_BOUND, TEMPORARY_MAX_CANDIDATE_UNKNOWNS
+from .review import review_contract
 from .store import AgentStore
 
-CANDIDATE_CONTRACT_VERSION = 2
+CANDIDATE_CONTRACT_VERSION = 3
 
 DefinitionProbe = Callable[[list[str]], dict[str, bool] | None]
 DefinitionOptionsLookup = Callable[[str], list[tuple[str, str]]]
@@ -76,7 +78,7 @@ def _compact_definition_options(
         if identity in seen:
             continue
         seen.add(identity)
-        options.append({"dictionary": dictionary, "text": text})
+        options.append({"option_id": f"definition_{len(options) + 1}", "dictionary": dictionary, "text": text})
         if len(options) >= max_options:
             break
     return options
@@ -148,7 +150,6 @@ class CandidateBatchService:
         inputs: list[LocalEpisodeInput | YouTubeInput],
         *,
         max_cards: int | None = None,
-        review_pool_size: int | None = None,
     ) -> dict[str, Any]:
         require(bool(inputs), "invalid_input", "At least one episode input is required")
         profile = self.store.profile_status()
@@ -161,25 +162,14 @@ class CandidateBatchService:
             current_analyzer=self.analyzer.identity.key,
         )
         effective_max_cards = self.config.max_cards if max_cards is None else max_cards
-        effective_pool = self.config.review_pool_size if review_pool_size is None else review_pool_size
         require(type(effective_max_cards) is int, "invalid_limit", "max_cards must be an integer")
-        require(
-            effective_pool is None or type(effective_pool) is int,
-            "invalid_limit",
-            "review_pool_size must be an integer or null",
-        )
         require(1 <= effective_max_cards <= self.config.max_cards, "invalid_limit", "max_cards exceeds the profile cap")
-        require(
-            effective_pool is None or effective_pool >= 1, "invalid_limit", "review_pool_size must be positive or null"
-        )
 
         resolved = [self._resolve_input(item) for item in inputs]
         episode_parsers = [self._parser_for_episode(item) for item in resolved]
         fingerprint_cache: dict[Path, dict[str, Any]] = {}
         raw_entries_cache: dict[tuple[Path, int], list[tuple[float, float, str]]] = {}
-        parsed_episodes: list[
-            tuple[list[TokenizedWord], Any, Counter[str], list[tuple[float, float, str]]]
-        ] = []
+        parsed_episodes: list[tuple[list[TokenizedWord], Any, Counter[str], list[tuple[float, float, str]]]] = []
         for episode, parser in zip(resolved, episode_parsers, strict=True):
             unified = getattr(parser, "parse_mining_episode", None)
             if callable(unified):
@@ -198,9 +188,7 @@ class CandidateBatchService:
         occurrences: Counter[str] = Counter()
         variants: dict[str, list[tuple[TokenizedWord, dict[str, Any], tuple[str, ...]]]] = defaultdict(list)
 
-        for episode, source, parser, parsed in zip(
-            resolved, sources, episode_parsers, parsed_episodes, strict=True
-        ):
+        for episode, source, parser, parsed in zip(resolved, sources, episode_parsers, parsed_episodes, strict=True):
             words, line_index, counts, _entries = parsed
             self._attach_frequency(words)
             self.word_filter.attach_occurrence_counts(words, counts)
@@ -237,7 +225,7 @@ class CandidateBatchService:
             "mining_policy_hash": self.mining_policy_hash,
             "lookup_material": lookup_material,
             "max_cards": effective_max_cards,
-            "review_pool_size": effective_pool,
+            "review_batch_bound": REVIEW_BATCH_BOUND,
         }
         request_hash = hashlib.sha256(canonical_json(request_material).encode("utf-8")).hexdigest()
         revision_id = content_id("batch", request_material)
@@ -250,7 +238,6 @@ class CandidateBatchService:
             )
             if configured_field
         ]
-        eligible_sentences: set[str] = set()
         for lexical_id, choices in variants.items():
             primary, source, quality_flags = choices[0]
             learner = known.get(
@@ -271,8 +258,10 @@ class CandidateBatchService:
             whitelisted = lists_available and (
                 word_lists.is_whitelisted(lexical_id) or word_lists.is_whitelisted(primary.lemma)
             )
-            if not whitelisted and lists_available and (
-                word_lists.is_blacklisted(lexical_id) or word_lists.is_blacklisted(primary.lemma)
+            if (
+                not whitelisted
+                and lists_available
+                and (word_lists.is_blacklisted(lexical_id) or word_lists.is_blacklisted(primary.lemma))
             ):
                 reasons.append({"code": "blacklisted", "message": "Target is on the configured blacklist"})
             policy = self.mining_policy
@@ -282,7 +271,7 @@ class CandidateBatchService:
                 and bool(getattr(policy, "exclude_katakana_only_words", False))
                 and is_katakana_only(lexical_id)
             ):
-                reasons.append({"code": "katakana_only", "message": "Target is written only in katakana"})
+                reasons.append({"code": "katakana_only", "message": "GUI policy rejects all-katakana targets"})
             if (
                 not whitelisted
                 and policy is not None
@@ -346,19 +335,21 @@ class CandidateBatchService:
                 reasons.append(
                     {"code": "not_i_plus_one", "message": "Sentence does not contain exactly one unknown lexeme"}
                 )
-            sentence_key = " ".join(primary.sentence.split())
-            if (
-                not whitelisted
-                and not reasons
-                and policy is not None
-                and bool(getattr(policy, "deduplicate_sentences", False))
-            ):
-                if sentence_key in eligible_sentences:
-                    reasons.append(
-                        {"code": "duplicate_sentence", "message": "Another eligible target already uses this sentence"}
-                    )
-                else:
-                    eligible_sentences.add(sentence_key)
+            if unknown_count > TEMPORARY_MAX_CANDIDATE_UNKNOWNS:
+                reasons.append(
+                    {
+                        "code": "too_many_candidate_unknowns",
+                        "message": "Sentence exceeds the temporary conservative candidate-unknown guard",
+                    }
+                )
+            severe_flags = sorted(set(quality_flags) - {"automatic_transcript"})
+            if severe_flags:
+                reasons.append(
+                    {
+                        "code": "unreliable_transcript",
+                        "message": "Sentence has severe transcript-quality flags",
+                    }
+                )
             candidate_material = {
                 "batch_revision": revision_id,
                 "lexical_id": lexical_id,
@@ -407,6 +398,12 @@ class CandidateBatchService:
                     "chars": len(primary.sentence),
                     "duration_ms": round(primary.duration * 1000),
                     "unknown_lexemes": unknown_count,
+                    "candidate_unknown_items": sorted(
+                        item
+                        for item in sentence_lexemes
+                        if known.get(item, {"word_exposures": 0, "word_card_count": 0})["word_exposures"] == 0
+                        and known.get(item, {"word_card_count": 0})["word_card_count"] == 0
+                    ),
                 },
                 "learner": learner,
                 "signals": {
@@ -424,6 +421,14 @@ class CandidateBatchService:
                 "definition_options": [],
                 "allowed_enrichments": allowed_enrichments,
                 "flags": list(quality_flags),
+                "difficulty": {
+                    "policy_version": DIFFICULTY_POLICY_VERSION,
+                    "signal": "candidate_unknown_count",
+                    "value": unknown_count,
+                    "automatic_max": TEMPORARY_MAX_CANDIDATE_UNKNOWNS,
+                    "calibrated_score": None,
+                },
+                "review": {"state": "required", "contract_version": review_contract()["version"]},
                 "eligible": not reasons,
                 "eligibility": {"reason_codes": [item["code"] for item in reasons], "diagnostics": reasons},
                 "variants": [
@@ -446,6 +451,46 @@ class CandidateBatchService:
             }
             candidates.append({"lexical_id": lexical_id, "public": public, "internal": internal})
 
+        # Resolve target competition before sentence deduplication. The stable
+        # policy prefers supported non-katakana lexical targets, then stronger
+        # recurrence and frequency evidence; no insertion/frequency prefix gets
+        # to claim the sentence merely by being visited first.
+        if bool(getattr(self.mining_policy, "deduplicate_sentences", False)):
+            by_sentence: dict[str, list[dict[str, Any]]] = defaultdict(list)
+            for item in candidates:
+                if item["public"]["eligible"]:
+                    by_sentence[" ".join(item["public"]["sentence"]["text"].split())].append(item)
+            for competing in by_sentence.values():
+                if len(competing) < 2:
+                    continue
+                ordered = sorted(
+                    competing,
+                    key=lambda item: (
+                        is_katakana_only(item["lexical_id"]),
+                        -int(item["public"]["signals"]["episode_occurrences"]),
+                        item["public"]["signals"]["frequency_rank"] or 10**9,
+                        item["public"]["candidate_id"],
+                    ),
+                )
+                winner = ordered[0]
+                competition = [item["public"]["candidate_id"] for item in ordered]
+                winner["public"]["signals"]["target_competition"] = {
+                    "winner": winner["public"]["candidate_id"],
+                    "candidates": competition,
+                }
+                for loser in ordered[1:]:
+                    loser["public"]["signals"]["target_competition"] = {
+                        "winner": winner["public"]["candidate_id"],
+                        "candidates": competition,
+                    }
+                    diagnostic = {
+                        "code": "weaker_sentence_target",
+                        "message": "A stronger eligible target won explicit competition for this sentence",
+                    }
+                    loser["public"]["eligible"] = False
+                    loser["public"]["eligibility"]["reason_codes"].append(diagnostic["code"])
+                    loser["public"]["eligibility"]["diagnostics"].append(diagnostic)
+
         candidates.sort(
             key=lambda item: (
                 not item["public"]["eligible"],
@@ -457,10 +502,10 @@ class CandidateBatchService:
         # Full definition text is the largest and slowest candidate enrichment.
         # Eligibility and deterministic ranking therefore run first, and only
         # the bounded public shortlist is hydrated.
-        shortlist_size = effective_pool if effective_pool is not None else max(effective_max_cards * 3, effective_max_cards)
+        shortlist_size = min(REVIEW_BATCH_BOUND, effective_max_cards)
         shortlist = [item for item in candidates if item["public"]["eligible"]][:shortlist_size]
         definition_options: dict[str, list[dict[str, str]]] = {}
-        if self.definition_options_lookup is not None and self.config.chosen_definition_field:
+        if self.definition_options_lookup is not None:
             for item in shortlist:
                 term = item["lexical_id"]
                 options = _compact_definition_options(
@@ -495,12 +540,14 @@ class CandidateBatchService:
             "profile_revision_id": profile["revision_id"],
             "analyzer_key": self.analyzer.identity.key,
             "config_hash": hashlib.sha256(
-                f"{self.config.material_hash()}:{self.mining_policy_hash}".encode("utf-8")
+                f"{self.config.material_hash()}:{self.mining_policy_hash}".encode()
             ).hexdigest(),
             "request_hash": request_hash,
             "sources": sources,
             "max_cards": effective_max_cards,
-            "review_pool_size": effective_pool,
+            # Existing durable storage uses this column as the internal public
+            # candidate bound. It is no longer user-configurable authority.
+            "review_pool_size": shortlist_size,
         }
         return self.store.create_batch(batch, candidates)
 

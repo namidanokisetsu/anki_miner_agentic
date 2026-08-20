@@ -1,14 +1,16 @@
 # Anki Miner Agentic
 
-A fork of [Anki Miner](https://github.com/0xzerolight/anki_miner) that lets an agent choose useful mining candidates and add cards automatically to your deck. For the original desktop app, its features, and general help, use the [upstream README](https://github.com/0xzerolight/anki_miner#readme).
-
+A fork of [Anki Miner](https://github.com/0xzerolight/anki_miner) that adds a bounded agent review layer around the existing mining pipeline. For the original desktop app, its features, architecture, and general help, use the [upstream README](https://github.com/0xzerolight/anki_miner#readme). Fork-specific behavior is documented under [`agentic-docs/`](agentic-docs/).
 
 ## What this fork changes
 
-- Builds a learner profile from the Anki decks and fields you choose.
-- Lets an agent rank prepared candidates, pick a dictionary meaning, and add a short translation.
+- Synchronizes learner evidence from explicitly mapped Anki decks and fields into a separate agent database.
+- Deterministically prepares at most 20 review candidates using the active GUI mining policy; the agent cannot override that policy.
+- Requires the agent to select or reject every returned candidate under a versioned contract, then writes only supported selections.
+- Adds optional, allowlisted definition and sentence-translation fields plus durable, candidate-aligned receipts.
 
-See the [benchmark results](agentic-docs/benchmark_results.md) for a small comparison on clean subtitles and noisy ASR.
+Most code is isolated under `anki_miner/agent`, `anki_miner/headless`, `anki_miner/mcp_server`, and `anki_miner/runtime`. Shared-pipeline changes are limited to parser integration, allowlisted optional note fields, aligned Anki write outcomes, learner-sync queries, conservative morphology corrections, and fork branding.
+
 
 ## How it works
 
@@ -16,7 +18,7 @@ See the [benchmark results](agentic-docs/benchmark_results.md) for a small compa
 flowchart TB
     U["You provide source media and a card limit"]
     D["Anki Miner · deterministic<br/>Finds candidate sentences"]
-    A["Agent chooses specified number of best sentences and optionally selects meaning or translation"]
+    A["Agent reviews every returned candidate<br/>Select or reject; zero is valid"]
     W["Anki Miner · deterministic<br/>Creates cards using your settings"]
     K[("Your Anki deck")]
 
@@ -50,9 +52,9 @@ Give your agent access to this checkout, then paste:
 Configure Anki Miner Agentic in this checkout. Read agentic-docs/agent-mining.md and skills/anki-miner-agent/SKILL.md. Reuse the active virtual environment and the GUI settings. Read deck, note-type, and field names from Anki instead of guessing them. Keep `write_target.enabled` false during setup. Validate and sync the learner profile, then register the two-tool MCP server.
 ```
 
-`agent.json` stores the settings used by automation: learner decks, the write target, safety limits, and intentional agent-only overrides.
+`~/.anki_miner/agentic-agent.json` is the agent configuration file. It stores only agent-owned settings: learner evidence mappings, the write target, safety/transport limits, and allowlisted enrichment-field mappings. Mining policy and executable paths remain owned by the active GUI profile.
 
-Use MCP for normal conversations with an agent (`prepare_mining_run`, then `commit_mining_run`). Use the JSON CLI when you want to run or debug the same workflow manually in a terminal, automate it with a script, or connect a client that does not support MCP.
+Use MCP for normal conversations with an agent (`prepare_mining_run`, then `commit_mining_run`). The JSON CLI's `prepare-run` and `commit-run` commands expose that same workflow for terminal use, scripts, or clients without MCP. Older low-level CLI commands remain only as a compatibility and recovery surface.
 
 For manual setup, read the [agent mining guide](agentic-docs/agent-mining.md). Exact tool payloads are in the [MCP contract](skills/anki-miner-agent/references/mcp-contract.md).
 

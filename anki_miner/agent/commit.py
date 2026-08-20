@@ -17,6 +17,7 @@ from anki_miner.models import TokenizedWord
 from .candidates import file_fingerprint
 from .errors import AgentMiningError, require
 from .models import AgentProfileConfig
+from .review import REJECT_REASONS, REVIEW_SPEC_VERSION, SELECT_REASON
 from .store import AgentStore
 
 
@@ -218,24 +219,54 @@ class MiningCommitService:
         self.config = config
         self.writer = writer
 
-    def commit_run(self, run_id: str, selections: list[dict[str, Any]]) -> dict[str, Any]:
-        require(isinstance(selections, list), "invalid_selection", "selections must be an array")
+    def commit_run(self, run_id: str, reviews: list[dict[str, Any]]) -> dict[str, Any]:
+        require(isinstance(reviews, list), "invalid_review", "reviews must be an array")
         candidate_ids: list[str] = []
+        rejected_ids: list[str] = []
+        reviewed_ids: list[str] = []
         metadata: dict[str, dict[str, Any]] = {}
         enrichments: dict[str, dict[str, Any]] = {}
-        for item in selections:
-            require(isinstance(item, dict), "invalid_selection", "Each selection must be an object")
-            extra = sorted(set(item) - {"candidate_id", "metadata", "enrichments"})
-            require(not extra, "invalid_selection", "Selection contains unsupported fields", fields=extra)
+        for item in reviews:
+            require(isinstance(item, dict), "invalid_review", "Each review must be an object")
+            extra = sorted(
+                set(item)
+                - {"candidate_id", "decision", "definition_option_id", "reason_code", "rationale", "enrichments"}
+            )
+            require(not extra, "invalid_review", "Review contains unsupported fields", fields=extra)
             candidate_id = item.get("candidate_id")
             if not isinstance(candidate_id, str) or not candidate_id:
-                raise AgentMiningError("invalid_selection", "candidate_id is required")
-            candidate_ids.append(candidate_id)
-            if "metadata" in item:
-                metadata[candidate_id] = item["metadata"]
-            if "enrichments" in item:
-                enrichments[candidate_id] = item["enrichments"]
-        require(len(candidate_ids) == len(set(candidate_ids)), "duplicate_selection", "Selection contains duplicate IDs")
+                raise AgentMiningError("invalid_review", "candidate_id is required")
+            reviewed_ids.append(candidate_id)
+            decision = item.get("decision")
+            require(decision in {"select", "reject"}, "invalid_review", "decision must be select or reject")
+            if decision == "select":
+                candidate_ids.append(candidate_id)
+                if "enrichments" in item:
+                    enrichments[candidate_id] = item["enrichments"]
+            else:
+                rejected_ids.append(candidate_id)
+                require("enrichments" not in item, "invalid_review", "Rejected candidates cannot contain enrichments")
+            rationale = item.get("rationale", "")
+            require(isinstance(rationale, str), "invalid_review", "rationale must be a string")
+            require(
+                len(rationale) <= self.config.max_rationale_chars,
+                "feedback_too_large",
+                "rationale exceeds the configured size limit",
+                candidate_id=candidate_id,
+                max_chars=self.config.max_rationale_chars,
+            )
+            metadata[candidate_id] = {
+                "review": {
+                    "version": REVIEW_SPEC_VERSION,
+                    "decision": decision,
+                    "definition_option_id": item.get("definition_option_id"),
+                    "reason_code": item.get("reason_code"),
+                },
+                **({"rationale": rationale} if rationale else {}),
+            }
+        require(
+            len(reviewed_ids) == len(set(reviewed_ids)), "duplicate_review", "Reviews contain duplicate candidate IDs"
+        )
         run = self.store.run_status(run_id)
         require(
             len(candidate_ids) <= run["max_cards"],
@@ -246,29 +277,41 @@ class MiningCommitService:
         )
         shortlist_ids = {item["candidate_id"] for item in run["shortlist"]}
         require(
-            set(candidate_ids) <= shortlist_ids,
+            set(reviewed_ids) <= shortlist_ids,
             "candidate_not_in_run",
-            "Selection contains a candidate outside this run",
-            candidate_ids=sorted(set(candidate_ids) - shortlist_ids),
+            "Reviews contain a candidate outside this run",
+            candidate_ids=sorted(set(reviewed_ids) - shortlist_ids),
         )
-        selected_rows = self.store.get_candidates(run["batch_revision"], candidate_ids)
+        require(
+            set(reviewed_ids) == shortlist_ids,
+            "missing_candidate_reviews",
+            "Every candidate in the returned review batch must be reviewed",
+            candidate_ids=sorted(shortlist_ids - set(reviewed_ids)),
+        )
+        reviewed_rows = self.store.get_candidates(run["batch_revision"], reviewed_ids)
+        selected_ids = set(candidate_ids)
+        selected_rows = [row for row in reviewed_rows if row["candidate_id"] in selected_ids]
         require(
             all(row["eligible"] for row in selected_rows),
             "ineligible_selection",
             "Selection contains an ineligible candidate",
         )
-        self._validate_metadata(set(candidate_ids), metadata)
+        self._validate_reviews(reviewed_rows, metadata, enrichments)
         self._validate_enrichments(set(candidate_ids), selected_rows, enrichments, require_mapped=True)
         self._validate_sources_once(selected_rows)
-        require(
-            self.config.write_target.enabled,
-            "writes_disabled",
-            "Autonomous Anki writes are disabled for this profile",
-        )
+        if candidate_ids:
+            require(
+                self.config.write_target.enabled,
+                "writes_disabled",
+                "Autonomous Anki writes are disabled for this profile",
+            )
 
-        job, created = self.store.reserve_run_commit(run_id, candidate_ids, metadata, enrichments)
+        job, created = self.store.reserve_run_commit(run_id, candidate_ids, rejected_ids, metadata, enrichments)
         if not created and job["state"] == "completed":
             return self._receipt(run_id, job, enrichments)
+        if not candidate_ids:
+            self.store.set_job_running(job["job_id"])
+            return self._receipt(run_id, self.store.finalize_job(job["job_id"]), enrichments)
         # The reservation exists before any operation that can lead into the
         # write pipeline. Preflight is read-only and runs once for work that
         # actually needs to start or resume.
@@ -324,16 +367,12 @@ class MiningCommitService:
             if global_error is not None:
                 for pending_group in group_list[group_index:]:
                     for candidate in pending_group:
-                        self.store.record_output(
-                            job["job_id"], candidate["candidate_id"], "failed", error=global_error
-                        )
+                        self.store.record_output(job["job_id"], candidate["candidate_id"], "failed", error=global_error)
                 break
         final = self.store.finalize_job(job["job_id"])
         return self._receipt(run_id, final, enrichments)
 
-    def _receipt(
-        self, run_id: str, job: dict[str, Any], enrichments: dict[str, dict[str, Any]]
-    ) -> dict[str, Any]:
+    def _receipt(self, run_id: str, job: dict[str, Any], enrichments: dict[str, dict[str, Any]]) -> dict[str, Any]:
         selected = job["selection"]["selected"]
         coverage = {
             key: sum(1 for candidate_id in selected if enrichments.get(candidate_id, {}).get(key))
@@ -350,6 +389,11 @@ class MiningCommitService:
                 "note_type": self.config.write_target.note_type,
             },
             "enrichment_coverage": coverage,
+            "review_counts": {
+                "reviewed": len(selected) + len(job["selection"].get("rejected", [])),
+                "selected": len(selected),
+                "rejected": len(job["selection"].get("rejected", [])),
+            },
             "tags": applied_tags,
             "shortfall": max(0, self.store.run_status(run_id)["max_cards"] - len(selected)),
         }
@@ -478,7 +522,7 @@ class MiningCommitService:
         )
         for candidate_id, value in metadata.items():
             require(isinstance(value, dict), "invalid_feedback", "Feedback metadata must be an object")
-            extra = sorted(set(value) - {"score", "rationale", "rejection_reason"})
+            extra = sorted(set(value) - {"score", "rationale", "rejection_reason", "judgment"})
             require(not extra, "invalid_feedback", "Feedback metadata contains unsupported fields", fields=extra)
             rationale = value.get("rationale", "")
             require(isinstance(rationale, str), "invalid_feedback", "rationale must be a string")
@@ -499,6 +543,102 @@ class MiningCommitService:
                 "rejection_reason exceeds 100 characters",
                 candidate_id=candidate_id,
             )
+
+    def _validate_reviews(
+        self,
+        reviewed_rows: list[dict[str, Any]],
+        metadata: dict[str, dict[str, Any]],
+        enrichments: dict[str, dict[str, Any]],
+    ) -> None:
+        for row in reviewed_rows:
+            candidate_id = row["candidate_id"]
+            review = metadata.get(candidate_id, {}).get("review")
+            require(
+                isinstance(review, dict),
+                "missing_required_review",
+                "Every reviewed candidate requires a decision record",
+                candidate_id=candidate_id,
+            )
+            assert isinstance(review, dict)
+            require(
+                row["public"].get("review", {}).get("contract_version") == REVIEW_SPEC_VERSION,
+                "unsupported_review_version",
+                "This run was prepared with a different review contract version",
+                candidate_id=candidate_id,
+            )
+            required = {"version", "decision", "definition_option_id", "reason_code"}
+            missing = sorted(required - set(review))
+            extra = sorted(set(review) - required)
+            require(
+                not missing,
+                "missing_required_review",
+                "Review decision is incomplete",
+                candidate_id=candidate_id,
+                fields=missing,
+            )
+            require(
+                not extra,
+                "invalid_review",
+                "Review contains unsupported fields",
+                candidate_id=candidate_id,
+                fields=extra,
+            )
+            require(
+                review["version"] == REVIEW_SPEC_VERSION,
+                "unsupported_review_version",
+                "Review contract version does not match this run",
+                candidate_id=candidate_id,
+            )
+            decision = review["decision"]
+            reason_code = review["reason_code"]
+            option_id = review["definition_option_id"]
+            require(
+                option_id is None or isinstance(option_id, str),
+                "invalid_review",
+                "definition_option_id must be a string or null",
+                candidate_id=candidate_id,
+            )
+            options = row["public"].get("definition_options", [])
+            allowed_ids = {option.get("option_id") for option in options}
+            if decision == "select":
+                require(
+                    reason_code == SELECT_REASON,
+                    "invalid_review",
+                    "Selected candidates require the clear-supported-target reason",
+                    candidate_id=candidate_id,
+                )
+                require(
+                    option_id in allowed_ids,
+                    "unsupported_definition_review",
+                    "definition_option_id must identify a prepared definition option",
+                    candidate_id=candidate_id,
+                    option_ids=sorted(value for value in allowed_ids if value),
+                )
+                selected_option = next(option for option in options if option.get("option_id") == option_id)
+                chosen = enrichments.get(candidate_id, {}).get("chosen_definition")
+                if isinstance(chosen, str):
+                    option_text = str(selected_option.get("text", ""))
+                    require(
+                        chosen.casefold() == option_text.casefold() or chosen.casefold() in option_text.casefold(),
+                        "definition_review_mismatch",
+                        "chosen_definition must be supported by the reviewed definition option",
+                        candidate_id=candidate_id,
+                        definition_option_id=option_id,
+                    )
+            else:
+                require(
+                    reason_code in REJECT_REASONS,
+                    "invalid_review",
+                    "Rejected candidates require one allowed rejection reason",
+                    candidate_id=candidate_id,
+                    reason_codes=sorted(REJECT_REASONS),
+                )
+                require(
+                    option_id is None,
+                    "invalid_review",
+                    "Rejected candidates must not select a definition option",
+                    candidate_id=candidate_id,
+                )
 
     def _validate_enrichments(
         self,

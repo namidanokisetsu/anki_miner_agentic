@@ -20,9 +20,11 @@ def create_server(app: AgentMiningApplication) -> Any:
     server = FastMCP(
         "Anki Miner Agentic",
         instructions=(
-            "Use prepare_mining_run once, choose no more than its max_cards from the returned shortlist, provide "
-            "every required enrichment for every selection, then call commit_mining_run once. The user's stated "
-            "maximum authorizes that write. Anki Miner supplies pitch, frequency, furigana, media, and other fields."
+            "Use prepare_mining_run once, follow its versioned review contract, and call commit_mining_run once with "
+            "bounded select/reject reviews for every returned candidate. There is no quota and zero selections is "
+            "valid. Every selected candidate needs all required enrichments. The user's stated maximum authorizes "
+            "that write. Anki Miner supplies "
+            "pitch, frequency, furigana, media, and other fields."
         ),
     )
 
@@ -31,25 +33,22 @@ def create_server(app: AgentMiningApplication) -> Any:
         inputs: list[dict[str, Any]],
         max_cards: int,
         ctx: Context,
-        review_pool_size: int | None = None,
     ) -> dict[str, Any]:
         """Synchronize and return one durable, bounded candidate shortlist."""
         await ctx.report_progress(0, 2, "Synchronizing profile and preparing shortlist")
-        result = app.prepare_mining_run(
-            {"inputs": inputs, "max_cards": max_cards, "review_pool_size": review_pool_size}
-        )
+        result = app.prepare_mining_run({"inputs": inputs, "max_cards": max_cards})
         await ctx.report_progress(2, 2, "Mining run prepared")
         return result
 
     @server.tool()
     async def commit_mining_run(
         run_id: str,
-        selections: list[dict[str, Any]],
+        reviews: list[dict[str, Any]],
         ctx: Context,
     ) -> dict[str, Any]:
-        """Validate and synchronously commit an enriched selection; unchanged retries are idempotent."""
-        await ctx.report_progress(0, 2, "Validating selection and processing source groups")
-        result = app.commit_mining_run(run_id, selections)
+        """Validate reviews and synchronously commit selected candidates; unchanged retries are idempotent."""
+        await ctx.report_progress(0, 2, "Validating reviews and processing selected source groups")
+        result = app.commit_mining_run(run_id, reviews)
         await ctx.report_progress(2, 2, "Terminal mining receipt ready")
         return result
 
