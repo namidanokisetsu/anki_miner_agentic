@@ -4,6 +4,8 @@ The normal workflow is exactly two calls. Use returned IDs unchanged and never i
 
 ## 1. Prepare one run
 
+`max_cards` is explicit write authorization. If the user omits it, inspect total media duration without preparing a run, recommend `round(total_minutes × 10 / 24)` cards (minimum 1), and wait for the user to accept or replace that number.
+
 Local media:
 
 ```json
@@ -54,7 +56,7 @@ Omit `audio_track` to select Japanese automatically. Use a zero-based audio-only
     "reason_code": "clear_supported_target",
     "rationale": "<optional short diagnostic>",
     "enrichments": {
-      "chosen_definition": "<short meaning supported by definition_options>",
+      "chosen_definition": "<short contextual meaning of the selected definition option>",
       "sentence_translation": "<close, readable translation preserving Japanese phrasing>"
     }
   }]
@@ -74,7 +76,6 @@ Review the returned batch without a quota. Every selected candidate must use `cl
 | `candidate_not_in_run`, `unknown_candidate`, or ineligible review | Use only eligible IDs from this run's shortlist. |
 | `missing_required_enrichment` | Supply the missing enrichment or change that candidate to an explicit rejection before retrying. |
 | `invalid_review` or `missing_candidate_reviews` | Follow the returned review fields and reason-code allowlist; review every returned candidate. |
-| `unsupported_chosen_definition` | Use a meaning supported by a prepared option or reject the candidate with `unsupported_sense`. |
 | `stale_source` | Prepare a new run from the current source files. |
 | `writes_disabled` | Deliberately enable the configured target before attempting the authorized write. |
 | `run_selection_changed` | Do not alter a reserved run; prepare a new run for different reviews. |
