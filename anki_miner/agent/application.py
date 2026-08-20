@@ -124,9 +124,13 @@ class AgentMiningApplication:
             "review_contract": review_contract(),
             "enrichment_specs": {
                 "chosen_definition": {
-                    "instruction_version": "supported_one_line_definition_v1",
+                    "instruction_version": "contextual_one_line_definition_v2",
                     "format": "plain_text_one_line",
                     "max_chars": MAX_CHOSEN_DEFINITION_CHARS,
+                    "instruction": (
+                        "Write the shortest clear meaning of the selected definition option that fits the "
+                        "complete sentence. A faithful paraphrase is allowed."
+                    ),
                 },
                 "sentence_translation": {
                     "instruction_version": "close_translation_v2",

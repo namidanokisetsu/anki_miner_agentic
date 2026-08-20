@@ -122,6 +122,25 @@ def test_commit_passes_bounded_enrichments_to_writer(tmp_path):
     assert writer.candidates[0]["enrichment"] == enrichments["candidate_one"]
 
 
+def test_chosen_definition_may_faithfully_paraphrase_dictionary_text(tmp_path):
+    store = AgentStore(tmp_path / "db.sqlite3")
+    make_batch(store, tmp_path)
+    writer = Writer()
+    service = MiningCommitService(store, cfg(chosen_definition_field="Chosen"), writer)
+    enrichments = {"candidate_one": {"chosen_definition": "to have a meal"}}
+
+    dry_run = service.commit("batch_one", ["candidate_one"], enrichments=enrichments, dry_run=True)
+    service.commit(
+        "batch_one",
+        ["candidate_one"],
+        enrichments=enrichments,
+        dry_run=False,
+        validation_token=dry_run["validation_token"],
+    )
+
+    assert writer.candidates[0]["enrichment"] == enrichments["candidate_one"]
+
+
 def test_live_commit_requires_matching_dry_run_token(tmp_path):
     store = AgentStore(tmp_path / "db.sqlite3")
     make_batch(store, tmp_path)

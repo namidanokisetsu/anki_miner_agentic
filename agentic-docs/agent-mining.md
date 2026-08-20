@@ -97,7 +97,7 @@ Candidate records contain target and sentence context, learner aggregates, quali
 
 Review every candidate in the returned review batch using the exact returned contract. Each review is `select` or `reject`, has one allowlisted `reason_code`, and may include a short rationale. A selection must use `clear_supported_target` and name the matching prepared `definition_option_id`; a rejection sets `definition_option_id` to `null` and omits `enrichments`. Generated card text belongs only in selected reviews' `enrichments`.
 
-If `sentence_translation` is required, every selected candidate needs a close one-line translation of the full sentence. Prefer the Japanese structure, imagery, and phrasing over idiomatic rewriting when understandable, but do not produce unnatural word-for-word English. If `chosen_definition` is required, set `definition_option_id` to the matching prepared option and keep the one-line meaning supported by it. When a candidate cannot be confidently supported or enriched, reject it with the applicable reason; the system never fills the shortfall.
+If `sentence_translation` is required, every selected candidate needs a close one-line translation of the full sentence. Prefer the Japanese structure, imagery, and phrasing over idiomatic rewriting when understandable, but do not produce unnatural word-for-word English. If `chosen_definition` is required, set `definition_option_id` to the matching prepared option and write its shortest clear meaning in context; faithful paraphrasing is allowed. When a candidate cannot be confidently supported or enriched, reject it with the applicable reason; the system never fills the shortfall.
 
 ## Call 2: commit
 

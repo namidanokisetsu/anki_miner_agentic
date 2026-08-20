@@ -298,7 +298,7 @@ class MiningCommitService:
             "Selection contains an ineligible candidate",
         )
         self._validate_reviews(reviewed_rows, metadata, enrichments)
-        self._validate_enrichments(set(candidate_ids), selected_rows, enrichments, require_mapped=True)
+        self._validate_enrichments(set(candidate_ids), enrichments, require_mapped=True)
         self._validate_sources_once(selected_rows)
         if candidate_ids:
             require(
@@ -448,7 +448,7 @@ class MiningCommitService:
             candidate_ids=ineligible,
         )
         self._validate_metadata(set(candidate_ids) | set(rejected), metadata)
-        self._validate_enrichments(set(candidate_ids), selected_rows, enrichments)
+        self._validate_enrichments(set(candidate_ids), enrichments)
         for candidate in selected_rows:
             self._validate_source(candidate)
         validation = {
@@ -615,17 +615,6 @@ class MiningCommitService:
                     candidate_id=candidate_id,
                     option_ids=sorted(value for value in allowed_ids if value),
                 )
-                selected_option = next(option for option in options if option.get("option_id") == option_id)
-                chosen = enrichments.get(candidate_id, {}).get("chosen_definition")
-                if isinstance(chosen, str):
-                    option_text = str(selected_option.get("text", ""))
-                    require(
-                        chosen.casefold() == option_text.casefold() or chosen.casefold() in option_text.casefold(),
-                        "definition_review_mismatch",
-                        "chosen_definition must be supported by the reviewed definition option",
-                        candidate_id=candidate_id,
-                        definition_option_id=option_id,
-                    )
             else:
                 require(
                     reason_code in REJECT_REASONS,
@@ -644,7 +633,6 @@ class MiningCommitService:
     def _validate_enrichments(
         self,
         selected_ids: set[str],
-        selected_rows: list[dict[str, Any]],
         enrichments: dict[str, dict[str, Any]],
         *,
         require_mapped: bool = False,
@@ -657,7 +645,6 @@ class MiningCommitService:
             "Enrichments may reference selected candidates only",
             candidate_ids=unknown,
         )
-        candidates = {row["candidate_id"]: row for row in selected_rows}
         limits = {
             "chosen_definition": (
                 self.config.chosen_definition_field,
@@ -718,24 +705,6 @@ class MiningCommitService:
                     f"{key} exceeds the fixed size limit",
                     candidate_id=candidate_id,
                     max_chars=max_chars,
-                )
-            if "chosen_definition" in fields:
-                require(
-                    bool(candidates[candidate_id]["public"].get("definition_options")),
-                    "missing_definition_options",
-                    "A chosen definition requires dictionary options from the prepared batch",
-                    candidate_id=candidate_id,
-                )
-                prepared = [
-                    str(option.get("text", ""))
-                    for option in candidates[candidate_id]["public"].get("definition_options", [])
-                ]
-                chosen = fields["chosen_definition"].casefold()
-                require(
-                    any(chosen == option.casefold() or chosen in option.casefold() for option in prepared),
-                    "unsupported_chosen_definition",
-                    "chosen_definition must be supported by a prepared definition option",
-                    candidate_id=candidate_id,
                 )
 
     @staticmethod

@@ -160,6 +160,20 @@ def test_required_enrichment_validation_is_side_effect_free(tmp_path):
     assert store.run_status(run["run_id"])["committed_job_id"] is None
 
 
+def test_two_call_review_accepts_contextual_definition_paraphrase(tmp_path):
+    store = AgentStore(tmp_path / "agent.sqlite3")
+    run = make_run(store, tmp_path, ("candidate_z",))
+    writer = BatchWriter()
+    service = MiningCommitService(store, config(chosen_definition_field="Chosen"), writer)
+
+    receipt = service.commit_run(
+        run["run_id"],
+        [review("candidate_z", enrichments={"chosen_definition": "contextual paraphrase"})],
+    )
+
+    assert receipt["counts"]["created"] == 1
+
+
 def test_commit_fingerprints_each_unique_path_once(monkeypatch, tmp_path):
     store = AgentStore(tmp_path / "agent.sqlite3")
     run = make_run(store, tmp_path)

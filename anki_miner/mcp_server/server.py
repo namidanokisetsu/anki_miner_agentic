@@ -23,8 +23,9 @@ def create_server(app: AgentMiningApplication) -> Any:
             "Use prepare_mining_run once, follow its versioned review contract, and call commit_mining_run once with "
             "bounded select/reject reviews for every returned candidate. There is no quota and zero selections is "
             "valid. Every selected candidate needs all required enrichments. max_cards must be a positive count "
-            "explicitly stated in the user's current request; never infer or reuse it from configuration, memory, "
-            "prior turns, source length, or a default. That stated maximum authorizes the write. Anki Miner supplies "
+            "explicitly stated by the user or explicitly accepted after a displayed recommendation of about 10 "
+            "cards per 24 minutes of media; never infer or reuse it from configuration, memory, or a hidden default. "
+            "That accepted maximum authorizes the write. Anki Miner supplies "
             "pitch, frequency, furigana, media, and other fields."
         ),
     )
@@ -35,7 +36,7 @@ def create_server(app: AgentMiningApplication) -> Any:
         max_cards: int,
         ctx: Context,
     ) -> dict[str, Any]:
-        """Return up to max_cards; use only a positive count explicitly stated in the current user request."""
+        """Return up to max_cards; use only a positive count explicitly stated or accepted by the user."""
         await ctx.report_progress(0, 2, "Synchronizing profile and preparing shortlist")
         result = app.prepare_mining_run({"inputs": inputs, "max_cards": max_cards})
         await ctx.report_progress(2, 2, "Mining run prepared")

@@ -4,7 +4,7 @@ A fork of [Anki Miner](https://github.com/0xzerolight/anki_miner) that lets an A
 
 ## How it works
 
-1. Choose media and a maximum card count (the most cards the app may create. The final count may be lower if candidates do not pass review.)
+1. Choose media and a maximum card count (the most cards the app may create; the final count may be lower). If omitted, the agent recommends about 10 cards per 24 minutes and asks first.
 2. The app reads your learner deck and subtitles, applies your settings, then filters and ranks candidates.
 3. The AI accepts or rejects each candidate based on its sentence and dictionary meaning.
 4. The app validates the review, creates media, skips duplicates, writes selected cards, and returns a receipt.
