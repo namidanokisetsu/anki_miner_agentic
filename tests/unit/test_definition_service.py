@@ -10,6 +10,7 @@ from anki_miner.services.definition_service import (
     collect_dictionary_css,
     collect_dictionary_css_entries,
 )
+from anki_miner.services.dictionary.providers import indexed_provider as indexed_provider_module
 from anki_miner.services.dictionary.providers.indexed_provider import IndexedDictProvider
 from anki_miner.services.dictionary.registry import DictionaryRegistry
 from anki_miner.services.dictionary.storage import (
@@ -240,6 +241,63 @@ class TestCollectDictionaryCssEntries:
         )
         entries = collect_dictionary_css_entries(config)
         assert collect_dictionary_css(config) == "\n\n".join(css for _, _, css in entries)
+
+
+class TestCssEntries:
+    """``DefinitionService.css_entries`` reads the already-loaded provider
+    chain (PB1) instead of rescanning the dictionary registry from disk —
+    same filters, same order as ``collect_dictionary_css_entries``."""
+
+    @staticmethod
+    def _build(config: AnkiMinerConfig) -> DefinitionService:
+        registry = DictionaryRegistry(config.dicts_root)
+        registry.load()
+        service = DefinitionService(config, providers=registry.build_provider_chain(config), registry=registry)
+        service.ensure_loaded()
+        return service
+
+    def test_matches_scan_based_collector(self, tmp_path: Path):
+        _seed_dict(tmp_path, "a-dict", "A", styles_css="span { color: red }")
+        _seed_dict(tmp_path, "b-dict", "B", styles_css="span { color: blue }")
+        config = _config(
+            tmp_path,
+            ChainEntry(kind="indexed", dict_id="a-dict", enabled=True),
+            ChainEntry(kind="indexed", dict_id="b-dict", enabled=True),
+        )
+        service = self._build(config)
+
+        assert service.css_entries() == collect_dictionary_css_entries(config)
+
+    def test_skips_empty_css_and_disabled_dicts(self, tmp_path: Path):
+        _seed_dict(tmp_path, "a-dict", "A", styles_css=None)
+        _seed_dict(tmp_path, "b-dict", "B", styles_css="span { color: blue }")
+        _seed_dict(tmp_path, "c-dict", "C", styles_css="span { color: green }")
+        config = _config(
+            tmp_path,
+            ChainEntry(kind="indexed", dict_id="a-dict", enabled=True),
+            ChainEntry(kind="indexed", dict_id="b-dict", enabled=True),
+            ChainEntry(kind="indexed", dict_id="c-dict", enabled=False),
+        )
+        service = self._build(config)
+
+        entries = service.css_entries()
+        assert [(dict_id, name) for dict_id, name, _ in entries] == [("b-dict", "B")]
+        assert entries == collect_dictionary_css_entries(config)
+
+    def test_reads_without_constructing_a_registry(self, tmp_path: Path, monkeypatch):
+        _seed_dict(tmp_path, "a-dict", "A", styles_css="span { color: red }")
+        config = _config(tmp_path, ChainEntry(kind="indexed", dict_id="a-dict", enabled=True))
+        service = self._build(config)
+
+        monkeypatch.setattr(
+            "anki_miner.services.dictionary.registry.DictionaryRegistry",
+            MagicMock(side_effect=AssertionError("css_entries must not rescan the registry")),
+        )
+
+        entries = service.css_entries()
+
+        assert [(dict_id, name) for dict_id, name, _ in entries] == [("a-dict", "A")]
+        assert '[data-dictionary-id="a-dict"]' in entries[0][2]
 
 
 def make_provider(name="Test", available=True, return_value=None, load_raises=None):
@@ -1045,6 +1103,54 @@ class TestLookupAllOffline:
         off1.lookup.assert_called_once_with("word")
         online.lookup.assert_not_called()
         off2.lookup.assert_called_once_with("word")
+
+    def test_lemma_reaches_lookup_many_for_batch_capable_provider(self, test_config):
+        """Rule A' pane fix: a lemma passed to lookup_all_offline threads into a
+        lookup_many-capable provider instead of the arity-1 lookup, so a kana
+        front (ゆう, lemma 言う) scopes to its own lexeme rather than every
+        same-reading homograph (有/夕/結う) — matching the card's own
+        get_definitions_batch(lemma_context=...) scoping."""
+        seen: list[dict[str, str] | None] = []
+        provider = make_batch_provider("lemma-aware")
+        provider.lookup_fallback = None  # unspecced Mock: no deinflection fallback surface
+
+        def lookup_many(pairs, scope_homographs=True, lemmas=None):
+            seen.append(lemmas)
+            return {w: "<div>言う</div>" for w, _ in pairs}
+
+        provider.lookup_many.side_effect = lookup_many
+        service = DefinitionService(test_config, providers=[provider])
+
+        result = service.lookup_all_offline("ゆう", lemma="言う")
+
+        assert result == [("lemma-aware", "<div>言う</div>")]
+        assert seen == [{"ゆう": "言う"}]
+        provider.lookup.assert_not_called()
+
+    def test_lemma_falls_back_to_lookup_for_provider_without_lookup_many(self, test_config):
+        """A provider lacking lookup_many (e.g. a legacy offline dict, or the
+        arity-1 provider fakes throughout this suite) keeps the arity-1
+        ``lookup(word)`` path even when a lemma is supplied — the getattr probe
+        never fires, so older provider stubs keep working unchanged."""
+        legacy = make_provider("Legacy", return_value="<div>legacy</div>")
+        service = DefinitionService(test_config, providers=[legacy])
+
+        result = service.lookup_all_offline("ゆう", lemma="言う")
+
+        assert result == [("Legacy", "<div>legacy</div>")]
+        legacy.lookup.assert_called_once_with("ゆう")
+
+    def test_no_lemma_does_not_probe_lookup_many(self, test_config):
+        """Absent lemma (the legacy call shape) never probes lookup_many at
+        all, even for a provider that has it — byte-identical to pre-A′."""
+        provider = make_batch_provider("batch-capable", table={"x": "<div>x</div>"})
+        service = DefinitionService(test_config, providers=[provider])
+
+        result = service.lookup_all_offline("x")
+
+        assert result == [("batch-capable", "<div>x</div>")]
+        provider.lookup_many.assert_not_called()
+        provider.lookup.assert_called_once_with("x")
 
 
 class TestProviderRaisesMidChain:
@@ -1929,3 +2035,139 @@ class TestOfflineKanaAttestQuality:
         q = service.offline_kana_attest_quality(["有る"])
         assert q is not None
         assert q["有る"]["term_rules"] == frozenset({"v5"})
+
+
+class TestAttestQualityRunCache:
+    """``_provider_attest_quality`` caches per (provider, include_readings) for
+    the run: ``offline_deinflection_terms_exist``, ``offline_term_commonness``
+    and ``offline_kana_attest_quality`` all read the same per-word rule sets
+    off the same providers, so a word probed by one is free to the others."""
+
+    @staticmethod
+    def _spy_storage(monkeypatch) -> list[tuple[tuple[str, ...], bool]]:
+        """Wrap the real ``storage.attest_detail`` call, recording every
+        (words, include_readings) it's invoked with while still delegating —
+        results stay real, only the call count/args are observed."""
+        calls: list[tuple[tuple[str, ...], bool]] = []
+        original = indexed_provider_module.storage_attest_detail
+
+        def spy(conn, words, include_readings):
+            calls.append((tuple(words), include_readings))
+            return original(conn, words, include_readings)
+
+        monkeypatch.setattr(indexed_provider_module, "storage_attest_detail", spy)
+        return calls
+
+    @staticmethod
+    def _provider(root: Path) -> IndexedDictProvider:
+        return _seed_tagged_provider(
+            root,
+            "jit",
+            "Jitendex",
+            [
+                DictRow(term="有る", reading="ある", content="<div>be</div>", tags="popular", rules="v5", sequence=1),
+                DictRow(term="見る", reading="みる", content="<div>see</div>", tags="popular", rules="v1", sequence=2),
+                DictRow(
+                    term="新しい",
+                    reading="あたらしい",
+                    content="<div>new</div>",
+                    tags="popular",
+                    rules="adj-i",
+                    sequence=3,
+                ),
+            ],
+            _JITENDEX_TAGS,
+        )
+
+    def test_overlapping_probes_share_one_attest_detail_call(self, test_config, tmp_path: Path, monkeypatch):
+        calls = self._spy_storage(monkeypatch)
+        p = self._provider(tmp_path)
+        service = DefinitionService(test_config, providers=[p])
+
+        service.offline_deinflection_terms_exist([("有る", 0), ("見る", 0)])
+        service.offline_term_commonness(["有る", "見る"])
+
+        assert len(calls) == 1
+        words, include_readings = calls[0]
+        assert set(words) == {"有る", "見る"}
+        assert include_readings is False
+
+    def test_new_words_trigger_only_an_incremental_batch(self, test_config, tmp_path: Path, monkeypatch):
+        calls = self._spy_storage(monkeypatch)
+        p = self._provider(tmp_path)
+        service = DefinitionService(test_config, providers=[p])
+
+        service.offline_term_commonness(["有る"])
+        service.offline_term_commonness(["有る", "新しい"])
+
+        assert len(calls) == 2
+        assert set(calls[1][0]) == {"新しい"}
+
+    def test_clear_run_cache_forces_a_reprobe(self, test_config, tmp_path: Path, monkeypatch):
+        calls = self._spy_storage(monkeypatch)
+        p = self._provider(tmp_path)
+        service = DefinitionService(test_config, providers=[p])
+
+        service.offline_term_commonness(["有る"])
+        service.clear_run_cache()
+        service.offline_term_commonness(["有る"])
+
+        assert len(calls) == 2
+
+    def test_cache_is_transparent_to_results(self, test_config, tmp_path: Path):
+        """A service whose cache is pre-warmed by an overlapping probe returns
+        byte-identical results to a cold, freshly built service."""
+        warm = DefinitionService(test_config, providers=[self._provider(tmp_path / "warm")])
+        warm.offline_deinflection_terms_exist([("見る", 0)])
+
+        fresh = DefinitionService(test_config, providers=[self._provider(tmp_path / "fresh")])
+
+        candidates = [("有る", 0), ("見る", 0), ("新しい", 0)]
+        terms = ["有る", "見る", "新しい"]
+        assert warm.offline_deinflection_terms_exist(candidates) == fresh.offline_deinflection_terms_exist(candidates)
+        assert warm.offline_term_commonness(terms) == fresh.offline_term_commonness(terms)
+        assert warm.offline_kana_attest_quality(terms) == fresh.offline_kana_attest_quality(terms)
+
+
+class TestRedirectFallsThroughChain:
+    """A dict whose only row for a word is an unresolvable redirect (negative
+    sequence + ⟶ arrow, target absent) is a MISS for that word, so the next
+    provider in the chain gets consulted instead of the arrow becoming the
+    card's definition."""
+
+    def _make_provider(self, db: Path, rows: list[DictRow], dict_id: str) -> IndexedDictProvider:
+        create_index(db)
+        bulk_insert(db, rows)
+        write_meta(db, {"schema_version": str(SCHEMA_VERSION), "source_name": dict_id})
+        provider = IndexedDictProvider(dict_id, db, display_name=dict_id)
+        assert provider.load() is True
+        return provider
+
+    def test_unresolvable_redirect_falls_through_to_next_dict(self, test_config, tmp_path: Path):
+        first = self._make_provider(
+            tmp_path / "a.sqlite",
+            [
+                DictRow(
+                    term="お互いさま",
+                    reading=None,
+                    content='<li class="gloss-item">⟶お互い様</li>',
+                    score=-101,
+                    sequence=-1270320,
+                )
+            ],
+            "dict-a",
+        )
+        second = self._make_provider(
+            tmp_path / "b.sqlite",
+            [DictRow(term="お互いさま", reading=None, content="<li>we are even</li>", sequence=99)],
+            "dict-b",
+        )
+        service = DefinitionService(test_config, providers=[first, second])
+        try:
+            result = service.get_definitions_batch([("お互いさま", None)])[0]
+            assert result is not None
+            assert "we are even" in result
+            assert "⟶" not in result
+        finally:
+            first.close()
+            second.close()

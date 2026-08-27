@@ -217,6 +217,16 @@ def test_window_is_modeless_and_start_returns_while_the_worker_runs(parent, monk
     assert modality == Qt.WindowModality.NonModal
 
 
+def test_window_declines_wa_quit_on_close(parent, monkeypatch, tmp_path, qtbot):
+    """H3: a still-visible download window must not keep a closed app alive."""
+    worker = _FakeWorker(_successful_summary())
+    session, _dir = _start(monkeypatch, tmp_path, parent, worker)
+
+    assert session.window.testAttribute(Qt.WidgetAttribute.WA_QuitOnClose) is False
+
+    _drain(qtbot, worker)
+
+
 def test_hide_leaves_the_worker_and_the_staged_files_alive(parent, monkeypatch, tmp_path, qtbot):
     worker = _FakeWorker(_successful_summary())
     session, download_dir = _start(monkeypatch, tmp_path, parent, worker)
@@ -989,3 +999,46 @@ def test_outcome_reports_activation_separately_from_import():
     outcome = ResourceDownloadOutcome(config=create_default_config(), summary=summary, activated=False)
     assert outcome.activated is False
     assert result_headline(outcome.summary, activated=outcome.activated).startswith("Imported, but not active")
+
+
+def test_start_resource_download_forwards_a_spec_subset(qtbot, monkeypatch):
+    """A page-level picker is worthless if the entry point drops the choice."""
+    from anki_miner.services.resource_catalog import RECOMMENDED_DEFAULT_SET
+
+    parent = QWidget()
+    qtbot.addWidget(parent)
+    only_pitch = [s for s in RECOMMENDED_DEFAULT_SET if s.kind == "pitch"]
+    seen: list[object] = []
+
+    def fake_start(self):
+        seen.append(list(self._specs))
+        return True
+
+    monkeypatch.setattr(ResourceDownloadSession, "start", fake_start)
+    session = start_resource_download(
+        parent,
+        create_default_config(),
+        activate=lambda _s: None,
+        specs=only_pitch,
+    )
+
+    assert session is not None
+    assert seen == [only_pitch]
+
+
+def test_start_resource_download_defaults_to_the_whole_catalog(qtbot, monkeypatch):
+    """Tools -> Download Recommended Resources passes no specs and must not narrow."""
+    from anki_miner.services.resource_catalog import RECOMMENDED_DEFAULT_SET
+
+    parent = QWidget()
+    qtbot.addWidget(parent)
+    seen: list[object] = []
+
+    def fake_start(self):
+        seen.append(list(self._specs))
+        return True
+
+    monkeypatch.setattr(ResourceDownloadSession, "start", fake_start)
+    start_resource_download(parent, create_default_config(), activate=lambda _s: None)
+
+    assert seen == [list(RECOMMENDED_DEFAULT_SET)]

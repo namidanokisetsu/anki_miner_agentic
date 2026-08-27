@@ -150,7 +150,7 @@ class TestRenamedDestinations:
         """D10 renamed the destination; nobody renamed the users' vocabulary."""
         results = _ids(search(entries, "ASR"))
 
-        assert "subtitles.alass_selector" in results
+        assert "subtitles.alass_binary" in results
 
     def test_the_filtering_destination_name_finds_its_settings(self, entries):
         """Filtering kept its name, so the breadcrumb alone has to match it."""

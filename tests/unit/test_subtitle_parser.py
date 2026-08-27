@@ -1,6 +1,7 @@
 """Tests for subtitle_parser module."""
 
 import re
+import time
 from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, patch
 
@@ -421,6 +422,79 @@ class TestParseSubtitleFile:
         # text (the _iter_parsed_lines tokenize call).
         full_line_calls = [c for c in mock_tagger.call_args_list if c.args and c.args[0] == "猫と犬と鳥"]
         assert len(full_line_calls) == 1, f"Expected exactly 1 full-sentence tagger call; got {len(full_line_calls)}"
+
+
+class TestPerfProbeTimers:
+    """Task 28 perf-audit counters: cumulative probe/tokenize time per parse.
+
+    Gate data for the PB2 (staged-batching parser) and PB7 (threading.local
+    tagger) rewrite decisions — see docs/perf_audit_2026-08/measurements.md.
+    """
+
+    def test_tokenize_time_accumulates_and_probes_stay_untouched(self, test_config):
+        """``_tokenize_time_s`` grows with each tagger call; no dict wired ⇒ no probing."""
+
+        def slow_tagger(text):
+            time.sleep(0.001)
+            return [_make_token(text, "名詞", lemma=text, kana=text)]
+
+        with patch(
+            "anki_miner.services.subtitle_parser.get_shared_tagger",
+            return_value=MagicMock(side_effect=slow_tagger),
+        ):
+            service = SubtitleParserService(test_config)  # no term_lookup ⇒ self._attest is None
+
+        assert service._tokenize_time_s == 0.0
+        service._build_line_state("猫", 0.0, 0.0)
+        after_one = service._tokenize_time_s
+        assert after_one > 0.0
+
+        service._build_line_state("犬", 1.0, 1.0)
+        assert service._tokenize_time_s > after_one, "a second tagger call must ADD, not overwrite"
+        assert service._probe_time_s == 0.0, "no offline dictionary wired ⇒ no probe calls"
+
+    def test_probe_time_accumulates_and_tokenize_stays_untouched(self, test_config):
+        """``_probe_time_s`` grows with each dictionary probe; the tagger is never called."""
+
+        def slow_term_lookup(surfaces):
+            time.sleep(0.001)
+            return set(surfaces)
+
+        service = SubtitleParserService(test_config, term_lookup=slow_term_lookup)
+
+        assert service._probe_time_s == 0.0
+        service._memoized_attest(["猫"])
+        after_one = service._probe_time_s
+        assert after_one > 0.0
+
+        service._memoized_attest(["犬"])  # distinct surface ⇒ guaranteed cache miss
+        assert service._probe_time_s > after_one, "a second probe call must ADD, not overwrite"
+        assert service._tokenize_time_s == 0.0, "no tagger call was ever made"
+
+    def test_perf_counters_reset_per_parse(self, test_config):
+        """``_reset_caches()`` — run at the start of every public ``parse_*``
+        entry point — zeroes both counters, so a second parse never inherits
+        the first call's cumulative totals."""
+
+        def slow_tagger(text):
+            time.sleep(0.001)
+            return [_make_token(text, "名詞", lemma=text, kana=text)]
+
+        with patch(
+            "anki_miner.services.subtitle_parser.get_shared_tagger",
+            return_value=MagicMock(side_effect=slow_tagger),
+        ):
+            service = SubtitleParserService(test_config, term_lookup=lambda surfaces: set(surfaces))
+
+        service._build_line_state("猫", 0.0, 0.0)
+        service._memoized_attest(["猫"])
+        assert service._tokenize_time_s > 0.0
+        assert service._probe_time_s > 0.0
+
+        service._reset_caches()
+
+        assert service._tokenize_time_s == 0.0
+        assert service._probe_time_s == 0.0
 
 
 class TestExpressionFuriganaSource:
@@ -4176,6 +4250,152 @@ class TestAbandonedGeneratorCacheNonCommit:
         assert counts["犬"] == 1
 
 
+class TestPerCallSubtitleOffset:
+    """The subtitle offset is a per-CALL argument, not a per-parser config value.
+
+    A batch run reuses ONE parser across queue items that each carry their own
+    offset, so ``_line_cache`` must store offset-NEUTRAL times and every parse
+    applies its own offset at yield. Two parses of the same unchanged file with
+    different offsets therefore share the tokenization (cache HIT) while
+    returning differently-shifted times.
+    """
+
+    @staticmethod
+    def _make_mock_subs(lines):
+        mock_lines = []
+        for text, start, end in lines:
+            ml = MagicMock()
+            ml.text = text
+            ml.start = start
+            ml.end = end
+            mock_lines.append(ml)
+        mock_subs = MagicMock()
+        mock_subs.__iter__ = MagicMock(side_effect=lambda: iter(mock_lines))
+        return mock_subs
+
+    def _fixture(self, tmp_path):
+        """A stable-mtime file plus mock subs whose single line is 1.0s → 3.0s."""
+        import os
+
+        sub_file = tmp_path / "test.srt"
+        sub_file.write_text("placeholder", encoding="utf-8")
+        os.utime(sub_file, (1000, 1000))
+        return sub_file, self._make_mock_subs([("食べる", 1000, 3000)])
+
+    @staticmethod
+    def _tagger():
+        tagger = MagicMock()
+        tagger.return_value = [_make_token("食べる", "動詞", lemma="食べる", kana="タベル")]
+        return tagger
+
+    def test_parse_subtitle_file_offset_then_zero_offset_hits_cache(self, test_config, tmp_path):
+        """A per-call offset shifts times; the same file at offset 0 replays the
+        cached tokenization unshifted."""
+        mock_tagger = self._tagger()
+        sub_file, mock_subs = self._fixture(tmp_path)
+
+        with (
+            patch("anki_miner.services.subtitle_parser.pysubs2.load", return_value=mock_subs),
+            patch("anki_miner.services.subtitle_parser.get_shared_tagger", return_value=mock_tagger),
+        ):
+            service = SubtitleParserService(test_config)
+            shifted = service.parse_subtitle_file(sub_file, subtitle_offset=2.0)
+            calls_after_first = mock_tagger.call_count
+            unshifted = service.parse_subtitle_file(sub_file, subtitle_offset=0.0)
+
+        assert shifted[0].start_time == pytest.approx(3.0)
+        assert shifted[0].end_time == pytest.approx(5.0)
+        assert shifted[0].duration == pytest.approx(2.0)
+        # Same parser, same file, different offset: the stored line state is
+        # offset-neutral, so the second parse is a cache HIT.
+        assert mock_tagger.call_count == calls_after_first
+        assert unshifted[0].start_time == pytest.approx(1.0)
+        assert unshifted[0].end_time == pytest.approx(3.0)
+
+    def test_parse_subtitle_file_with_index_offset_then_zero_offset_hits_cache(self, test_config, tmp_path):
+        """Same contract through the i+1 phase-1 path (words AND line index)."""
+        mock_tagger = self._tagger()
+        sub_file, mock_subs = self._fixture(tmp_path)
+
+        with (
+            patch("anki_miner.services.subtitle_parser.pysubs2.load", return_value=mock_subs),
+            patch("anki_miner.services.subtitle_parser.get_shared_tagger", return_value=mock_tagger),
+        ):
+            service = SubtitleParserService(test_config)
+            shifted, shifted_index = service.parse_subtitle_file_with_index(sub_file, subtitle_offset=2.0)
+            calls_after_first = mock_tagger.call_count
+            unshifted, unshifted_index = service.parse_subtitle_file_with_index(sub_file, subtitle_offset=0.0)
+
+        assert shifted[0].start_time == pytest.approx(3.0)
+        assert shifted[0].end_time == pytest.approx(5.0)
+        assert shifted_index[0].start_time == pytest.approx(3.0)
+        assert shifted_index[0].end_time == pytest.approx(5.0)
+        assert mock_tagger.call_count == calls_after_first
+        assert unshifted[0].start_time == pytest.approx(1.0)
+        assert unshifted[0].end_time == pytest.approx(3.0)
+        assert unshifted_index[0].start_time == pytest.approx(1.0)
+        assert unshifted_index[0].end_time == pytest.approx(3.0)
+
+    def test_parse_raw_entries_applies_per_call_offset(self, test_config, tmp_path):
+        """The display/expansion path takes the same per-call offset."""
+        mock_tagger = self._tagger()
+        sub_file, mock_subs = self._fixture(tmp_path)
+
+        with (
+            patch("anki_miner.services.subtitle_parser.pysubs2.load", return_value=mock_subs),
+            patch("anki_miner.services.subtitle_parser.get_shared_tagger", return_value=mock_tagger),
+        ):
+            service = SubtitleParserService(test_config)
+            shifted = service.parse_raw_entries(sub_file, subtitle_offset=2.0)
+            unshifted = service.parse_raw_entries(sub_file, subtitle_offset=0.0)
+
+        assert shifted[0][0] == pytest.approx(3.0)
+        assert shifted[0][1] == pytest.approx(5.0)
+        assert unshifted[0][0] == pytest.approx(1.0)
+        assert unshifted[0][1] == pytest.approx(3.0)
+
+    def test_omitted_offset_falls_back_to_config(self, test_config, tmp_path):
+        """No argument = the parser's own config offset, on every entry point."""
+        import dataclasses
+
+        config = dataclasses.replace(test_config, subtitle_offset=5.0)
+        mock_tagger = self._tagger()
+        sub_file, mock_subs = self._fixture(tmp_path)
+
+        with (
+            patch("anki_miner.services.subtitle_parser.pysubs2.load", return_value=mock_subs),
+            patch("anki_miner.services.subtitle_parser.get_shared_tagger", return_value=mock_tagger),
+        ):
+            service = SubtitleParserService(config)
+            words = service.parse_subtitle_file(sub_file)
+            indexed, index = service.parse_subtitle_file_with_index(sub_file)
+            entries = service.parse_raw_entries(sub_file)
+
+        assert words[0].start_time == pytest.approx(6.0)
+        assert words[0].end_time == pytest.approx(8.0)
+        assert indexed[0].start_time == pytest.approx(6.0)
+        assert index[0].start_time == pytest.approx(6.0)
+        assert entries[0][0] == pytest.approx(6.0)
+        assert entries[0][1] == pytest.approx(8.0)
+
+    def test_negative_offset_clamps_at_zero_and_shrinks_duration(self, test_config, tmp_path):
+        """The clamp is applied AFTER the shift, not baked into the stored state:
+        a line pushed below zero keeps ``duration == end - start``."""
+        mock_tagger = self._tagger()
+        sub_file, mock_subs = self._fixture(tmp_path)
+
+        with (
+            patch("anki_miner.services.subtitle_parser.pysubs2.load", return_value=mock_subs),
+            patch("anki_miner.services.subtitle_parser.get_shared_tagger", return_value=mock_tagger),
+        ):
+            service = SubtitleParserService(test_config)
+            words = service.parse_subtitle_file(sub_file, subtitle_offset=-2.0)
+
+        assert words[0].start_time == pytest.approx(0.0)
+        assert words[0].end_time == pytest.approx(1.0)
+        assert words[0].duration == pytest.approx(1.0)
+
+
 # ---------------------------------------------------------------------------
 # OVH-006 — ASS/SSA Comment lines must be skipped
 # ---------------------------------------------------------------------------
@@ -5507,6 +5727,41 @@ class TestVerbFrontCommonnessResolver:
         assert "呼ぶ" not in forms
 
 
+class TestPerParseCacheCaps:
+    """_fg_cache / _rd_cache / _attested_readings_cache are per-parse memos, but a
+    single huge parse (whole-corpus Deck Builder run) can still fill them without
+    limit within that one pass. They get the same clear-on-cap treatment as the
+    sibling caches (_front_cache et al.) so memory stays bounded.
+    """
+
+    def _service(self, reading_lookup=None):
+        with patch("anki_miner.services.subtitle_parser.get_shared_tagger"):
+            return SubtitleParserService(AnkiMinerConfig(), reading_lookup=reading_lookup)
+
+    def test_furigana_cache_honours_cap(self, monkeypatch):
+        service = self._service()
+        monkeypatch.setattr("anki_miner.services.subtitle_parser._FRONT_CACHE_CAP", 1)
+        with patch("anki_miner.services.subtitle_parser.generate_furigana", side_effect=lambda s, _t: f"fg:{s}"):
+            service._furigana("犬")
+            service._furigana("猫")
+        assert len(service._fg_cache) <= 1
+
+    def test_reading_cache_honours_cap(self, monkeypatch):
+        service = self._service()
+        monkeypatch.setattr("anki_miner.services.subtitle_parser._FRONT_CACHE_CAP", 1)
+        with patch("anki_miner.services.subtitle_parser.generate_reading", side_effect=lambda s, _t: f"rd:{s}"):
+            service._reading("犬")
+            service._reading("猫")
+        assert len(service._rd_cache) <= 1
+
+    def test_attested_readings_cache_honours_cap(self, monkeypatch):
+        service = self._service(reading_lookup=lambda words: {w: [f"r:{w}"] for w in words})
+        monkeypatch.setattr("anki_miner.services.subtitle_parser._FRONT_CACHE_CAP", 1)
+        service._attested_readings("犬")
+        service._attested_readings("猫")
+        assert len(service._attested_readings_cache) <= 1
+
+
 class TestMemoizedAttest:
     def _service(self, term_lookup):
         with patch("anki_miner.services.subtitle_parser.get_shared_tagger"):
@@ -6785,11 +7040,11 @@ class TestMasuStemNominalizationWiring:
     """
 
     @staticmethod
-    def _service(test_config, dictionary):
+    def _service(test_config, dictionary, reading_lookup=None):
         def term_lookup(terms):
             return dictionary & set(terms)
 
-        return SubtitleParserService(test_config, term_lookup=term_lookup)
+        return SubtitleParserService(test_config, term_lookup=term_lookup, reading_lookup=reading_lookup)
 
     @staticmethod
     def _mined(service, text):
@@ -6847,3 +7102,16 @@ class TestMasuStemNominalizationWiring:
 
         unmerged = self._mined(self._service(test_config, {"存じ"}), "ご存じですか")
         assert "存じ" not in unmerged
+
+    def test_dictionary_attestation_does_not_override_the_nominalized_reading(self, test_config):
+        """A-4: unidic's context reading is absent from the dictionary's
+        attested set for 差し入れ (the dictionary attests a different single
+        reading instead), so ``attest_merged_readings`` must leave the
+        nominalizer's kana alone."""
+        service = self._service(
+            test_config,
+            {"差し入れ"},
+            reading_lookup=lambda terms: {"差し入れ": ["さしいれもの"]},
+        )
+        word = self._mined(service, self.SENTENCE)["差し入れ"]
+        assert word.expression_reading == "さしいれ"

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import collections
 import io
 import json
 import os
 import signal
+import subprocess
 import sys
 import threading
 import time
@@ -21,6 +23,7 @@ from anki_miner.config import AnkiMinerConfig
 from anki_miner.exceptions.youtube import (
     BotDetectionError,
     CookieDatabaseLockedError,
+    DubAudioUnavailableError,
     FfmpegNotFoundError,
     NoJapaneseSubtitlesError,
     VideoTooLongError,
@@ -28,6 +31,7 @@ from anki_miner.exceptions.youtube import (
     YtdlpNotFoundError,
 )
 from anki_miner.services.youtube_fetcher import YouTubeFetcherService
+from anki_miner.utils import ytdlp_resolver
 from anki_miner.utils.process_supervisor import SupervisedResult, SupervisedState
 
 _REAL_KILLPG = os.killpg if sys.platform != "win32" else None
@@ -156,12 +160,12 @@ def _js_runtime_capability(request: pytest.FixtureRequest, monkeypatch: pytest.M
     shelling out to a real ``yt-dlp --help``. Tests marked ``real_ytdlp`` opt out
     to exercise the real function and manage the cache themselves. Issue #64.
     """
-    from anki_miner.services import youtube_fetcher as yf
+    from anki_miner.services import ytdlp_invocation as yf
 
-    real = yf._ytdlp_supports_js_runtimes  # the lru_cache-wrapped function
+    real = yf.ytdlp_supports_js_runtimes  # the lru_cache-wrapped function
     real.cache_clear()
     if "real_ytdlp" not in request.keywords:
-        monkeypatch.setattr(yf, "_ytdlp_supports_js_runtimes", lambda _path: False)
+        monkeypatch.setattr(yf, "ytdlp_supports_js_runtimes", lambda _path: False)
     yield
     real.cache_clear()
 
@@ -174,12 +178,12 @@ def _remote_component_capability(request: pytest.FixtureRequest, monkeypatch: py
     deterministic and off a real ``yt-dlp --help``. ``real_ytdlp``-marked tests
     opt out and manage the cache themselves. Issue #64.
     """
-    from anki_miner.services import youtube_fetcher as yf
+    from anki_miner.services import ytdlp_invocation as yf
 
-    real = yf._ytdlp_supports_remote_components  # the lru_cache-wrapped function
+    real = yf.ytdlp_supports_remote_components  # the lru_cache-wrapped function
     real.cache_clear()
     if "real_ytdlp" not in request.keywords:
-        monkeypatch.setattr(yf, "_ytdlp_supports_remote_components", lambda _path: False)
+        monkeypatch.setattr(yf, "ytdlp_supports_remote_components", lambda _path: False)
     yield
     real.cache_clear()
 
@@ -258,6 +262,65 @@ class TestProbeMetadata:
         ):
             info = service.probe_metadata("https://youtu.be/abc123")
         assert info.has_auto_ja_subs is False
+
+    def test_dubbed_video_sets_dub_flag(self, service: YouTubeFetcherService) -> None:
+        """EN original with a JA auto-dub: MT ja captions + ja audio track -> dub route."""
+        payload = _make_metadata(
+            automatic_captions={"ja": [{"name": "Japanese"}], "en-orig": [{"name": "English (Original)"}]},
+            language="en",
+            formats=[
+                {"vcodec": "avc1", "acodec": "none", "language": None},
+                {"vcodec": "none", "acodec": "opus", "language": "en-US"},
+                {"vcodec": "none", "acodec": "opus", "language": "ja"},
+            ],
+        )
+        with patch(
+            "anki_miner.services.youtube_fetcher.run_supervised", return_value=_fake_run(0, json.dumps(payload))
+        ):
+            info = service.probe_metadata("https://youtu.be/abc123")
+        assert info.has_auto_ja_subs is False
+        assert info.has_dub_ja_subs is True
+
+    def test_mt_captions_without_dub_audio_stay_rejected(self, service: YouTubeFetcherService) -> None:
+        """The original MT-caption rejection is intact when no JA audio exists."""
+        payload = _make_metadata(
+            automatic_captions={"ja": [{"name": "Japanese"}], "en-orig": [{"name": "English (Original)"}]},
+            language="en",
+            formats=[{"vcodec": "none", "acodec": "opus", "language": "en-US"}],
+        )
+        with patch(
+            "anki_miner.services.youtube_fetcher.run_supervised", return_value=_fake_run(0, json.dumps(payload))
+        ):
+            info = service.probe_metadata("https://youtu.be/abc123")
+        assert info.has_auto_ja_subs is False
+        assert info.has_dub_ja_subs is False
+
+    def test_native_auto_video_does_not_set_dub_flag(self, service: YouTubeFetcherService) -> None:
+        """Exclusivity: a native-auto video takes the auto_only route, never auto_dub."""
+        payload = _make_metadata(
+            automatic_captions={"ja": [{"name": "Japanese"}], "ja-orig": [{"name": "Japanese (Original)"}]},
+            language="ja",
+            formats=[{"vcodec": "none", "acodec": "opus", "language": "ja"}],
+        )
+        with patch(
+            "anki_miner.services.youtube_fetcher.run_supervised", return_value=_fake_run(0, json.dumps(payload))
+        ):
+            info = service.probe_metadata("https://youtu.be/abc123")
+        assert info.has_auto_ja_subs is True
+        assert info.has_dub_ja_subs is False
+
+    def test_no_ja_captions_no_dub_flag(self, service: YouTubeFetcherService) -> None:
+        """A JA audio track alone is not mineable — captions are still required."""
+        payload = _make_metadata(
+            automatic_captions={"en-orig": [{"name": "English (Original)"}]},
+            language="en",
+            formats=[{"vcodec": "none", "acodec": "opus", "language": "ja"}],
+        )
+        with patch(
+            "anki_miner.services.youtube_fetcher.run_supervised", return_value=_fake_run(0, json.dumps(payload))
+        ):
+            info = service.probe_metadata("https://youtu.be/abc123")
+        assert info.has_dub_ja_subs is False
 
     def test_non_ja_language_with_auto_ja_rejected(self, service: YouTubeFetcherService) -> None:
         payload = _make_metadata(
@@ -424,6 +487,134 @@ class TestProbeMetadata:
             service.probe_metadata("https://youtu.be/abc123")
 
 
+class TestProbeClassifiesLikeFetch:
+    """A probe must recognize the same failures a fetch does (Issue #119).
+
+    The probe paths used to raise the raw stderr tail unconditionally, so a user
+    whose cookie source was unreadable got yt-dlp's own text and a link to
+    yt-dlp's issue tracker in a queue-row tooltip — while this app's remedy for
+    that exact failure sat unused on the fetch path. Both probes now run the
+    shared classifier; the raw tail stays only as the unrecognized fallback.
+
+    Stderr strings here are verbatim yt-dlp output — see
+    ``tests/unit/test_ytdlp_invocation.py`` for why that matters.
+    """
+
+    #: cookies.py:363 — the failure in Issue #119's screenshot, doubled the way
+    #: yt-dlp really emits it (logger.error, then YoutubeDL re-reports the cause).
+    CHROME_COPY_FAILED = (
+        "ERROR: Could not copy Chrome cookie database. See  "
+        "https://github.com/yt-dlp/yt-dlp/issues/7271  for more info\n"
+        "ERROR: Could not copy Chrome cookie database. See  "
+        "https://github.com/yt-dlp/yt-dlp/issues/7271  for more info"
+    )
+
+    @staticmethod
+    def _service_with_chrome_cookies(yt_config: AnkiMinerConfig) -> YouTubeFetcherService:
+        return YouTubeFetcherService(replace(yt_config, youtube_cookies_from_browser="chrome"))
+
+    def test_metadata_probe_maps_cookie_copy_failure(self, yt_config: AnkiMinerConfig) -> None:
+        service = self._service_with_chrome_cookies(yt_config)
+        with (
+            patch(
+                "anki_miner.services.youtube_fetcher.run_supervised",
+                return_value=_fake_run(1, "", stderr=self.CHROME_COPY_FAILED),
+            ),
+            pytest.raises(CookieDatabaseLockedError) as exc,
+        ):
+            service.probe_metadata("https://youtu.be/abc123")
+        assert "Close chrome" in str(exc.value)
+        # The whole point: yt-dlp's text and issue link stop here.
+        assert "Could not copy" not in str(exc.value)
+        assert "github.com" not in str(exc.value)
+
+    def test_playlist_probe_maps_cookie_copy_failure(self, yt_config: AnkiMinerConfig) -> None:
+        service = self._service_with_chrome_cookies(yt_config)
+        with (
+            patch(
+                "anki_miner.services.youtube_fetcher.run_supervised",
+                return_value=_fake_run(1, "", stderr=self.CHROME_COPY_FAILED),
+            ),
+            pytest.raises(CookieDatabaseLockedError) as exc,
+        ):
+            service.probe_playlist("https://youtube.com/playlist?list=PL1", limit=10)
+        assert "Close chrome" in str(exc.value)
+
+    def test_metadata_probe_maps_missing_cookie_db(self, yt_config: AnkiMinerConfig) -> None:
+        """cookies.py:318 — reproducible locally on a box with no Chrome installed."""
+        service = self._service_with_chrome_cookies(yt_config)
+        stderr = 'ERROR: could not find chrome cookies database in "/home/u/.config/google-chrome"'
+        with (
+            patch(
+                "anki_miner.services.youtube_fetcher.run_supervised",
+                return_value=_fake_run(1, "", stderr=stderr),
+            ),
+            pytest.raises(CookieDatabaseLockedError) as exc,
+        ):
+            service.probe_metadata("https://youtu.be/abc123")
+        assert "No cookie database found for chrome" in str(exc.value)
+        # Closing a browser that was never there cannot help.
+        assert "Close chrome" not in str(exc.value)
+
+    def test_metadata_probe_maps_bot_wall(self, service: YouTubeFetcherService) -> None:
+        stderr = "ERROR: [youtube] abc123: Sign in to confirm you're not a bot."
+        with (
+            patch(
+                "anki_miner.services.youtube_fetcher.run_supervised",
+                return_value=_fake_run(1, "", stderr=stderr),
+            ),
+            pytest.raises(BotDetectionError),
+        ):
+            service.probe_metadata("https://youtu.be/abc123")
+
+    def test_metadata_probe_maps_stale_extractor(self, service: YouTubeFetcherService) -> None:
+        """An images-only listing at probe time means the same stale yt-dlp it
+        means at fetch time, and wants the same "update yt-dlp" remedy."""
+        stderr = "ERROR: Only images are available for download, use --list-formats to see them"
+        with (
+            patch(
+                "anki_miner.services.youtube_fetcher.run_supervised",
+                return_value=_fake_run(1, "", stderr=stderr),
+            ),
+            pytest.raises(YouTubeFetchError, match="Update yt-dlp now"),
+        ):
+            service.probe_metadata("https://youtu.be/abc123")
+
+    def test_probe_never_raises_the_dub_route_error(self, service: YouTubeFetcherService) -> None:
+        """The auto_dub branch is gated on sub_mode, which a probe never sets.
+
+        A probe requests no format at all, so "no format" from a probe means a
+        stale extractor, not a vanished dub track.
+        """
+        stderr = "ERROR: Requested format is not available"
+        with (
+            patch(
+                "anki_miner.services.youtube_fetcher.run_supervised",
+                return_value=_fake_run(1, "", stderr=stderr),
+            ),
+            pytest.raises(YouTubeFetchError) as exc,
+        ):
+            service.probe_metadata("https://youtu.be/abc123")
+        assert not isinstance(exc.value, DubAudioUnavailableError)
+
+    def test_unrecognized_probe_failure_keeps_the_verbatim_tail(self, service: YouTubeFetcherService) -> None:
+        """The raw-tail fallback is deliberate — an unknown yt-dlp error is more
+        use on screen in full than paraphrased."""
+        stderr = "ERROR: unable to download video data: HTTP Error 403: Forbidden (attempts=3)."
+        with (
+            patch(
+                "anki_miner.services.youtube_fetcher.run_supervised",
+                return_value=_fake_run(1, "", stderr=stderr),
+            ),
+            pytest.raises(YouTubeFetchError) as exc,
+        ):
+            service.probe_metadata("https://youtu.be/abc123")
+        message = str(exc.value)
+        assert "metadata probe failed (exit 1)" in message
+        assert "HTTP Error 403: Forbidden" in message
+        assert not isinstance(exc.value, (BotDetectionError, CookieDatabaseLockedError))
+
+
 class TestAppOwnedCommandIsolation:
     def test_metadata_probe_ignores_user_config(self, service: YouTubeFetcherService) -> None:
         payload = _make_metadata()
@@ -451,13 +642,13 @@ class TestAppOwnedCommandIsolation:
 
     @pytest.mark.real_ytdlp
     def test_capability_probes_ignore_user_config(self) -> None:
-        from anki_miner.services import youtube_fetcher as yf
+        from anki_miner.services import ytdlp_invocation as yf
 
-        yf._ytdlp_supports_js_runtimes.cache_clear()
-        yf._ytdlp_supports_remote_components.cache_clear()
+        yf.ytdlp_supports_js_runtimes.cache_clear()
+        yf.ytdlp_supports_remote_components.cache_clear()
         with patch("subprocess.run", return_value=_fake_run(0, "old help")) as mrun:
-            yf._ytdlp_supports_js_runtimes("yt-dlp")
-            yf._ytdlp_supports_remote_components("yt-dlp")
+            yf.ytdlp_supports_js_runtimes("yt-dlp")
+            yf.ytdlp_supports_remote_components("yt-dlp")
         assert [call.args[0][1] for call in mrun.call_args_list] == ["--ignore-config", "--ignore-config"]
 
 
@@ -583,6 +774,58 @@ class TestHasNativeAutoJa:
             "language": "ja",
         }
         assert self._call(data) is True
+
+
+# ---------------------------------------------------------------------------
+# _has_ja_audio_track (helper unit tests)
+# ---------------------------------------------------------------------------
+
+
+class TestHasJaAudioTrack:
+    """_has_ja_audio_track: detect a selectable Japanese audio-only format."""
+
+    @staticmethod
+    def _call(data: dict[str, Any]) -> bool:
+        return YouTubeFetcherService._has_ja_audio_track(data)
+
+    def test_no_formats_key(self) -> None:
+        assert self._call({}) is False
+
+    def test_empty_formats(self) -> None:
+        assert self._call({"formats": []}) is False
+
+    def test_ja_audio_only_format(self) -> None:
+        data = {"formats": [{"vcodec": "none", "acodec": "opus", "language": "ja"}]}
+        assert self._call(data) is True
+
+    def test_ja_regional_variant(self) -> None:
+        data = {"formats": [{"vcodec": "none", "acodec": "opus", "language": "ja-JP"}]}
+        assert self._call(data) is True
+
+    def test_missing_vcodec_treated_as_audio_only(self) -> None:
+        # yt-dlp sometimes omits vcodec instead of writing "none".
+        data = {"formats": [{"acodec": "opus", "language": "ja"}]}
+        assert self._call(data) is True
+
+    def test_muxed_ja_format_ignored(self) -> None:
+        # A muxed format's language names the container audio, not a dub track;
+        # bestaudio[language~='^ja(-|$)'] could never select it anyway.
+        data = {"formats": [{"vcodec": "avc1", "acodec": "mp4a", "language": "ja"}]}
+        assert self._call(data) is False
+
+    def test_non_ja_audio_only_ignored(self) -> None:
+        data = {"formats": [{"vcodec": "none", "acodec": "opus", "language": "en-US"}]}
+        assert self._call(data) is False
+
+    def test_language_absent_ignored(self) -> None:
+        data = {"formats": [{"vcodec": "none", "acodec": "opus"}]}
+        assert self._call(data) is False
+
+    def test_javanese_not_mistaken_for_japanese(self) -> None:
+        # "jv" is Javanese; also guard the prefix match against bare startswith
+        # false-positives — only "ja" exact or "ja-<region>" qualify.
+        data = {"formats": [{"vcodec": "none", "acodec": "opus", "language": "jav"}]}
+        assert self._call(data) is False
 
 
 # ---------------------------------------------------------------------------
@@ -894,6 +1137,50 @@ class TestBuildFetchCmdPercentPath:
         result = service._resolve_outputs(workspace, "abc123", "manual_only")
         assert result.video_file.name == "abc123.mp4"
         assert result.subtitle_file.name == "abc123.ja.srt"
+
+
+class TestBuildFetchCmdAutoDub:
+    """The auto-dub route's format selection and its failure diagnostics."""
+
+    def test_build_fetch_cmd_auto_dub_requests_ja_audio_fail_closed(
+        self, service: YouTubeFetcherService, tmp_path: Path
+    ) -> None:
+        """auto_dub must pin the JA audio track with no non-JA fallback: MT ja
+        subs over foreign audio is the exact mismatch the caption gate exists
+        to prevent, so an unavailable dub must fail the fetch, not degrade it."""
+        cmd = service._build_fetch_cmd("https://youtu.be/abc123", tmp_path, "auto_dub")
+        assert "--write-auto-sub" in cmd
+        assert "--write-sub" not in cmd
+        fmt = cmd[cmd.index("--format") + 1]
+        assert fmt == "bestvideo[height<=720]+bestaudio[language~='^ja(-|$)']"
+        assert "/" not in fmt  # no fallback alternative may reintroduce non-JA audio
+
+    def test_auto_dub_selector_excludes_javanese(self, service: YouTubeFetcherService, tmp_path: Path) -> None:
+        """A bare [language^=ja] prefix test would also admit "jav" (Javanese);
+        the selector must be regex-anchored the same way the probe is."""
+        cmd = service._build_fetch_cmd("https://youtu.be/abc123", tmp_path, "auto_dub")
+        fmt = cmd[cmd.index("--format") + 1]
+        assert "language^=ja" not in fmt
+        assert "bestaudio[language~=" in fmt
+
+    def test_build_fetch_cmd_auto_only_format_unchanged(self, service: YouTubeFetcherService, tmp_path: Path) -> None:
+        """The two existing modes keep the historical selector byte-identical."""
+        for mode in ("manual_only", "auto_only"):
+            cmd = service._build_fetch_cmd("https://youtu.be/abc123", tmp_path, mode)
+            fmt = cmd[cmd.index("--format") + 1]
+            assert fmt == "bestvideo[height<=720]+bestaudio/best[height<=720]"
+
+    def test_raise_for_error_names_missing_dub_track(self, service: YouTubeFetcherService) -> None:
+        """'Requested format is not available' on the dub route means either
+        side of the selector vanished between probe and fetch — saying 'update
+        yt-dlp' would mislead — and must be typed as a deterministic failure."""
+        tail = collections.deque(["ERROR: Requested format is not available"])
+        with pytest.raises(DubAudioUnavailableError, match="Japanese-audio") as excinfo:
+            service._raise_for_error(tail, "auto_dub")
+        assert issubclass(DubAudioUnavailableError, YouTubeFetchError)
+        assert "Japanese-audio" in str(excinfo.value)
+        with pytest.raises(YouTubeFetchError, match="yt-dlp is out of date"):
+            service._raise_for_error(tail, "auto_only")
 
 
 class TestFetchVideoResolverFallback:
@@ -1728,9 +2015,9 @@ class TestJsRuntimeArgs:
     since yt-dlp's --js-runtimes defaults to deno)."""
 
     def _enable_capability(self, monkeypatch: pytest.MonkeyPatch, supported: bool) -> None:
-        from anki_miner.services import youtube_fetcher as yf
+        from anki_miner.services import ytdlp_invocation as yf
 
-        monkeypatch.setattr(yf, "_ytdlp_supports_js_runtimes", lambda _path: supported)
+        monkeypatch.setattr(yf, "ytdlp_supports_js_runtimes", lambda _path: supported)
 
     def test_probe_adds_js_runtime_node(self, service: YouTubeFetcherService, monkeypatch: pytest.MonkeyPatch) -> None:
         self._enable_capability(monkeypatch, True)
@@ -1811,28 +2098,29 @@ class TestJsRuntimeArgs:
 
     @pytest.mark.real_ytdlp
     def test_capability_probe_true_when_help_lists_flag(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from anki_miner.services import youtube_fetcher as yf
+        from anki_miner.services import ytdlp_invocation as yf
 
-        yf._ytdlp_supports_js_runtimes.cache_clear()
+        yf.ytdlp_supports_js_runtimes.cache_clear()
         help_text = "Usage: yt-dlp [OPTIONS] URL\n  --js-runtimes RUNTIME[:PATH]  ...\n"
-        with patch("subprocess.run", return_value=_fake_run(0, help_text)):
-            assert yf._ytdlp_supports_js_runtimes("yt-dlp") is True
+        with patch("subprocess.run", return_value=_fake_run(0, help_text)) as mock_run:
+            assert yf.ytdlp_supports_js_runtimes("yt-dlp") is True
+        assert mock_run.call_args.kwargs["stdin"] is subprocess.DEVNULL
 
     @pytest.mark.real_ytdlp
     def test_capability_probe_false_when_flag_absent(self) -> None:
-        from anki_miner.services import youtube_fetcher as yf
+        from anki_miner.services import ytdlp_invocation as yf
 
-        yf._ytdlp_supports_js_runtimes.cache_clear()
+        yf.ytdlp_supports_js_runtimes.cache_clear()
         with patch("subprocess.run", return_value=_fake_run(0, "Usage: yt-dlp [OPTIONS] URL\n  --version\n")):
-            assert yf._ytdlp_supports_js_runtimes("yt-dlp") is False
+            assert yf.ytdlp_supports_js_runtimes("yt-dlp") is False
 
     @pytest.mark.real_ytdlp
     def test_capability_probe_false_when_ytdlp_missing(self) -> None:
-        from anki_miner.services import youtube_fetcher as yf
+        from anki_miner.services import ytdlp_invocation as yf
 
-        yf._ytdlp_supports_js_runtimes.cache_clear()
+        yf.ytdlp_supports_js_runtimes.cache_clear()
         with patch("subprocess.run", side_effect=FileNotFoundError):
-            assert yf._ytdlp_supports_js_runtimes("yt-dlp") is False
+            assert yf.ytdlp_supports_js_runtimes("yt-dlp") is False
 
 
 class TestRemoteComponentArgs:
@@ -1842,9 +2130,9 @@ class TestRemoteComponentArgs:
     longer auto-downloads."""
 
     def _enable_capability(self, monkeypatch: pytest.MonkeyPatch, supported: bool) -> None:
-        from anki_miner.services import youtube_fetcher as yf
+        from anki_miner.services import ytdlp_invocation as yf
 
-        monkeypatch.setattr(yf, "_ytdlp_supports_remote_components", lambda _path: supported)
+        monkeypatch.setattr(yf, "ytdlp_supports_remote_components", lambda _path: supported)
 
     def test_probe_adds_remote_components(
         self, service: YouTubeFetcherService, monkeypatch: pytest.MonkeyPatch
@@ -1910,28 +2198,29 @@ class TestRemoteComponentArgs:
 
     @pytest.mark.real_ytdlp
     def test_capability_probe_true_when_help_lists_flag(self) -> None:
-        from anki_miner.services import youtube_fetcher as yf
+        from anki_miner.services import ytdlp_invocation as yf
 
-        yf._ytdlp_supports_remote_components.cache_clear()
+        yf.ytdlp_supports_remote_components.cache_clear()
         help_text = "Usage: yt-dlp [OPTIONS] URL\n  --remote-components COMPONENT  ...\n"
-        with patch("subprocess.run", return_value=_fake_run(0, help_text)):
-            assert yf._ytdlp_supports_remote_components("yt-dlp") is True
+        with patch("subprocess.run", return_value=_fake_run(0, help_text)) as mock_run:
+            assert yf.ytdlp_supports_remote_components("yt-dlp") is True
+        assert mock_run.call_args.kwargs["stdin"] is subprocess.DEVNULL
 
     @pytest.mark.real_ytdlp
     def test_capability_probe_false_when_flag_absent(self) -> None:
-        from anki_miner.services import youtube_fetcher as yf
+        from anki_miner.services import ytdlp_invocation as yf
 
-        yf._ytdlp_supports_remote_components.cache_clear()
+        yf.ytdlp_supports_remote_components.cache_clear()
         with patch("subprocess.run", return_value=_fake_run(0, "Usage: yt-dlp [OPTIONS] URL\n  --version\n")):
-            assert yf._ytdlp_supports_remote_components("yt-dlp") is False
+            assert yf.ytdlp_supports_remote_components("yt-dlp") is False
 
     @pytest.mark.real_ytdlp
     def test_capability_probe_false_when_ytdlp_missing(self) -> None:
-        from anki_miner.services import youtube_fetcher as yf
+        from anki_miner.services import ytdlp_invocation as yf
 
-        yf._ytdlp_supports_remote_components.cache_clear()
+        yf.ytdlp_supports_remote_components.cache_clear()
         with patch("subprocess.run", side_effect=FileNotFoundError):
-            assert yf._ytdlp_supports_remote_components("yt-dlp") is False
+            assert yf.ytdlp_supports_remote_components("yt-dlp") is False
 
 
 # ---------------------------------------------------------------------------
@@ -2434,3 +2723,128 @@ class TestYtdlpNotFound:
 
     def test_ytdlp_not_found_is_youtube_fetch_error(self) -> None:
         assert issubclass(YtdlpNotFoundError, YouTubeFetchError)
+
+
+def _lock_acquirable_from_another_thread() -> bool:
+    """True when a foreign thread can take the generation lock right now.
+
+    The lock is an RLock, so probing it on the thread that may still hold it would
+    always succeed; the probe has to run somewhere else to mean anything.
+    """
+    seen: list[bool] = []
+
+    def probe() -> None:
+        with ytdlp_resolver.managed_ytdlp_lock(blocking=False) as acquired:
+            seen.append(bool(acquired))
+
+    thread = threading.Thread(target=probe)
+    thread.start()
+    thread.join(10)
+    assert not thread.is_alive()
+    return seen == [True]
+
+
+class TestGenerationLockScope:
+    """A running yt-dlp only holds the generation lock when it IS the managed binary.
+
+    The lock exists so the updater cannot swap the app-managed binary between argv
+    construction and exec (c963c8a1). A user-supplied / PATH / bundled yt-dlp carries
+    no such hazard, and holding the lock across a multi-hour download starved every
+    other resolver caller (System Health validation, diagnostics, availability probes).
+    """
+
+    @pytest.fixture(autouse=True)
+    def _isolated_managed_dir(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.setattr(ytdlp_resolver.paths, "ANKI_MINER_HOME", tmp_path / "home")
+
+    @staticmethod
+    def _lock_free_during(call: Any, executable: str) -> bool:
+        """Run *call* with a yt-dlp spawn parked mid-flight; report lock availability."""
+        spawned = threading.Event()
+        finish = threading.Event()
+
+        def fake_run_supervised(cmd: list[str], **kwargs: Any) -> Any:
+            assert cmd[0] == executable
+            spawned.set()
+            assert finish.wait(10)
+            return _fake_run(1, "", "ERROR: stopped")
+
+        outcome: list[bool] = []
+
+        def worker() -> None:
+            # The parked run always ends non-zero; the failure is not what is under test.
+            with pytest.raises(YouTubeFetchError):
+                call()
+
+        with (
+            patch("anki_miner.services.youtube_fetcher.resolve_ytdlp", return_value=executable),
+            patch("anki_miner.services.youtube_fetcher.shutil.which", return_value="/usr/bin/ffmpeg"),
+            patch("anki_miner.services.youtube_fetcher.run_supervised", side_effect=fake_run_supervised),
+        ):
+            thread = threading.Thread(target=worker)
+            thread.start()
+            try:
+                assert spawned.wait(10), "run_supervised was never reached"
+                with ytdlp_resolver.managed_ytdlp_lock(blocking=False) as acquired:
+                    outcome.append(bool(acquired))
+            finally:
+                finish.set()
+                thread.join(10)
+        assert not thread.is_alive()
+        return outcome == [True]
+
+    def test_fetch_video_with_a_non_managed_binary_frees_the_lock(
+        self, service: YouTubeFetcherService, tmp_path: Path
+    ) -> None:
+        assert self._lock_free_during(
+            lambda: service.fetch_video("https://youtu.be/abc123", "abc123", tmp_path, "manual_only"),
+            "/usr/bin/yt-dlp",
+        )
+
+    def test_fetch_video_with_the_managed_binary_holds_the_lock(
+        self, service: YouTubeFetcherService, tmp_path: Path
+    ) -> None:
+        managed = str(tmp_path / "home" / "bin" / ytdlp_resolver.ytdlp_binary_name())
+        assert not self._lock_free_during(
+            lambda: service.fetch_video("https://youtu.be/abc123", "abc123", tmp_path, "manual_only"),
+            managed,
+        )
+
+    def test_probe_metadata_with_a_non_managed_binary_frees_the_lock(self, service: YouTubeFetcherService) -> None:
+        assert self._lock_free_during(
+            lambda: service.probe_metadata("https://youtu.be/abc123"),
+            "/usr/bin/yt-dlp",
+        )
+
+    def test_probe_metadata_with_the_managed_binary_holds_the_lock(
+        self, service: YouTubeFetcherService, tmp_path: Path
+    ) -> None:
+        managed = str(tmp_path / "home" / "bin" / ytdlp_resolver.ytdlp_binary_name())
+        assert not self._lock_free_during(lambda: service.probe_metadata("https://youtu.be/abc123"), managed)
+
+    def test_probe_playlist_with_a_non_managed_binary_frees_the_lock(self, service: YouTubeFetcherService) -> None:
+        assert self._lock_free_during(
+            lambda: service.probe_playlist("https://youtu.be/playlist", limit=5),
+            "/usr/bin/yt-dlp",
+        )
+
+    def test_probe_playlist_with_the_managed_binary_holds_the_lock(
+        self, service: YouTubeFetcherService, tmp_path: Path
+    ) -> None:
+        managed = str(tmp_path / "home" / "bin" / ytdlp_resolver.ytdlp_binary_name())
+        assert not self._lock_free_during(lambda: service.probe_playlist("https://youtu.be/playlist", limit=5), managed)
+
+    def test_the_lock_is_released_after_a_managed_run(self, service: YouTubeFetcherService, tmp_path: Path) -> None:
+        managed = str(tmp_path / "home" / "bin" / ytdlp_resolver.ytdlp_binary_name())
+        with (
+            patch("anki_miner.services.youtube_fetcher.resolve_ytdlp", return_value=managed),
+            patch("anki_miner.services.youtube_fetcher.shutil.which", return_value="/usr/bin/ffmpeg"),
+            patch(
+                "anki_miner.services.youtube_fetcher.run_supervised",
+                return_value=_fake_run(1, "", "ERROR: stopped"),
+            ),
+            pytest.raises(YouTubeFetchError),
+        ):
+            service.fetch_video("https://youtu.be/abc123", "abc123", tmp_path, "manual_only")
+
+        assert _lock_acquirable_from_another_thread()

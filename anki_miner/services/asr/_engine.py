@@ -26,8 +26,11 @@ import logging
 import os
 import subprocess
 import sys
+import threading
 from enum import Enum, auto
 from pathlib import Path
+
+from anki_miner.utils.subprocess_utils import no_window_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +84,8 @@ def cuda_device_count() -> int:
         count = int(ctranslate2.get_cuda_device_count())
         logger.debug("ASR CUDA probe: devices=%d", count)
         return count
+    except MemoryError:
+        raise  # never degrade a real allocation failure to "no GPU" (service_factory.py policy)
     except Exception as exc:  # noqa: BLE001 — any failure means "no usable GPU"
         # Bucket B: an absent optional CUDA accelerator is a normal fallback.
         logger.debug("ASR CUDA probe: devices=0 exc=%s", type(exc).__name__)
@@ -147,6 +152,8 @@ def _ggml_lib_search_dirs() -> list[Path]:
             if sibling.is_dir():
                 dirs.append(sibling)
         return dirs
+    except MemoryError:
+        raise  # never degrade a real allocation failure to "no dirs" (service_factory.py policy)
     except Exception as exc:  # noqa: BLE001 — a missing/odd install means "no dirs"
         # Bucket B: an uninspectable optional install means no backend dirs.
         logger.debug("ASR backend library search: backend=ggml dirs=0 exc=%s", type(exc).__name__)
@@ -177,6 +184,8 @@ def _find_ggml_vulkan_lib() -> Path | None:
                     if hit.is_file():
                         return hit
         return None
+    except MemoryError:
+        raise  # never degrade a real allocation failure to "absent" (service_factory.py policy)
     except Exception as exc:  # noqa: BLE001 — a missing/odd install means "no Vulkan lib"
         # Bucket B: an uninspectable optional install means Vulkan is absent.
         logger.debug(
@@ -265,6 +274,8 @@ def ensure_ggml_backends_loaded() -> None:
                 fn.restype = None
                 fn.argtypes = argtypes
                 fn(*args)
+            except MemoryError:
+                raise  # never degrade a real allocation failure to "try next loader" (service_factory.py policy)
             except Exception as exc:  # noqa: BLE001 — try the next backend loader
                 # Bucket A: loader failure silently degrades all later work to CPU.
                 logger.warning(
@@ -276,6 +287,8 @@ def ensure_ggml_backends_loaded() -> None:
                 continue
             _GGML_BACKEND_STATES[name] = _BackendState.SUCCEEDED
             return
+    except MemoryError:
+        raise  # never degrade a real allocation failure to "fall back to CPU" (service_factory.py policy)
     except Exception as exc:  # noqa: BLE001 — a load failure must degrade to CPU/CT2, never abort
         # Bucket A: Vulkan backend setup failure silently degrades later work to CPU.
         for name, state in _GGML_BACKEND_STATES.items():
@@ -302,6 +315,8 @@ def whisper_cpp_available() -> bool:
         is_available = _find_ggml_vulkan_lib() is not None
         logger.debug("ASR backend probe: backend=whisper.cpp available=%s", is_available)
         return is_available
+    except MemoryError:
+        raise  # never degrade a real allocation failure to "not available" (service_factory.py policy)
     except Exception as exc:  # noqa: BLE001 — any failure means "not available"
         # Bucket B: an absent optional whisper.cpp backend is a normal fallback.
         logger.debug(
@@ -325,6 +340,9 @@ def get_whisper_cpp_model_cls():
 # Per-process memoization for vulkan_device_count: the subprocess probe is
 # computed once and cached. None means "not yet computed".
 _VULKAN_DEVICE_COUNT: int | None = None
+# Guards _VULKAN_DEVICE_COUNT against two threads racing the first probe (each
+# would otherwise spawn its own subprocess before either write lands).
+_VULKAN_DEVICE_COUNT_LOCK = threading.Lock()
 
 
 def vulkan_device_count() -> int:
@@ -340,8 +358,10 @@ def vulkan_device_count() -> int:
     if _VULKAN_DEVICE_COUNT is not None:
         return _VULKAN_DEVICE_COUNT
 
-    _VULKAN_DEVICE_COUNT = _probe_vulkan_device_count()
-    return _VULKAN_DEVICE_COUNT
+    with _VULKAN_DEVICE_COUNT_LOCK:
+        if _VULKAN_DEVICE_COUNT is None:
+            _VULKAN_DEVICE_COUNT = _probe_vulkan_device_count()
+        return _VULKAN_DEVICE_COUNT
 
 
 def _probe_vulkan_device_count() -> int:
@@ -357,10 +377,12 @@ def _probe_vulkan_device_count() -> int:
             env = None
         proc = subprocess.run(
             argv,
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             timeout=15,
             env=env,
+            **no_window_kwargs(),
         )
         if proc.returncode != 0:
             logger.debug("ASR Vulkan probe: devices=0 returncode=%d", proc.returncode)
@@ -368,6 +390,8 @@ def _probe_vulkan_device_count() -> int:
         count = int(proc.stdout.strip())
         logger.debug("ASR Vulkan probe: devices=%d", count)
         return count
+    except MemoryError:
+        raise  # never degrade a real allocation failure to "0 devices" (service_factory.py policy)
     except Exception as exc:  # noqa: BLE001 — timeout / spawn / parse failure all mean 0
         # Bucket B: an absent optional Vulkan accelerator is a normal fallback.
         logger.debug("ASR Vulkan probe: devices=0 exc=%s", type(exc).__name__)

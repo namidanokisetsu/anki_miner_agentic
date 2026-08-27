@@ -5,6 +5,7 @@ import gc
 import os
 import shutil
 import threading
+import time
 import weakref
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -310,6 +311,169 @@ def test_cleanup_failure_does_not_mask_primary_promotion_error(
 
     assert exc_info.value.errno == errno.ENOSPC
     assert cleanup_modes == ["outcome"]
+
+
+def test_promote_staged_dir_removes_lockfile_on_success(tmp_path: Path) -> None:
+    final = tmp_path / "resource"
+    staging = tmp_path / ".staging-resource"
+    staging.mkdir()
+    (staging / "payload").write_bytes(b"new")
+
+    promote_staged_dir(staging, final, mover=os.replace, overwrite=False)
+
+    assert (final / "payload").read_bytes() == b"new"
+    assert not (tmp_path / staging_module._PROMOTION_LOCK_FILENAME).exists()
+
+
+def test_promote_staged_dir_removes_lockfile_on_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    final = tmp_path / "resource"
+    final.mkdir()
+    (final / "payload").write_bytes(b"old")
+    write_ownership_marker(final, "resource", "dictionary")
+    staging = tmp_path / ".staging-resource"
+    staging.mkdir()
+    (staging / "payload").write_bytes(b"new")
+    write_ownership_marker(staging, "resource", "dictionary")
+    real_replace = os.replace
+
+    def crash_during_promotion(src, dst):
+        if Path(src) == staging and Path(dst) == final:
+            raise KeyboardInterrupt
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(os, "replace", crash_during_promotion)
+
+    with pytest.raises(KeyboardInterrupt):
+        promote_staged_dir(staging, final, mover=os.replace, overwrite=True)
+
+    assert not (tmp_path / staging_module._PROMOTION_LOCK_FILENAME).exists()
+
+
+def test_promote_staged_dir_raises_when_another_process_holds_the_lock(tmp_path: Path) -> None:
+    """Process A holds the lockfile directly (bypassing the in-process RLock,
+
+    like a second OS process would); process B's ``promote_staged_dir`` must
+    see the contention as the same staging-failure type callers already
+    catch for a same-process "already exists" race.
+    """
+    final = tmp_path / "resource"
+    staging = tmp_path / ".staging-resource"
+    staging.mkdir()
+    (staging / "payload").write_bytes(b"new")
+
+    lock_path = tmp_path / staging_module._PROMOTION_LOCK_FILENAME
+    held_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+    os.write(held_fd, b"999999\n")
+    os.close(held_fd)
+
+    with pytest.raises(FileExistsError):
+        promote_staged_dir(staging, final, mover=os.replace, overwrite=False)
+
+    assert not final.exists()
+    assert staging.exists()
+    assert lock_path.exists()
+
+
+def test_promote_staged_dir_steals_stale_lockfile(tmp_path: Path) -> None:
+    final = tmp_path / "resource"
+    staging = tmp_path / ".staging-resource"
+    staging.mkdir()
+    (staging / "payload").write_bytes(b"new")
+
+    lock_path = tmp_path / staging_module._PROMOTION_LOCK_FILENAME
+    stale_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+    os.close(stale_fd)
+    stale_time = time.time() - staging_module._PROMOTION_LOCK_STALE_SECONDS - 1
+    os.utime(lock_path, (stale_time, stale_time))
+
+    promote_staged_dir(staging, final, mover=os.replace, overwrite=False)
+
+    assert (final / "payload").read_bytes() == b"new"
+    assert not lock_path.exists()
+
+
+def test_promotion_lock_release_removes_own_lockfile(tmp_path: Path) -> None:
+    root = tmp_path.resolve()
+    lock = staging_module._PromotionLock(root)
+
+    with lock:
+        assert lock._lock_path.exists()
+
+    assert not lock._lock_path.exists()
+
+
+def test_promotion_lock_release_after_steal_leaves_stolen_lockfile(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A holder that overran the stale budget and had its lockfile stolen must
+
+    not blind-unlink whatever now occupies that path -- a second racer's live
+    lock -- on release; it should warn and leave the file untouched.
+    """
+    root = tmp_path.resolve()
+    lock = staging_module._PromotionLock(root)
+    lock._acquire_file_lock()
+    assert lock._token is not None
+
+    # Simulate a steal: another process's token now occupies the path.
+    lock._lock_path.write_bytes(b"999999:stolen-by-another-process\n")
+
+    with caplog.at_level("WARNING", logger=staging_module.__name__):
+        lock._release_file_lock()
+
+    assert lock._lock_path.exists()
+    assert lock._lock_path.read_bytes() == b"999999:stolen-by-another-process\n"
+    assert any("promotion lock stolen" in record.message for record in caplog.records)
+
+
+def test_promotion_lock_exit_releases_rlock_when_file_release_raises(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A ``_release_file_lock`` failure (Windows PermissionError from a racer
+
+    holding the lockfile open, EIO on a network store) must still decrement
+    ``_depth`` and release the RLock -- otherwise every later promotion on
+    this family root blocks forever behind a lock nobody can ever re-acquire.
+    """
+    root = tmp_path.resolve()
+    lock = staging_module._PromotionLock(root)
+    real_release = staging_module._PromotionLock._release_file_lock
+
+    def flaky_release(self: staging_module._PromotionLock) -> None:
+        real_release(self)  # the OS-level lock genuinely clears...
+        raise PermissionError("lockfile release failed")  # ...but the call still errors
+
+    monkeypatch.setattr(staging_module._PromotionLock, "_release_file_lock", flaky_release)
+
+    with pytest.raises(PermissionError), lock:
+        pass
+
+    assert lock._depth == 0
+
+    monkeypatch.undo()
+
+    # Not wedged: a later acquire succeeds, including from another thread --
+    # this is also what proves the RLock itself was released: ``_thread.RLock``
+    # grew a ``locked()`` predicate only in 3.14, and a same-thread re-acquire
+    # would succeed on a still-held reentrant lock anyway.
+    # the old bug held the RLock forever, which would deadlock any other
+    # thread's acquire rather than merely re-entering on the same thread.
+    errors: list[BaseException] = []
+
+    def acquire_from_other_thread() -> None:
+        try:
+            with lock:
+                pass
+        except BaseException as exc:  # pragma: no cover - failure path only
+            errors.append(exc)
+
+    thread = threading.Thread(target=acquire_from_other_thread)
+    thread.start()
+    thread.join(timeout=2)
+    assert not thread.is_alive(), "promotion lock is wedged: later acquire never completed"
+    assert errors == []
 
 
 def test_promotion_lock_registry_reclaims_unused_roots(tmp_path: Path) -> None:

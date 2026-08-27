@@ -176,6 +176,92 @@ def test_themes_family_toggle_does_not_call_populate(qtbot, tmp_path: Path):
 
 
 # ---------------------------------------------------------------------------
+# Fix 3: UISettingsPanel theme gallery built once at boot (__init__ +
+# load_from_config used to both unconditionally rebuild it).
+# ---------------------------------------------------------------------------
+
+
+def test_populate_skips_rebuild_when_boot_state_is_unchanged(themes_panel: UISettingsPanel, test_config):
+    """load_from_config right after construction, same config, does not rebuild.
+
+    Mirrors SettingsTab's actual boot sequence: __init__ populates once, then
+    _load_config calls load_from_config with the very config __init__ was
+    built from.
+    """
+    from dataclasses import replace
+
+    boot_config = replace(
+        test_config,
+        themes_root=themes_panel._themes_root,
+        theme=Theme.get_current_mode(),
+    )
+    with patch.object(themes_panel.gallery, "refresh") as refresh_spy:
+        themes_panel.load_from_config(boot_config)
+        assert refresh_spy.call_count == 0
+
+
+def test_populate_rebuilds_when_theme_key_changes(themes_panel: UISettingsPanel, test_config):
+    from dataclasses import replace
+
+    Theme.set_mode("dark")
+    boot_config = replace(test_config, themes_root=themes_panel._themes_root, theme="dark")
+    with patch.object(themes_panel.gallery, "refresh") as refresh_spy:
+        themes_panel.load_from_config(boot_config)
+        assert refresh_spy.call_count == 1
+
+
+def test_populate_rebuilds_when_favorites_change(themes_panel: UISettingsPanel, test_config):
+    from dataclasses import replace
+
+    boot_config = replace(
+        test_config,
+        themes_root=themes_panel._themes_root,
+        theme=Theme.get_current_mode(),
+    )
+    Theme.set_favorites(("dark",))
+    with patch.object(themes_panel.gallery, "refresh") as refresh_spy:
+        themes_panel.load_from_config(boot_config)
+        assert refresh_spy.call_count == 1
+
+
+def test_populate_rebuilds_when_themes_root_changes(themes_panel: UISettingsPanel, test_config, tmp_path: Path):
+    from dataclasses import replace
+
+    other_root = tmp_path / "other_themes"
+    other_root.mkdir()
+    boot_config = replace(test_config, themes_root=other_root, theme=Theme.get_current_mode())
+    with patch.object(themes_panel.gallery, "refresh") as refresh_spy:
+        themes_panel.load_from_config(boot_config)
+        assert refresh_spy.call_count == 1
+
+
+def test_favorite_toggle_then_matching_reseed_still_repopulates(themes_panel: UISettingsPanel, test_config):
+    """A star toggle's surgical update must keep _populated_state truthful.
+
+    Repro: boot favorites=() (stale cached state). Star "dark" — surgical
+    update, live favorites now ("dark",). A profile switch re-seeds Theme to
+    the new profile's favorites, which happen to be () again — matching the
+    STALE cached tuple, not the current live one — then calls
+    load_from_config. The guard must still repopulate, or the gallery keeps
+    showing "dark" starred against a profile that never favorited it.
+    """
+    from dataclasses import replace
+
+    themes_panel._toggle_favorite("dark")
+    assert Theme.get_favorites() == ("dark",)
+
+    Theme.set_favorites(())
+    boot_config = replace(
+        test_config,
+        themes_root=themes_panel._themes_root,
+        theme=Theme.get_current_mode(),
+    )
+    themes_panel.load_from_config(boot_config)
+
+    assert themes_panel.gallery.star("dark").text() == STAR_OUTLINE
+
+
+# ---------------------------------------------------------------------------
 # Fix 4: DictionarySettingsPanel._rebuild_list wraps in setUpdatesEnabled
 # ---------------------------------------------------------------------------
 

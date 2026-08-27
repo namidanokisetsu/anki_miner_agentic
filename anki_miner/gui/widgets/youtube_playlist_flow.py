@@ -56,10 +56,13 @@ logger = logging.getLogger(__name__)
 # Bare 11-char YouTube video id (same alphabet as the fetcher's _VIDEO_ID_RE).
 _BARE_VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 
-# Bounded join for yt-dlp probe/playlist workers at tab/app shutdown. Each is
-# already bounded by its subprocess timeout, so this is generous; it only
-# guards a pathological hang from freezing the GUI thread on close.
-_PROBE_JOIN_TIMEOUT_MS = 30000
+# Bounded join for yt-dlp probe/playlist workers at tab/app shutdown. The SAME
+# budget as ``background_tasks._CLOSE_JOIN_GRACE_MS``: :meth:`shutdown` can join
+# three of these back to back on the GUI thread, and any that outlive the grace
+# is retained and reported by :meth:`iter_close_workers`, which
+# ``background_tasks.shutdown`` folds into ``defer_close``. Waiting longer here
+# only delays the close — it never changes the outcome.
+_PROBE_JOIN_TIMEOUT_MS = 2000
 
 
 def _is_acceptable_add_input(url: str) -> bool:
@@ -115,6 +118,11 @@ def _classify_probe_result(info: VideoInfo, config: AnkiMinerConfig) -> tuple[bo
         return True, None, "manual_only"
     if info.has_auto_ja_subs:
         return True, None, "auto_only"
+    if info.has_dub_ja_subs:
+        # Auto-dub route: MT ja captions matched by a JA dub audio track (see
+        # VideoInfo.has_dub_ja_subs). Lowest priority — a real manual track or
+        # native captions always describe the video better than the dub pipeline.
+        return True, None, "auto_dub"
     return False, "No Japanese subtitles available for this video.", None
 
 

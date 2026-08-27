@@ -24,8 +24,8 @@
         <translation>Майньте карточки японской лексики из видео в Anki — скриншоты, аудио и определения автоматически.</translation>
     </message>
     <message>
-        <source>About Anki Miner Agentic</source>
-        <translation type="unfinished" />
+        <source>About Anki Miner</source>
+        <translation type="unfinished">О программе Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -650,11 +650,11 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Agentic Is Already Running</source>
+        <source>Anki Miner Is Already Running</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
         <translation type="unfinished" />
@@ -840,6 +840,10 @@ Skipped (source folder or database not found; use per-row Re-import…):
 
 Пропущено (исходная папка или база данных не найдены; используйте «Повторный импорт…» в соответствующей строке):
 </translation>
+    </message>
+    <message>
+        <source>The selected audio pack is no longer in the chain.</source>
+        <translation>Выбранный аудиопакет больше не находится в цепочке.</translation>
     </message>
     <message>
         <source>No audio packs in the chain.</source>
@@ -2058,6 +2062,14 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>Проверяйте наличие новой версии Anki Miner из меню «Справка» или переключайте автоматическую проверку при запуске в нижней панели настроек.</translation>
     </message>
     <message>
+        <source>Download videos or audio</source>
+        <translation>Скачивание видео и аудио</translation>
+    </message>
+    <message>
+        <source>Save videos, audio or subtitles from a URL to a folder using yt-dlp, without mining. Works with any site yt-dlp supports.</source>
+        <translation>Сохраняйте видео, аудио или субтитры по ссылке в выбранную папку через yt-dlp, без майнинга. Работает с любым сайтом, который поддерживает yt-dlp.</translation>
+    </message>
+    <message>
         <source>Restyle mined cards</source>
         <translation>Изменить стиль намайненных карточек</translation>
     </message>
@@ -2690,6 +2702,10 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
     <message>
         <source>No media files were found in that folder.</source>
         <translation>В этой папке не найдено медиафайлов.</translation>
+    </message>
+    <message>
+        <source>That media folder could not be read.</source>
+        <translation>Не удалось прочитать эту папку с медиафайлами.</translation>
     </message>
     <message>
         <source>Matched %1 of %2 media files.</source>
@@ -3662,6 +3678,206 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>Офлайн-словарь готов: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
 </context><context>
+    <name>DownloadTab</name>
+    <message>
+        <source>Progress</source>
+        <translation>Прогресс</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Готово</translation>
+    </message>
+    <message>
+        <source>Done: </source>
+        <translation>Готово: </translation>
+    </message>
+    <message>
+        <source>Skipped</source>
+        <translation>Пропущено</translation>
+    </message>
+    <message>
+        <source>Skipped: </source>
+        <translation>Пропущено: </translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>Cancelling…</source>
+        <translation>Отмена…</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Отменено</translation>
+    </message>
+    <message>
+        <source>Failed — see log</source>
+        <translation>Ошибка — см. журнал</translation>
+    </message>
+    <message>
+        <source>Some URLs could not be downloaded.</source>
+        <translation>Некоторые ссылки не удалось скачать.</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded</source>
+        <translation>Завершено — скачано: %1</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded, %2 already present</source>
+        <translation>Завершено — скачано: %1, уже было: %2</translation>
+    </message>
+    <message>
+        <source>Nothing downloaded — all %1 already present in the download folder.</source>
+        <translation>Ничего не скачано — все %1 уже есть в папке загрузок.</translation>
+    </message>
+    <message>
+        <source>Select Download Folder</source>
+        <translation>Выбор папки загрузок</translation>
+    </message>
+    <message>
+        <source>Media download</source>
+        <translation>Загрузка медиафайлов</translation>
+    </message>
+    <message>
+        <source>URLs</source>
+        <translation>Ссылки</translation>
+    </message>
+    <message>
+        <source>yt-dlp not found. Install or update it in Settings → YouTube to enable downloads.</source>
+        <translation>yt-dlp не найден. Установите или обновите его в разделе Настройки → YouTube, чтобы включить загрузку.</translation>
+    </message>
+    <message>
+        <source>Download videos or audio from any site yt-dlp supports, without mining.</source>
+        <translation>Скачивайте видео или аудио с любого сайта, который поддерживает yt-dlp, без майнинга.</translation>
+    </message>
+    <message>
+        <source>One URL per line</source>
+        <translation>По одной ссылке в строке</translation>
+    </message>
+    <message>
+        <source>Options</source>
+        <translation>Параметры</translation>
+    </message>
+    <message>
+        <source>Quality:</source>
+        <translation>Качество:</translation>
+    </message>
+    <message>
+        <source>Best available</source>
+        <translation>Наилучшее доступное</translation>
+    </message>
+    <message>
+        <source>Up to 1080p</source>
+        <translation>До 1080p</translation>
+    </message>
+    <message>
+        <source>Up to 720p</source>
+        <translation>До 720p</translation>
+    </message>
+    <message>
+        <source>Audio only (MP3)</source>
+        <translation>Только аудио (MP3)</translation>
+    </message>
+    <message>
+        <source>Audio only (M4A)</source>
+        <translation>Только аудио (M4A)</translation>
+    </message>
+    <message>
+        <source>Custom format:</source>
+        <translation>Свой формат:</translation>
+    </message>
+    <message>
+        <source>Optional yt-dlp format string</source>
+        <translation>Строка формата yt-dlp (необязательно)</translation>
+    </message>
+    <message>
+        <source>When set, the quality preset above is ignored.</source>
+        <translation>Если указана, выбранное выше качество не учитывается.</translation>
+    </message>
+    <message>
+        <source>Download subtitles</source>
+        <translation>Скачивать субтитры</translation>
+    </message>
+    <message>
+        <source>Save subtitles next to the media file. Prefers manual subtitles, falls back to automatic.</source>
+        <translation>Сохранять субтитры рядом с медиафайлом. Предпочитает ручные субтитры, при их отсутствии берёт автоматические.</translation>
+    </message>
+    <message>
+        <source>Languages:</source>
+        <translation>Языки:</translation>
+    </message>
+    <message>
+        <source>Comma-separated language codes, e.g. ja,en</source>
+        <translation>Коды языков через запятую, например ja,en</translation>
+    </message>
+    <message>
+        <source>Embed thumbnail</source>
+        <translation>Встроить обложку</translation>
+    </message>
+    <message>
+        <source>Embed title and metadata</source>
+        <translation>Встроить название и метаданные</translation>
+    </message>
+    <message>
+        <source>Output</source>
+        <translation>Вывод</translation>
+    </message>
+    <message>
+        <source>Output:</source>
+        <translation>Вывод:</translation>
+    </message>
+    <message>
+        <source>Choose Folder…</source>
+        <translation>Выбрать папку…</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Сбросить</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Скачать</translation>
+    </message>
+    <message>
+        <source>Download folder is not writable.</source>
+        <translation>В папку загрузок нельзя записывать.</translation>
+    </message>
+    <message>
+        <source>Check permissions for %1.</source>
+        <translation>Проверьте права доступа к %1.</translation>
+    </message>
+    <message>
+        <source>Some lines are not valid URLs.</source>
+        <translation>Некоторые строки не являются корректными ссылками.</translation>
+    </message>
+    <message>
+        <source>Paste at least one URL to download.</source>
+        <translation>Вставьте хотя бы одну ссылку для загрузки.</translation>
+    </message>
+    <message>
+        <source>Downloading %1 of %2</source>
+        <translation>Загрузка %1 из %2</translation>
+    </message>
+</context><context>
+    <name>DownloadWorker</name>
+    <message>
+        <source>%1: %2%</source>
+        <translation>%1: %2%</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Готово</translation>
+    </message>
+    <message>
+        <source>Already downloaded</source>
+        <translation>Уже скачано</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Отменено</translation>
+    </message>
+</context><context>
     <name>EnhancedDialog</name>
     <message>
         <source>Close</source>
@@ -3898,10 +4114,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>Ошибка: %1</translation>
     </message>
     <message>
-        <source>Unexpected error: %1</source>
-        <translation>Непредвиденная ошибка: %1</translation>
-    </message>
-    <message>
         <source>No words selected for card creation</source>
         <translation>Не выбрано слов для создания карточек</translation>
     </message>
@@ -3928,6 +4140,10 @@ Files on disk will be left untouched because the folder could not be proven to b
             <numerusform>Извлечено медиа для %n слов</numerusform>
             <numerusform>Извлечено медиа для %n слов</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Unexpected error: %1</source>
+        <translation>Непредвиденная ошибка: %1</translation>
     </message>
     <message numerus="yes">
         <source>Run failed after creating %n card(s); they remain in Anki and can be undone.</source>
@@ -5284,6 +5500,10 @@ Continue?</source>
         <translation>Фильтр колоды</translation>
     </message>
     <message>
+        <source>Download</source>
+        <translation>Загрузки</translation>
+    </message>
+    <message>
         <source>Single</source>
         <translation>Один</translation>
     </message>
@@ -5298,6 +5518,16 @@ Continue?</source>
     <message>
         <source>Failed to create desktop shortcut.</source>
         <translation>Не удалось создать ярлык на рабочем столе.</translation>
+    </message>
+</context><context>
+    <name>MediaDownloader</name>
+    <message>
+        <source>Downloading</source>
+        <translation>Загрузка</translation>
+    </message>
+    <message>
+        <source>Processing</source>
+        <translation>Обработка</translation>
     </message>
 </context><context>
     <name>MediaExtractorService</name>
@@ -6644,6 +6874,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>Сначала вставьте текст.</translation>
     </message>
     <message>
+        <source>This card image has no Picture field to land in. Map one in Settings → Anki, or clear the image to mine without one.</source>
+        <translation>У этой карточки нет поля Picture для изображения. Назначьте поле в «Настройки → Anki» либо очистите изображение, чтобы майнить без него.</translation>
+    </message>
+    <message>
         <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
         <translation>Это изображение не удаётся прочитать. Выберите другое или очистите поле, чтобы майнить без изображения.</translation>
     </message>
@@ -6844,6 +7078,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>Что это за ресурсы?</translation>
     </message>
     <message>
+        <source>%1 — %2</source>
+        <translation>%1 — %2</translation>
+    </message>
+    <message>
         <source>Download recommended resources</source>
         <translation>Загрузить рекомендуемые ресурсы</translation>
     </message>
@@ -6852,12 +7090,20 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>Проверка офлайн-словаря...</translation>
     </message>
     <message>
-        <source>Could not check the offline dictionary: </source>
-        <translation>Не удалось проверить офлайн-словарь: </translation>
+        <source>Could not check the installed resources: </source>
+        <translation>Не удалось проверить установленные ресурсы: </translation>
     </message>
     <message>
         <source>Dictionary ready: %1</source>
         <translation>Словарь готов: %1</translation>
+    </message>
+    <message>
+        <source>%1 ready: %2</source>
+        <translation>%1 готово: %2</translation>
+    </message>
+    <message>
+        <source>%1: not set up (optional)</source>
+        <translation>%1: не настроено (необязательно)</translation>
     </message>
     <message>
         <source>Download cancelled. Some resources were installed before cancellation.</source>
@@ -7026,6 +7272,40 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Failed to delete notes. Check that Anki is running.</source>
         <translation>Не удалось удалить заметки. Убедитесь, что Anki запущен.</translation>
+    </message>
+</context><context>
+    <name>RetimeReference</name>
+    <message>
+        <source>Chosen subtitle track %1 is unusable; using audio instead.</source>
+        <translation>Выбранная дорожка субтитров %1 непригодна для использования; вместо неё используется аудио.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: not a dialogue track.</source>
+        <translation>Дорожка субтитров %1 пропущена: не является дорожкой диалогов.</translation>
+    </message>
+    <message>
+        <source>No usable embedded subtitle track; aligning against audio.</source>
+        <translation>Нет пригодной встроенной дорожки субтитров; выравнивание выполняется по аудио.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: only %2 dialogue lines.</source>
+        <translation>Дорожка субтитров %1 пропущена: строк диалога — %2.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: covers only %2 of the episode.</source>
+        <translation>Дорожка субтитров %1 пропущена: охватывает только %2 эпизода.</translation>
+    </message>
+    <message>
+        <source>Aligning against embedded subtitle track %1 (%2, %3 lines).</source>
+        <translation>Выравнивание по встроенной дорожке субтитров %1 (%2, строк: %3).</translation>
+    </message>
+    <message>
+        <source>No Japanese-tagged audio track found; using the first audio track — on a dual-audio release this may be a dub.</source>
+        <translation>Аудиодорожка с японской меткой не найдена; используется первая аудиодорожка — на релизе с двумя дорожками это может быть дубляж.</translation>
+    </message>
+    <message>
+        <source>Aligning against audio (%1).</source>
+        <translation>Выравнивание по аудио (%1).</translation>
     </message>
 </context><context>
     <name>RetimeReferenceDialog</name>
@@ -7396,6 +7676,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>Download the recommended frequency list, pitch accent data, and dictionary now?</source>
         <translation>Скачать рекомендуемый список частотности, данные тонального ударения и словарь сейчас?</translation>
+    </message>
+    <message>
+        <source>Dictionary</source>
+        <translation>Словарь</translation>
+    </message>
+    <message>
+        <source>Frequency</source>
+        <translation>Частотность</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>Тональное ударение</translation>
     </message>
     <message>
         <source>Anki Miner Setup</source>
@@ -7812,12 +8104,12 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Эта папка больше не существует.</translation>
     </message>
     <message>
-        <source>That folder could not be read.</source>
-        <translation>Не удалось прочитать эту папку.</translation>
-    </message>
-    <message>
         <source>No video or audio files were found in that folder.</source>
         <translation>В этой папке не найдено видео- или аудиофайлов.</translation>
+    </message>
+    <message>
+        <source>That folder could not be read.</source>
+        <translation>Не удалось прочитать эту папку.</translation>
     </message>
     <message>
         <source>Transcribing file %1 of %2</source>
@@ -8134,10 +8426,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Эта папка с субтитрами больше не существует.</translation>
     </message>
     <message>
-        <source>That video folder could not be read.</source>
-        <translation>Не удалось прочитать эту папку с видео.</translation>
-    </message>
-    <message>
         <source>Matched %1 of %2 video files.</source>
         <translation>Сопоставлено %1 из %2 видеофайлов.</translation>
     </message>
@@ -8148,6 +8436,10 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>No subtitle file could be matched to any video file in those folders.</source>
         <translation>Не удалось сопоставить ни один файл субтитров с видеофайлами в этих папках.</translation>
+    </message>
+    <message>
+        <source>That video folder could not be read.</source>
+        <translation>Не удалось прочитать эту папку с видео.</translation>
     </message>
     <message>
         <source>Retiming file %1 of %2</source>
@@ -8168,12 +8460,54 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Готово</translation>
     </message>
     <message>
+        <source>Retimed with %1</source>
+        <translation>Синхронизировано с помощью %1</translation>
+    </message>
+    <message>
+        <source>Original backed up as %1</source>
+        <translation>Резервная копия оригинала сохранена как %1</translation>
+    </message>
+    <message>
         <source>Cancelled</source>
         <translation>Отменено</translation>
     </message>
     <message>
-        <source>No trustworthy sync for %1; original kept unchanged</source>
-        <translation>Нет надёжной синхронизации для %1; оригинал остался без изменений</translation>
+        <source>no trustworthy sync; original kept unchanged</source>
+        <translation>нет надёжной синхронизации; оригинал оставлен без изменений</translation>
+    </message>
+    <message>
+        <source>Retiming failed for %1: %2</source>
+        <translation>Синхронизация не удалась для %1: %2</translation>
+    </message>
+</context><context>
+    <name>SubtitleRetimer</name>
+    <message>
+        <source>Ignoring %1 non-dialogue lines during alignment.</source>
+        <translation>При выравнивании проигнорировано %1 недиалоговых строк.</translation>
+    </message>
+    <message>
+        <source>alass is not installed; skipping alass attempts.</source>
+        <translation>alass не установлен; попытки использования alass пропущены.</translation>
+    </message>
+    <message>
+        <source>%1 result rejected: %2</source>
+        <translation>Результат %1 отклонён: %2</translation>
+    </message>
+    <message>
+        <source>no engine produced a trustworthy sync; original left untouched</source>
+        <translation>ни один движок не выдал надёжной синхронизации; оригинал оставлен без изменений</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (offset %2).</source>
+        <translation>Синхронизировано с помощью %1 (смещение %2).</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (%2 blocks, shifts %3..%4).</source>
+        <translation>Синхронизировано с помощью %1 (блоков: %2, смещения: %3..%4).</translation>
+    </message>
+    <message>
+        <source>Retimed with %1.</source>
+        <translation>Синхронизировано с помощью %1.</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8758,14 +9092,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>Фильтровать по любому полю...</translation>
     </message>
     <message>
-        <source>Add to Known Words</source>
-        <translation>Добавить в известные слова</translation>
-    </message>
-    <message>
-        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
-        <translation>Пометить выделенные строки как «Известные · ожидают». Подтверждение сохранит их, отмена отбросит.</translation>
-    </message>
-    <message>
         <source>Word (mined)</source>
         <translation>Слово (намайнено)</translation>
     </message>
@@ -8804,6 +9130,30 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
     <message>
         <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S — включить/исключить · Ctrl+A — включить видимые · Ctrl+D — исключить видимые · Ctrl+Enter — подтвердить</translation>
+    </message>
+    <message>
+        <source>+ Previous line</source>
+        <translation>+ Предыдущая строка</translation>
+    </message>
+    <message>
+        <source>+ Next line</source>
+        <translation>+ Следующая строка</translation>
+    </message>
+    <message>
+        <source>Reset lines</source>
+        <translation>Сбросить строки</translation>
+    </message>
+    <message>
+        <source>Merge the previous subtitle line into this word's sentence and media clip. Disabled when there is no earlier line or the combined clip would exceed %1 seconds.</source>
+        <translation>Присоединить предыдущую строку субтитров к предложению и клипу этого слова. Недоступно, если предыдущей строки нет или объединённый клип превысит %1 с.</translation>
+    </message>
+    <message>
+        <source>Merge the next subtitle line into this word's sentence and media clip. Disabled when there is no later line or the combined clip would exceed %1 seconds.</source>
+        <translation>Присоединить следующую строку субтитров к предложению и клипу этого слова. Недоступно, если следующей строки нет или объединённый клип превысит %1 с.</translation>
+    </message>
+    <message>
+        <source>Restore this word's original single-line sentence and clip window.</source>
+        <translation>Вернуть исходное однострочное предложение и границы клипа для этого слова.</translation>
     </message>
     <message>
         <source>Sentences</source>
@@ -8862,6 +9212,22 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
         <translation>Включить выделенные (%1)</translation>
     </message>
     <message>
+        <source>Add to Known Words</source>
+        <translation>Добавить в известные слова</translation>
+    </message>
+    <message>
+        <source>Remove from Known Words</source>
+        <translation>Удалить из известных слов</translation>
+    </message>
+    <message>
+        <source>Take the Known · pending mark back off the highlighted rows and return them to this review.</source>
+        <translation>Снимите отметку «Известно · в ожидании» с выделенных строк и верните их в этот список для проверки.</translation>
+    </message>
+    <message>
+        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
+        <translation>Пометить выделенные строки как «Известные · ожидают». Подтверждение сохранит их, отмена отбросит.</translation>
+    </message>
+    <message>
         <source>Word %1 of %2 · %3 included · %4 shown of %5</source>
         <translation>Слово %1 из %2 · включено: %3 · показано %4 из %5</translation>
     </message>
@@ -8906,6 +9272,10 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
     <message>
         <source>Auto JA subs</source>
         <translation>Авто субтитры JA</translation>
+    </message>
+    <message>
+        <source>Auto JA subs (dub audio)</source>
+        <translation>Автоматические JA-субтитры (дублированное аудио)</translation>
     </message>
     <message>
         <source>Checking</source>
@@ -9152,7 +9522,7 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner Agentic — Unexpected Error</source>
+        <source>Anki Miner — Unexpected Error</source>
         <translation type="unfinished" />
     </message>
     <message>

@@ -24,8 +24,8 @@
         <translation>Khai thác thẻ từ vựng tiếng Nhật từ video vào Anki — ảnh chụp màn hình, âm thanh và định nghĩa, tự động.</translation>
     </message>
     <message>
-        <source>About Anki Miner Agentic</source>
-        <translation type="unfinished" />
+        <source>About Anki Miner</source>
+        <translation type="unfinished">Giới thiệu Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -648,11 +648,11 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Agentic Is Already Running</source>
+        <source>Anki Miner Is Already Running</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
         <translation type="unfinished" />
@@ -838,6 +838,10 @@ Skipped (source folder or database not found; use per-row Re-import…):
 
 Đã bỏ qua (không tìm thấy thư mục nguồn hoặc cơ sở dữ liệu; hãy dùng Nhập lại… theo từng dòng):
 </translation>
+    </message>
+    <message>
+        <source>The selected audio pack is no longer in the chain.</source>
+        <translation>Gói âm thanh được chọn không còn trong chuỗi.</translation>
     </message>
     <message>
         <source>No audio packs in the chain.</source>
@@ -2054,6 +2058,14 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Kiểm tra phiên bản Anki Miner mới từ menu Trợ giúp, hoặc bật/tắt kiểm tra tự động khi khởi động trong chân trang Cài đặt.</translation>
     </message>
     <message>
+        <source>Download videos or audio</source>
+        <translation>Tải video hoặc âm thanh</translation>
+    </message>
+    <message>
+        <source>Save videos, audio or subtitles from a URL to a folder using yt-dlp, without mining. Works with any site yt-dlp supports.</source>
+        <translation>Lưu video, âm thanh hoặc phụ đề từ một URL vào thư mục bằng yt-dlp, không khai thác. Hoạt động với mọi trang mà yt-dlp hỗ trợ.</translation>
+    </message>
+    <message>
         <source>Restyle mined cards</source>
         <translation>Định dạng lại thẻ đã khai thác</translation>
     </message>
@@ -2686,6 +2698,10 @@ Thao tác này sẽ sửa đổi {notes} ghi chú ({fields} trường) và gắn
     <message>
         <source>No media files were found in that folder.</source>
         <translation>Không tìm thấy tệp phương tiện nào trong thư mục đó.</translation>
+    </message>
+    <message>
+        <source>That media folder could not be read.</source>
+        <translation>Không đọc được thư mục media đó.</translation>
     </message>
     <message>
         <source>Matched %1 of %2 media files.</source>
@@ -3658,6 +3674,206 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
         <translation>Từ điển ngoại tuyến sẵn sàng: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
 </context><context>
+    <name>DownloadTab</name>
+    <message>
+        <source>Progress</source>
+        <translation>Tiến trình</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Xong</translation>
+    </message>
+    <message>
+        <source>Done: </source>
+        <translation>Xong: </translation>
+    </message>
+    <message>
+        <source>Skipped</source>
+        <translation>Đã bỏ qua</translation>
+    </message>
+    <message>
+        <source>Skipped: </source>
+        <translation>Đã bỏ qua: </translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Hủy</translation>
+    </message>
+    <message>
+        <source>Cancelling…</source>
+        <translation>Đang hủy…</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Đã hủy</translation>
+    </message>
+    <message>
+        <source>Failed — see log</source>
+        <translation>Thất bại — xem nhật ký</translation>
+    </message>
+    <message>
+        <source>Some URLs could not be downloaded.</source>
+        <translation>Một số URL không tải được.</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded</source>
+        <translation>Hoàn tất — đã tải %1</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded, %2 already present</source>
+        <translation>Hoàn tất — đã tải %1, %2 đã có sẵn</translation>
+    </message>
+    <message>
+        <source>Nothing downloaded — all %1 already present in the download folder.</source>
+        <translation>Không tải gì — cả %1 mục đều đã có trong thư mục tải về.</translation>
+    </message>
+    <message>
+        <source>Select Download Folder</source>
+        <translation>Chọn thư mục tải về</translation>
+    </message>
+    <message>
+        <source>Media download</source>
+        <translation>Tải media</translation>
+    </message>
+    <message>
+        <source>URLs</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>yt-dlp not found. Install or update it in Settings → YouTube to enable downloads.</source>
+        <translation>Không tìm thấy yt-dlp. Hãy cài đặt hoặc cập nhật trong Cài đặt → YouTube để bật tính năng tải về.</translation>
+    </message>
+    <message>
+        <source>Download videos or audio from any site yt-dlp supports, without mining.</source>
+        <translation>Tải video hoặc âm thanh từ mọi trang mà yt-dlp hỗ trợ, không khai thác.</translation>
+    </message>
+    <message>
+        <source>One URL per line</source>
+        <translation>Mỗi dòng một URL</translation>
+    </message>
+    <message>
+        <source>Options</source>
+        <translation>Tùy chọn</translation>
+    </message>
+    <message>
+        <source>Quality:</source>
+        <translation>Chất lượng:</translation>
+    </message>
+    <message>
+        <source>Best available</source>
+        <translation>Tốt nhất hiện có</translation>
+    </message>
+    <message>
+        <source>Up to 1080p</source>
+        <translation>Tối đa 1080p</translation>
+    </message>
+    <message>
+        <source>Up to 720p</source>
+        <translation>Tối đa 720p</translation>
+    </message>
+    <message>
+        <source>Audio only (MP3)</source>
+        <translation>Chỉ âm thanh (MP3)</translation>
+    </message>
+    <message>
+        <source>Audio only (M4A)</source>
+        <translation>Chỉ âm thanh (M4A)</translation>
+    </message>
+    <message>
+        <source>Custom format:</source>
+        <translation>Định dạng tùy chỉnh:</translation>
+    </message>
+    <message>
+        <source>Optional yt-dlp format string</source>
+        <translation>Chuỗi định dạng yt-dlp (tùy chọn)</translation>
+    </message>
+    <message>
+        <source>When set, the quality preset above is ignored.</source>
+        <translation>Khi được đặt, thiết lập chất lượng ở trên sẽ bị bỏ qua.</translation>
+    </message>
+    <message>
+        <source>Download subtitles</source>
+        <translation>Tải phụ đề</translation>
+    </message>
+    <message>
+        <source>Save subtitles next to the media file. Prefers manual subtitles, falls back to automatic.</source>
+        <translation>Lưu phụ đề cạnh tệp media. Ưu tiên phụ đề thủ công, nếu không có thì dùng phụ đề tự động.</translation>
+    </message>
+    <message>
+        <source>Languages:</source>
+        <translation>Ngôn ngữ:</translation>
+    </message>
+    <message>
+        <source>Comma-separated language codes, e.g. ja,en</source>
+        <translation>Mã ngôn ngữ cách nhau bằng dấu phẩy, ví dụ ja,en</translation>
+    </message>
+    <message>
+        <source>Embed thumbnail</source>
+        <translation>Nhúng ảnh thu nhỏ</translation>
+    </message>
+    <message>
+        <source>Embed title and metadata</source>
+        <translation>Nhúng tiêu đề và siêu dữ liệu</translation>
+    </message>
+    <message>
+        <source>Output</source>
+        <translation>Đầu ra</translation>
+    </message>
+    <message>
+        <source>Output:</source>
+        <translation>Đầu ra:</translation>
+    </message>
+    <message>
+        <source>Choose Folder…</source>
+        <translation>Chọn thư mục…</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Đặt lại</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Tải về</translation>
+    </message>
+    <message>
+        <source>Download folder is not writable.</source>
+        <translation>Không ghi được vào thư mục tải về.</translation>
+    </message>
+    <message>
+        <source>Check permissions for %1.</source>
+        <translation>Hãy kiểm tra quyền truy cập của %1.</translation>
+    </message>
+    <message>
+        <source>Some lines are not valid URLs.</source>
+        <translation>Một số dòng không phải URL hợp lệ.</translation>
+    </message>
+    <message>
+        <source>Paste at least one URL to download.</source>
+        <translation>Hãy dán ít nhất một URL để tải về.</translation>
+    </message>
+    <message>
+        <source>Downloading %1 of %2</source>
+        <translation>Đang tải %1 trên %2</translation>
+    </message>
+</context><context>
+    <name>DownloadWorker</name>
+    <message>
+        <source>%1: %2%</source>
+        <translation>%1: %2%</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Xong</translation>
+    </message>
+    <message>
+        <source>Already downloaded</source>
+        <translation>Đã tải trước đó</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Đã hủy</translation>
+    </message>
+</context><context>
     <name>EnhancedDialog</name>
     <message>
         <source>Close</source>
@@ -3878,10 +4094,6 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
         <translation>Lỗi: %1</translation>
     </message>
     <message>
-        <source>Unexpected error: %1</source>
-        <translation>Lỗi không mong đợi: %1</translation>
-    </message>
-    <message>
         <source>No words selected for card creation</source>
         <translation>Chưa chọn từ nào để tạo thẻ</translation>
     </message>
@@ -3904,6 +4116,10 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
         <translation>
             <numerusform>Đã trích xuất media cho %n từ</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Unexpected error: %1</source>
+        <translation>Lỗi không mong đợi: %1</translation>
     </message>
     <message numerus="yes">
         <source>Run failed after creating %n card(s); they remain in Anki and can be undone.</source>
@@ -5258,6 +5474,10 @@ Tiếp tục?</translation>
         <translation>Lọc bộ thẻ</translation>
     </message>
     <message>
+        <source>Download</source>
+        <translation>Tải về</translation>
+    </message>
+    <message>
         <source>Single</source>
         <translation>Đơn lẻ</translation>
     </message>
@@ -5272,6 +5492,16 @@ Tiếp tục?</translation>
     <message>
         <source>Failed to create desktop shortcut.</source>
         <translation>Không tạo được lối tắt trên màn hình nền.</translation>
+    </message>
+</context><context>
+    <name>MediaDownloader</name>
+    <message>
+        <source>Downloading</source>
+        <translation>Đang tải</translation>
+    </message>
+    <message>
+        <source>Processing</source>
+        <translation>Đang xử lý</translation>
     </message>
 </context><context>
     <name>MediaExtractorService</name>
@@ -6618,6 +6848,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Hãy dán văn bản trước.</translation>
     </message>
     <message>
+        <source>This card image has no Picture field to land in. Map one in Settings → Anki, or clear the image to mine without one.</source>
+        <translation>Hình ảnh của thẻ không có trường Picture để đặt vào. Hãy cấu hình một trong Cài đặt → Anki, hoặc xóa hình ảnh để khai thác mà không cần.</translation>
+    </message>
+    <message>
         <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
         <translation>Không thể đọc hình ảnh đó. Chọn ảnh khác, hoặc xóa trường để khai thác mà không cần ảnh.</translation>
     </message>
@@ -6818,6 +7052,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Các tài nguyên này là gì?</translation>
     </message>
     <message>
+        <source>%1 — %2</source>
+        <translation>%1 — %2</translation>
+    </message>
+    <message>
         <source>Download recommended resources</source>
         <translation>Tải các tài nguyên được đề xuất</translation>
     </message>
@@ -6826,12 +7064,20 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Đang kiểm tra từ điển ngoại tuyến...</translation>
     </message>
     <message>
-        <source>Could not check the offline dictionary: </source>
-        <translation>Không thể kiểm tra từ điển ngoại tuyến: </translation>
+        <source>Could not check the installed resources: </source>
+        <translation>Không kiểm tra được các tài nguyên đã cài: </translation>
     </message>
     <message>
         <source>Dictionary ready: %1</source>
         <translation>Từ điển sẵn sàng: %1</translation>
+    </message>
+    <message>
+        <source>%1 ready: %2</source>
+        <translation>%1 đã sẵn sàng: %2</translation>
+    </message>
+    <message>
+        <source>%1: not set up (optional)</source>
+        <translation>%1: chưa thiết lập (tùy chọn)</translation>
     </message>
     <message>
         <source>Download cancelled. Some resources were installed before cancellation.</source>
@@ -7000,6 +7246,40 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>Failed to delete notes. Check that Anki is running.</source>
         <translation>Không thể xóa ghi chú. Kiểm tra Anki đang chạy.</translation>
+    </message>
+</context><context>
+    <name>RetimeReference</name>
+    <message>
+        <source>Chosen subtitle track %1 is unusable; using audio instead.</source>
+        <translation>Tuyến phụ đề được chọn %1 không thể sử dụng được; sử dụng âm thanh thay vào.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: not a dialogue track.</source>
+        <translation>Bỏ qua tuyến phụ đề %1: không phải là tuyến đối thoại.</translation>
+    </message>
+    <message>
+        <source>No usable embedded subtitle track; aligning against audio.</source>
+        <translation>Không có tuyến phụ đề được nhúng có thể sử dụng; căn chỉnh với âm thanh.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: only %2 dialogue lines.</source>
+        <translation>Bỏ qua tuyến phụ đề %1: chỉ %2 dòng đối thoại.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: covers only %2 of the episode.</source>
+        <translation>Bỏ qua tuyến phụ đề %1: chỉ bao phủ %2 của tập.</translation>
+    </message>
+    <message>
+        <source>Aligning against embedded subtitle track %1 (%2, %3 lines).</source>
+        <translation>Căn chỉnh với tuyến phụ đề được nhúng %1 (%2, %3 dòng).</translation>
+    </message>
+    <message>
+        <source>No Japanese-tagged audio track found; using the first audio track — on a dual-audio release this may be a dub.</source>
+        <translation>Không tìm thấy tuyến âm thanh được gắn thẻ tiếng Nhật; sử dụng tuyến âm thanh đầu tiên — trên bản phát hành có hai âm thanh, đây có thể là phiên bản lồng tiếng.</translation>
+    </message>
+    <message>
+        <source>Aligning against audio (%1).</source>
+        <translation>Căn chỉnh với âm thanh (%1).</translation>
     </message>
 </context><context>
     <name>RetimeReferenceDialog</name>
@@ -7370,6 +7650,18 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
     <message>
         <source>Download the recommended frequency list, pitch accent data, and dictionary now?</source>
         <translation>Tải xuống danh sách tần suất, dữ liệu trọng âm cao độ và từ điển được đề xuất ngay bây giờ?</translation>
+    </message>
+    <message>
+        <source>Dictionary</source>
+        <translation>Từ điển</translation>
+    </message>
+    <message>
+        <source>Frequency</source>
+        <translation>Tần suất</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>Trọng âm cao độ</translation>
     </message>
     <message>
         <source>Anki Miner Setup</source>
@@ -7782,12 +8074,12 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Thư mục đó không còn tồn tại.</translation>
     </message>
     <message>
-        <source>That folder could not be read.</source>
-        <translation>Không thể đọc thư mục đó.</translation>
-    </message>
-    <message>
         <source>No video or audio files were found in that folder.</source>
         <translation>Không tìm thấy tệp video hoặc âm thanh nào trong thư mục đó.</translation>
+    </message>
+    <message>
+        <source>That folder could not be read.</source>
+        <translation>Không thể đọc thư mục đó.</translation>
     </message>
     <message>
         <source>Transcribing file %1 of %2</source>
@@ -8104,10 +8396,6 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Thư mục phụ đề đó không còn tồn tại.</translation>
     </message>
     <message>
-        <source>That video folder could not be read.</source>
-        <translation>Không thể đọc thư mục video đó.</translation>
-    </message>
-    <message>
         <source>Matched %1 of %2 video files.</source>
         <translation>Đã khớp %1 trên %2 tệp video.</translation>
     </message>
@@ -8118,6 +8406,10 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
     <message>
         <source>No subtitle file could be matched to any video file in those folders.</source>
         <translation>Không thể khớp tệp phụ đề nào với bất kỳ tệp video nào trong các thư mục đó.</translation>
+    </message>
+    <message>
+        <source>That video folder could not be read.</source>
+        <translation>Không thể đọc thư mục video đó.</translation>
     </message>
     <message>
         <source>Retiming file %1 of %2</source>
@@ -8138,12 +8430,54 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Xong</translation>
     </message>
     <message>
+        <source>Retimed with %1</source>
+        <translation>Đã căn chỉnh lại thời gian với %1</translation>
+    </message>
+    <message>
+        <source>Original backed up as %1</source>
+        <translation>Bản gốc được sao lưu dưới dạng %1</translation>
+    </message>
+    <message>
         <source>Cancelled</source>
         <translation>Đã hủy</translation>
     </message>
     <message>
-        <source>No trustworthy sync for %1; original kept unchanged</source>
-        <translation>Không có kết quả đồng bộ đáng tin cậy cho %1; tệp gốc được giữ nguyên</translation>
+        <source>no trustworthy sync; original kept unchanged</source>
+        <translation>không đồng bộ đáng tin cậy; bản gốc giữ nguyên không thay đổi</translation>
+    </message>
+    <message>
+        <source>Retiming failed for %1: %2</source>
+        <translation>Căn chỉnh lại thời gian không thành công cho %1: %2</translation>
+    </message>
+</context><context>
+    <name>SubtitleRetimer</name>
+    <message>
+        <source>Ignoring %1 non-dialogue lines during alignment.</source>
+        <translation>Bỏ qua %1 dòng không phải đối thoại trong quá trình căn chỉnh.</translation>
+    </message>
+    <message>
+        <source>alass is not installed; skipping alass attempts.</source>
+        <translation>alass chưa được cài đặt; bỏ qua các nỗ lực với alass.</translation>
+    </message>
+    <message>
+        <source>%1 result rejected: %2</source>
+        <translation>Kết quả %1 bị từ chối: %2</translation>
+    </message>
+    <message>
+        <source>no engine produced a trustworthy sync; original left untouched</source>
+        <translation>không có công cụ nào tạo ra đồng bộ đáng tin cậy; giữ nguyên bản gốc</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (offset %2).</source>
+        <translation>Đã căn chỉnh lại thời gian với %1 (độ lệch %2).</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (%2 blocks, shifts %3..%4).</source>
+        <translation>Đã căn chỉnh lại thời gian với %1 (%2 khối, dịch chuyển %3..%4).</translation>
+    </message>
+    <message>
+        <source>Retimed with %1.</source>
+        <translation>Đã căn chỉnh lại thời gian với %1.</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8728,14 +9062,6 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Lọc theo bất kỳ trường nào...</translation>
     </message>
     <message>
-        <source>Add to Known Words</source>
-        <translation>Thêm vào từ đã biết</translation>
-    </message>
-    <message>
-        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
-        <translation>Đánh dấu các hàng tô sáng là Đã biết · chờ xử lý. Xác nhận để lưu; Hủy để bỏ.</translation>
-    </message>
-    <message>
         <source>Word (mined)</source>
         <translation>Từ (đã khai thác)</translation>
     </message>
@@ -8774,6 +9100,30 @@ Khung chọn “Câu” đưa ra một lựa chọn cho mỗi dòng phụ đề 
     <message>
         <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S bao gồm/loại trừ · Ctrl+A bao gồm phần hiển thị · Ctrl+D loại trừ phần hiển thị · Ctrl+Enter xác nhận</translation>
+    </message>
+    <message>
+        <source>+ Previous line</source>
+        <translation>+ Dòng trước</translation>
+    </message>
+    <message>
+        <source>+ Next line</source>
+        <translation>+ Dòng sau</translation>
+    </message>
+    <message>
+        <source>Reset lines</source>
+        <translation>Đặt lại các dòng</translation>
+    </message>
+    <message>
+        <source>Merge the previous subtitle line into this word's sentence and media clip. Disabled when there is no earlier line or the combined clip would exceed %1 seconds.</source>
+        <translation>Gộp dòng phụ đề trước vào câu và đoạn media của từ này. Bị tắt khi không có dòng trước hoặc đoạn gộp lại vượt quá %1 giây.</translation>
+    </message>
+    <message>
+        <source>Merge the next subtitle line into this word's sentence and media clip. Disabled when there is no later line or the combined clip would exceed %1 seconds.</source>
+        <translation>Gộp dòng phụ đề sau vào câu và đoạn media của từ này. Bị tắt khi không có dòng sau hoặc đoạn gộp lại vượt quá %1 giây.</translation>
+    </message>
+    <message>
+        <source>Restore this word's original single-line sentence and clip window.</source>
+        <translation>Khôi phục câu một dòng và khoảng đoạn gốc của từ này.</translation>
     </message>
     <message>
         <source>Sentences</source>
@@ -8832,6 +9182,22 @@ Khung chọn “Câu” đưa ra một lựa chọn cho mỗi dòng phụ đề 
         <translation>Bao gồm phần tô sáng (%1)</translation>
     </message>
     <message>
+        <source>Add to Known Words</source>
+        <translation>Thêm vào từ đã biết</translation>
+    </message>
+    <message>
+        <source>Remove from Known Words</source>
+        <translation>Loại bỏ khỏi Từ Đã Biết</translation>
+    </message>
+    <message>
+        <source>Take the Known · pending mark back off the highlighted rows and return them to this review.</source>
+        <translation>Xóa dấu Từ Đã Biết · chờ xử lý khỏi các hàng được tô sáng và đưa chúng quay lại bản đánh giá này.</translation>
+    </message>
+    <message>
+        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
+        <translation>Đánh dấu các hàng tô sáng là Đã biết · chờ xử lý. Xác nhận để lưu; Hủy để bỏ.</translation>
+    </message>
+    <message>
         <source>Word %1 of %2 · %3 included · %4 shown of %5</source>
         <translation>Từ thứ %1/%2 · đã bao gồm %3 · hiển thị %4/%5</translation>
     </message>
@@ -8876,6 +9242,10 @@ Khung chọn “Câu” đưa ra một lựa chọn cho mỗi dòng phụ đề 
     <message>
         <source>Auto JA subs</source>
         <translation>Phụ đề JA tự động</translation>
+    </message>
+    <message>
+        <source>Auto JA subs (dub audio)</source>
+        <translation>Phụ đề JA tự động (âm thanh lồng tiếng)</translation>
     </message>
     <message>
         <source>Checking</source>
@@ -9122,7 +9492,7 @@ Khung chọn “Câu” đưa ra một lựa chọn cho mỗi dòng phụ đề 
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner Agentic — Unexpected Error</source>
+        <source>Anki Miner — Unexpected Error</source>
         <translation type="unfinished" />
     </message>
     <message>

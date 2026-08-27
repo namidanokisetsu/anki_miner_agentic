@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from anki_miner.gui.utils.phrase_wrap import WORD_JOINER
 from anki_miner.gui.widgets.dialogs import word_curation_dialog as wcd
 from anki_miner.gui.widgets.dialogs.word_curation_dialog import (
     CurationMediaContext,
@@ -232,10 +233,12 @@ class TestCandidatePresentation:
         single.sentence_candidates = [c1, c2]
         dlg, _player = _build_dialog(qtbot, [word, single], _ctx_for(ep1))
         dlg._populate_candidate_list(word, 0)
-        texts = [dlg.sentence_list.item(i).text() for i in range(dlg.sentence_list.count())]
+        # Strip the BudouX word joiners: this test pins the episode prefix,
+        # phrase wrapping is TestPhraseWrappedDisplay's contract.
+        texts = [dlg.sentence_list.item(i).text().replace(WORD_JOINER, "") for i in range(dlg.sentence_list.count())]
         assert texts == ["[ep1] 一の文", "[ep2] 二の文"]
         dlg._populate_candidate_list(single, 1)
-        texts = [dlg.sentence_list.item(i).text() for i in range(dlg.sentence_list.count())]
+        texts = [dlg.sentence_list.item(i).text().replace(WORD_JOINER, "") for i in range(dlg.sentence_list.count())]
         assert texts == ["犬文A", "犬文B"]
 
 
@@ -256,3 +259,26 @@ class TestSelectionCarriesEpisode:
         selected = dlg.get_selected_words()
         assert selected[0].video_file == ep2
         assert selected[0].clip_override == (6.5, 8.5)
+
+
+class TestExpansionButtonsSeason:
+    def test_expansion_buttons_disabled_until_episode_context_cached(self, qtbot, ep1, ep2, deferred_off_thread):
+        """A cross-episode word's expansion buttons stay off while the context
+        swap is in flight, and refresh when _apply_media_context lands."""
+        ep2_ctx = CurationMediaContext(
+            video_file=ep2,
+            subtitle_entries=[(7.0, 9.0, "犬の文"), (9.5, 11.0, "次の文")],
+            offset=0.0,
+        )
+        resolver = MagicMock(return_value=ep2_ctx)
+        words = [_word("猫", video=ep1, sentence="文"), _word("犬", start_time=7.0, video=ep2)]
+        dlg, _player = _build_dialog(qtbot, words, _ctx_for(ep1, resolver))
+        _focus_row(dlg, 1)  # ep2 swap dispatched, not yet applied
+        assert not dlg.expand_prev_button.isEnabled()
+        assert not dlg.expand_next_button.isEnabled()
+
+        work, on_done, _err = deferred_off_thread[0]
+        on_done(work())  # swap lands
+
+        assert dlg.expand_next_button.isEnabled()
+        assert not dlg.expand_prev_button.isEnabled()  # 犬's cue is the first entry

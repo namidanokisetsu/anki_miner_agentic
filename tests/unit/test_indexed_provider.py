@@ -260,6 +260,84 @@ class TestIndexedDictProvider:
         assert provider.load() is False
         assert provider.is_available() is False
 
+    def test_concurrent_load_opens_one_connection(self, tmp_path: Path):
+        """Two threads racing load() on the same never-loaded provider must
+        open the underlying sqlite connection exactly once — the loser must
+        not leak a second, discarded connection's file descriptor."""
+        import threading
+        import time
+
+        db = tmp_path / "test.sqlite"
+        _seed_db(db, [DictRow(term="x", reading=None, content="c", sequence=1)])
+        provider = IndexedDictProvider("test-dict", db, display_name="Test")
+
+        from anki_miner.services.dictionary.providers import indexed_provider as provider_mod
+
+        real_open_readonly = provider_mod.open_readonly
+        opened: list[sqlite3.Connection] = []
+
+        def _slow_open(path):
+            time.sleep(0.05)  # widen the window so a racing thread must block on the lock
+            conn = real_open_readonly(path)
+            opened.append(conn)
+            return conn
+
+        start_barrier = threading.Barrier(2)
+
+        def _run():
+            start_barrier.wait(timeout=5)
+            provider.load()
+
+        with patch.object(provider_mod, "open_readonly", _slow_open):
+            threads = [threading.Thread(target=_run) for _ in range(2)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+
+        assert len(opened) == 1  # only one thread actually opened a connection
+        assert provider._conn is opened[0]
+        for conn in opened:
+            conn.close()
+
+    def test_concurrent_tag_meta_reads_once(self, tmp_path: Path):
+        """Two threads racing _tag_meta() on a freshly loaded provider must
+        read the tags table exactly once."""
+        import threading
+        import time
+
+        db = tmp_path / "test.sqlite"
+        _seed_db(db, [DictRow(term="x", reading=None, content="c", sequence=1)])
+        write_tags(db, [TagMeta(name="freq", category="frequent", ord=0, notes="", score=0)])
+        provider = IndexedDictProvider("test-dict", db, display_name="Test")
+        provider.load()
+
+        from anki_miner.services.dictionary.providers import indexed_provider as provider_mod
+
+        real_read_tags = provider_mod.read_tags
+        calls: list[dict] = []
+
+        def _slow_read_tags(conn):
+            time.sleep(0.05)  # widen the window so a racing thread must block on the lock
+            result = real_read_tags(conn)
+            calls.append(result)
+            return result
+
+        start_barrier = threading.Barrier(2)
+
+        def _run():
+            start_barrier.wait(timeout=5)
+            provider._tag_meta()
+
+        with patch.object(provider_mod, "read_tags", _slow_read_tags):
+            threads = [threading.Thread(target=_run) for _ in range(2)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+
+        assert len(calls) == 1
+
     def test_load_on_one_thread_lookup_on_another(self, tmp_path: Path):
         """Provider must support load() on GUI thread + lookup() on worker thread.
 
@@ -1515,3 +1593,144 @@ class TestAttestQuality:
             "日本": {"term_rules": frozenset(), "common_rules": frozenset()},
         }
         assert "boom-dict" in caplog.text
+
+
+class TestRedirectResolution:
+    """Redirect rows (negative sequence + ⟶ arrow) render as their canonical
+    entry — never as a pointer — and an unresolvable redirect is a miss."""
+
+    def _seed_redirect_dict(self, db: Path):
+        _seed_db(
+            db,
+            [
+                DictRow(
+                    term="お互い様",
+                    reading="おたがいさま",
+                    content="<li>mutual</li>",
+                    tags="n",
+                    sequence=1270320,
+                ),
+                DictRow(
+                    term="お互いさま",
+                    reading=None,
+                    content='<li class="gloss-item">⟶お互い様</li>',
+                    score=-101,
+                    sequence=-1270320,
+                ),
+            ],
+        )
+
+    def test_redirect_renders_as_canonical_entry(self, tmp_path: Path):
+        db = tmp_path / "test.sqlite"
+        self._seed_redirect_dict(db)
+        provider = IndexedDictProvider("test-dict", db, display_name="DictName")
+        assert provider.load() is True
+
+        via_redirect = provider.lookup("お互いさま")
+        direct = provider.lookup("お互い様")
+
+        assert via_redirect is not None
+        assert via_redirect == direct
+        assert "⟶" not in via_redirect
+        provider.close()
+
+    def test_lookup_many_matches_lookup_through_a_redirect(self, tmp_path: Path):
+        db = tmp_path / "test.sqlite"
+        self._seed_redirect_dict(db)
+        provider = IndexedDictProvider("test-dict", db, display_name="DictName")
+        assert provider.load() is True
+
+        batch = provider.lookup_many([("お互いさま", None)])
+        assert batch["お互いさま"] == provider.lookup("お互いさま")
+        provider.close()
+
+    def test_unresolvable_redirect_is_a_provider_miss(self, tmp_path: Path):
+        db = tmp_path / "test.sqlite"
+        _seed_db(
+            db,
+            [
+                DictRow(
+                    term="孤児",
+                    reading=None,
+                    content='<li class="gloss-item">⟶親</li>',
+                    score=-101,
+                    sequence=-999,
+                )
+            ],
+        )
+        provider = IndexedDictProvider("test-dict", db, display_name="DictName")
+        assert provider.load() is True
+
+        assert provider.lookup("孤児") is None
+        assert provider.lookup_many([("孤児", None)])["孤児"] is None
+        provider.close()
+
+
+def _drop_sequence_index(db_path: Path) -> None:
+    conn = sqlite3.connect(db_path)
+    conn.execute("DROP INDEX IF EXISTS idx_sequence")
+    conn.commit()
+    conn.close()
+
+
+class TestSequenceIndexBackfill:
+    """A pre-existing v6 index built before redirect resolution lacks
+    ``idx_sequence`` (Task 1 / F1); ``load()`` backfills it in place."""
+
+    def _seed_and_drop(self, db: Path) -> None:
+        _seed_db(db, [DictRow(term="猫", reading="ねこ", content="cat", sequence=1)])
+        _drop_sequence_index(db)
+
+    def test_load_creates_missing_sequence_index(self, tmp_path: Path):
+        db = tmp_path / "test.sqlite"
+        self._seed_and_drop(db)
+        provider = IndexedDictProvider("test-dict", db)
+        assert provider.load() is True
+        conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        names = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")}
+        conn.close()
+        assert "idx_sequence" in names
+
+    def test_load_survives_index_creation_failure(self, tmp_path: Path, monkeypatch):
+        db = tmp_path / "test.sqlite"
+        self._seed_and_drop(db)
+
+        # Patched where indexed_provider looked it up (module-level import
+        # binding), matching how storage_attest_detail etc. are patched above.
+        monkeypatch.setattr(
+            "anki_miner.services.dictionary.providers.indexed_provider.ensure_sequence_index",
+            lambda p: (_ for _ in ()).throw(sqlite3.OperationalError("readonly")),
+        )
+        provider = IndexedDictProvider("test-dict", db)
+        assert provider.load() is True  # failure is logged, never raised
+
+    def test_load_returns_false_when_reopen_after_backfill_fails(self, tmp_path: Path, monkeypatch):
+        """A backfill-induced lock (writer holds EXCLUSIVE, blocks readers too)
+        must not raise out of load() — it degrades to unavailable, same as any
+        other open failure, instead of taking the whole dictionary down."""
+        db = tmp_path / "test.sqlite"
+        self._seed_and_drop(db)
+
+        from anki_miner.services.dictionary.providers import indexed_provider as mod
+
+        real_open_readonly = mod.open_readonly
+        calls = {"n": 0}
+
+        def flaky_open_readonly(path):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return real_open_readonly(path)
+            raise sqlite3.OperationalError("database is locked")
+
+        monkeypatch.setattr(mod, "open_readonly", flaky_open_readonly)
+        provider = IndexedDictProvider("test-dict", db)
+        assert provider.load() is False
+        assert calls["n"] == 2  # initial open, then the post-backfill reopen
+
+    def test_sequence_index_refreshes_meta_sidecar(self, tmp_path: Path):
+        """CREATE INDEX bumps the db mtime; the sidecar must stay >= it."""
+        db = tmp_path / "test.sqlite"
+        self._seed_and_drop(db)
+        sidecar = db.parent / "meta.json"
+        IndexedDictProvider("test-dict", db).load()
+        assert sidecar.stat().st_mtime >= db.stat().st_mtime

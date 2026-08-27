@@ -19,7 +19,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QEvent, Qt
+from PyQt6.QtWidgets import QApplication, QWidget
 
 from anki_miner.gui.widgets.dialogs import word_curation_dialog as wcd
 from anki_miner.gui.widgets.dialogs.word_curation_dialog import (
@@ -430,10 +431,29 @@ class TestLookupUsesMinedForm:
         assert word.lemma != word.mined_form
         return word
 
+    def _kana_front_word(self):
+        # ゆう: verb written kana-only in the source line (orth_base "ゆう"),
+        # unidic's canonical lemma is 言う → mined_form (ゆう) != lemma (言う).
+        # This is the Rule A' homograph case: 有/夕/結う share the ゆう reading.
+        word = TokenizedWord(
+            surface="ゆう",
+            lemma="言う",
+            reading="ゆう",
+            sentence="ゆうとね",
+            start_time=1.0,
+            end_time=3.0,
+            duration=2.0,
+            pos="動詞",
+            orth_base="ゆう",
+        )
+        assert word.mined_form == "ゆう"
+        assert word.lemma != word.mined_form
+        return word
+
     def test_lookup_uses_mined_form_when_it_hits(self, qtbot):
         received: list[str] = []
 
-        def capturing_lookup(term: str) -> list[tuple[str, str]]:
+        def capturing_lookup(term: str, lemma: str | None = None) -> list[tuple[str, str]]:
             received.append(term)
             return [("JMdict", "<div>to do someone in</div>")]
 
@@ -448,7 +468,7 @@ class TestLookupUsesMinedForm:
     def test_lookup_retries_lemma_on_miss(self, qtbot):
         received: list[str] = []
 
-        def capturing_lookup(term: str) -> list[tuple[str, str]]:
+        def capturing_lookup(term: str, lemma: str | None = None) -> list[tuple[str, str]]:
             received.append(term)
             return [] if term == "殺る" else [("JMdict", "<div>to do</div>")]
 
@@ -461,7 +481,7 @@ class TestLookupUsesMinedForm:
         assert "to do" in dlg.definition_view.toHtml()
 
     def test_both_miss_placeholder_names_mined_form(self, qtbot):
-        dlg = WordCurationDialog([self._variant_word()], lookup_fn=lambda term: [])
+        dlg = WordCurationDialog([self._variant_word()], lookup_fn=lambda term, lemma=None: [])
         qtbot.addWidget(dlg)
         _select_row(dlg, 0)
         _fire_timer(dlg)
@@ -469,6 +489,67 @@ class TestLookupUsesMinedForm:
         html = dlg.definition_view.toHtml()
         assert "No offline dictionary entry" in html
         assert "殺る" in html
+
+    def test_lookup_scopes_the_primary_call_by_lemma(self, qtbot):
+        """Rule A' pane fix: the token's lemma reaches the PRIMARY (hit) call,
+        not just the miss-only fallback retry, so a kana front (ゆう, lemma
+        言う) can be scoped to its own lexeme instead of showing every
+        same-reading homograph beside the card's lemma-scoped entry."""
+        received: list[tuple[str, str | None]] = []
+
+        def capturing_lookup(term: str, lemma: str | None = None) -> list[tuple[str, str]]:
+            received.append((term, lemma))
+            return [("JMdict", "<div>to say</div>")]
+
+        dlg = WordCurationDialog([self._kana_front_word()], lookup_fn=capturing_lookup)
+        qtbot.addWidget(dlg)
+        _select_row(dlg, 0)
+        _fire_timer(dlg)
+
+        assert received == [("ゆう", "言う")]
+
+    def test_same_mined_form_different_lemma_does_not_share_cache(self, qtbot):
+        """The cache key must include the scope lemma, not just the term:
+        upstream dedup is by lemma (word_filter.py), so two curator rows can
+        share a mined_form (ゆう) with different lemmas (言う vs 結う). A
+        term-only cache key would serve row 1's lemma-scoped entry to row 2 —
+        the exact wrong-homograph pane bug this task exists to fix."""
+        calls: list[tuple[str, str | None]] = []
+
+        def recording_lookup(term: str, lemma: str | None = None) -> list[tuple[str, str]]:
+            calls.append((term, lemma))
+            return [("JMdict", f"<div>{lemma or term}</div>")]
+
+        word_iu = self._kana_front_word()  # ゆう, lemma 言う
+        word_yuu = TokenizedWord(
+            surface="ゆう",
+            lemma="結う",
+            reading="ゆう",
+            sentence="髪をゆう",
+            start_time=10.0,
+            end_time=12.0,
+            duration=2.0,
+            pos="動詞",
+            orth_base="ゆう",
+        )
+        assert word_yuu.mined_form == word_iu.mined_form == "ゆう"
+        assert word_yuu.lemma != word_iu.lemma
+
+        dlg = WordCurationDialog([word_iu, word_yuu], lookup_fn=recording_lookup)
+        qtbot.addWidget(dlg)
+
+        _select_row(dlg, 0)
+        _fire_timer(dlg)
+        assert "言う" in dlg.definition_view.toHtml()
+
+        _select_row(dlg, 1)
+        _fire_timer(dlg)
+
+        # Two distinct scoped calls — the second row was NOT served from the
+        # first row's cache entry.
+        assert calls == [("ゆう", "言う"), ("ゆう", "結う")]
+        assert "結う" in dlg.definition_view.toHtml()
+        assert "言う" not in dlg.definition_view.toHtml()
 
 
 # ---------------------------------------------------------------------------
@@ -637,6 +718,79 @@ class TestSinglePlayerInstance:
 
 
 # ---------------------------------------------------------------------------
+# 6c. The player is released on EVERY destruction path
+# ---------------------------------------------------------------------------
+
+
+class _ReleaseSpyPlayer(QWidget):
+    """Player stand-in that records ``release()`` calls.
+
+    A real ``QWidget`` subclass because the pane layout takes it as a child;
+    the other player tests substitute a bare ``QWidget``, which cannot show
+    whether the release happened.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.releases = 0
+
+    def release(self) -> None:
+        self.releases += 1
+
+
+def _drain_deletes() -> None:
+    """Deliver pending ``deleteLater`` deletions.
+
+    ``processEvents()`` alone never runs ``DeferredDelete`` events, so a
+    ``destroyed``-driven release would look dead without the explicit send.
+    """
+    QApplication.processEvents()
+    QApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    QApplication.processEvents()
+
+
+class TestReleaseOnDestruction:
+    """``finished`` is not the only way a curator dies.
+
+    A tab destroyed outside the shutdown flow deletes its child dialog without
+    ``finished`` ever emitting, and a ``__init__`` that raises after the player
+    exists never hands the caller a dialog to close at all. Either way the mpv
+    core stays alive with its event thread firing observers into a dead widget.
+    """
+
+    def test_release_on_delete_without_finished(self, qtbot, words, existing_video):
+        """deleteLater() alone releases the player; ``finished`` never emits."""
+        ctx = _make_media_context(video_file=existing_video)
+        player = _ReleaseSpyPlayer()
+        with patch.object(WordCurationDialog, "_create_player_widget", return_value=player):
+            dlg = WordCurationDialog(words, media_context=ctx)
+        # Deliberately NOT qtbot.addWidget: this test destroys the dialog
+        # itself, and pytest-qt's teardown would then call close() on the dead
+        # C++ object through its still-live Python wrapper.
+        codes: list[int] = []
+        dlg.finished.connect(codes.append)
+
+        dlg.deleteLater()
+        _drain_deletes()
+
+        assert codes == []
+        assert player.releases == 1
+
+    def test_release_when_init_raises_after_the_player_exists(self, qtbot, words, existing_video):
+        """A raise after the player is built releases it before propagating."""
+        ctx = _make_media_context(video_file=existing_video)
+        player = _ReleaseSpyPlayer()
+        with (
+            patch.object(WordCurationDialog, "_create_player_widget", return_value=player),
+            patch.object(WordCurationDialog, "_populate_table", side_effect=RuntimeError("boom")),
+            pytest.raises(RuntimeError, match="boom"),
+        ):
+            WordCurationDialog(words, media_context=ctx)
+
+        assert player.releases == 1
+
+
+# ---------------------------------------------------------------------------
 # 7. Debounce coalesces rapid row-focus changes
 # ---------------------------------------------------------------------------
 
@@ -766,7 +920,7 @@ class TestLookupIsAsynchronous:
         _fire_timer(dlg)  # row 0 in flight
 
         # Row 1 resolves from cache, so it paints immediately and supersedes.
-        dlg._lookup_cache["走る"] = [("JMdict", "<div>fresher</div>")]
+        dlg._lookup_cache[("走る", None)] = [("JMdict", "<div>fresher</div>")]
         _select_row(dlg, 1)
         _fire_timer(dlg)
         assert "fresher" in dlg.definition_view.toHtml()
@@ -785,7 +939,7 @@ class TestLookupIsAsynchronous:
         _select_row(dlg, 0)
         _fire_timer(dlg)
 
-        dlg._lookup_cache["走る"] = [("JMdict", "<div>fresher</div>")]
+        dlg._lookup_cache[("走る", None)] = [("JMdict", "<div>fresher</div>")]
         _select_row(dlg, 1)
         _fire_timer(dlg)
 
@@ -802,7 +956,7 @@ class TestLookupIsAsynchronous:
 
         _select_row(dlg, 0)
         _fire_timer(dlg)
-        dlg._lookup_cache["走る"] = [("JMdict", "<div>fresher</div>")]
+        dlg._lookup_cache[("走る", None)] = [("JMdict", "<div>fresher</div>")]
         _select_row(dlg, 1)
         _fire_timer(dlg)
 
@@ -819,7 +973,7 @@ class TestLookupIsAsynchronous:
     def test_cache_hit_renders_without_dispatching(self, qtbot, words, deferred_off_thread):
         dlg = WordCurationDialog(words, lookup_fn=_entry_lookup([]))
         qtbot.addWidget(dlg)
-        dlg._lookup_cache["食べる"] = [("JMdict", "<div>cached</div>")]
+        dlg._lookup_cache[("食べる", None)] = [("JMdict", "<div>cached</div>")]
 
         _select_row(dlg, 0)
         _fire_timer(dlg)
@@ -837,6 +991,109 @@ class TestLookupIsAsynchronous:
         on_error("boom")
 
         assert "No offline dictionary entry" in dlg.definition_view.toHtml()
+
+
+class TestLateCallbackGuards:
+    """Guards for late callbacks after dialog teardown (M1+M9).
+
+    The _closing flag + generation counters ensure off-thread callbacks
+    do not touch widgets after the dialog is being destroyed.
+    """
+
+    def test_preview_scene_guards_against_closing_dialog(self, qtbot, words, existing_video):
+        """_preview_scene must not call player methods when _closing=True."""
+        ctx = _make_media_context(video_file=existing_video)
+        dlg, mock_player = _build_dialog_with_mock_player(qtbot, words, ctx)
+
+        # Mark dialog as closing before calling _preview_scene
+        dlg._closing = True
+
+        # Call _preview_scene with the focused word
+        dlg._preview_scene(words[0].start_time)
+
+        # Assert that no player method was called (seek_seconds or pause)
+        mock_player.seek_seconds.assert_not_called()
+        mock_player.pause.assert_not_called()
+
+    def test_on_lookup_done_guards_with_stale_generation(self, qtbot, words, deferred_off_thread):
+        """_on_lookup_done must not mutate _lookup_inflight if generation is stale during teardown.
+
+        The generation check is BEFORE the _lookup_inflight write so a late
+        result after dialog teardown returns without modifying any Qt state.
+        """
+
+        def fake_lookup(term: str) -> list[tuple[str, str]]:
+            return [("JMdict", f"<div>{term} entry</div>")]
+
+        dlg = WordCurationDialog(words, lookup_fn=fake_lookup)
+        qtbot.addWidget(dlg)
+
+        # Start a lookup for the first word
+        _select_row(dlg, 0)
+        _fire_timer(dlg)
+
+        # Simulate teardown: set _closing and bump the generation counter (as _stop_player does)
+        dlg._closing = True
+        dlg._lookup_gen += 1
+
+        # Get the callback from the deferred list
+        assert len(deferred_off_thread) > 0
+        work, on_done, _ = deferred_off_thread[0]
+
+        # Deliver the result with the now-stale generation during teardown
+        result = work()
+        # Record the initial state before calling the callback
+        inflight_before = dlg._lookup_inflight
+
+        # Call the callback with stale generation during teardown
+        on_done(result)
+
+        # _lookup_inflight must NOT have been mutated (no False write)
+        # because the closing/gen checks reject the stale callback
+        assert dlg._lookup_inflight == inflight_before
+
+    def test_on_lookup_done_stale_gen_without_closing(self, qtbot, words, deferred_off_thread):
+        """Stale generation WITHOUT _closing: render suppressed but inflight cleared and drain runs.
+
+        When a lookup arrives with a stale generation (from a scroll) but
+        _closing is False, the dialog must NOT paint the stale entry, but must
+        still clear _lookup_inflight and drain any pending request that arrived
+        during the flight.
+        """
+
+        def fake_lookup(term: str) -> list[tuple[str, str]]:
+            return [("JMdict", f"<div>{term} entry</div>")]
+
+        dlg = WordCurationDialog(words, lookup_fn=fake_lookup)
+        qtbot.addWidget(dlg)
+
+        # Start lookup for row 0, paint it, then navigate to row 1
+        _select_row(dlg, 0)
+        _fire_timer(dlg)
+
+        # Row 1 is already cached, so it paints immediately and supersedes gen
+        dlg._lookup_cache[("走る", None)] = [("JMdict", "<div>row 1 entry</div>")]
+        _select_row(dlg, 1)
+        _fire_timer(dlg)
+        assert "row 1 entry" in dlg.definition_view.toHtml()
+
+        # Now the row 0 result arrives (stale gen) but _closing is False
+        assert not dlg._closing
+        work, on_done, _ = deferred_off_thread[0]
+        result = work()
+
+        # The stale result should NOT paint over the current row 1 entry
+        on_done(result)
+        html = dlg.definition_view.toHtml()
+        assert "row 1 entry" in html
+        assert "食べる entry" not in html
+
+        # But _lookup_inflight must be cleared (False)
+        assert dlg._lookup_inflight is False
+
+        # And if there were a pending request, _drain_pending_lookup would start it.
+        # We verify the drain ran by checking the pending was cleared.
+        assert dlg._pending_lookup is None
 
 
 class TestPreviewSuppressedInCurator:

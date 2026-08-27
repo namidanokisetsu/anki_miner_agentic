@@ -650,11 +650,11 @@ def _confirm_second_instance(parent: QWidget | None = None) -> bool:
     """Production ``on_conflict``: warn and let the user decide."""
     box = QMessageBox(parent)
     box.setIcon(QMessageBox.Icon.Warning)
-    box.setWindowTitle(QCoreApplication.translate("App", "Anki Miner Agentic Is Already Running"))
+    box.setWindowTitle(QCoreApplication.translate("App", "Anki Miner Is Already Running"))
     box.setText(
         QCoreApplication.translate(
             "App",
-            "Another copy of Anki Miner Agentic appears to be running. Running two copies at once "
+            "Another copy of Anki Miner appears to be running. Running two copies at once "
             "can corrupt the known-words and statistics databases.\n\n"
             "Continue anyway?",
         )
@@ -1091,7 +1091,7 @@ def _install_excepthook(app: QApplication, *, fail_fast: bool = False) -> None:
             log_path = get_effective_log_path()
             box = QMessageBox(app.activeWindow())
             box.setIcon(QMessageBox.Icon.Critical)
-            box.setWindowTitle(QCoreApplication.translate("app", "Anki Miner Agentic — Unexpected Error"))
+            box.setWindowTitle(QCoreApplication.translate("app", "Anki Miner — Unexpected Error"))
             box.setTextFormat(Qt.TextFormat.PlainText)
             box.setText(
                 tr_format(
@@ -1327,6 +1327,8 @@ def compose_main_window(
     # write-subs) by emitting config_changed; route it through window.update_config
     # so condenser_* land in gui_config.json and survive restart.
     subtitles_tab.condense_tab.config_changed.connect(window.update_config)
+    # Same pattern for the Download tab's downloader_* options.
+    subtitles_tab.download_tab.config_changed.connect(window.update_config)
 
     # --- task-registry publication (W5) -----------------------------------
     # Until now only the two list queues published, so only they had the
@@ -1347,6 +1349,7 @@ def compose_main_window(
         subtitles_tab.condense_tab,
         subtitles_tab.backfill_tab,
         subtitles_tab.deck_filter_tab,
+        subtitles_tab.download_tab,
     ):
         screen.bind_task_registry(window.task_registry)
     # --- end task-registry publication ------------------------------------

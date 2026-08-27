@@ -24,8 +24,8 @@
         <translation>Mina tarjetas de vocabulario japonés desde vídeos a Anki: capturas de pantalla, audio y definiciones, de forma automática.</translation>
     </message>
     <message>
-        <source>About Anki Miner Agentic</source>
-        <translation type="unfinished" />
+        <source>About Anki Miner</source>
+        <translation type="unfinished">Acerca de Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -649,11 +649,11 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Agentic Is Already Running</source>
+        <source>Anki Miner Is Already Running</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
         <translation type="unfinished" />
@@ -839,6 +839,10 @@ Skipped (source folder or database not found; use per-row Re-import…):
 
 Omitidos (no se encontró la carpeta o base de datos de origen; use Reimportar… en cada fila):
 </translation>
+    </message>
+    <message>
+        <source>The selected audio pack is no longer in the chain.</source>
+        <translation>El paquete de audio seleccionado ya no está en la cadena.</translation>
     </message>
     <message>
         <source>No audio packs in the chain.</source>
@@ -2056,6 +2060,14 @@ Los archivos de índice en el disco quedarán sin modificar porque no se pudo co
         <translation>Busque una nueva versión de Anki Miner desde el menú Ayuda, o active la comprobación automática al iniciar en el pie de página de Ajustes.</translation>
     </message>
     <message>
+        <source>Download videos or audio</source>
+        <translation>Descargar vídeos o audio</translation>
+    </message>
+    <message>
+        <source>Save videos, audio or subtitles from a URL to a folder using yt-dlp, without mining. Works with any site yt-dlp supports.</source>
+        <translation>Guarde vídeos, audio o subtítulos de una URL en una carpeta con yt-dlp, sin minar. Funciona con cualquier sitio compatible con yt-dlp.</translation>
+    </message>
+    <message>
         <source>Restyle mined cards</source>
         <translation>Reestilizar tarjetas minadas</translation>
     </message>
@@ -2688,6 +2700,10 @@ Número de notas que se modificarán: {notes}. Número de campos que se modifica
     <message>
         <source>No media files were found in that folder.</source>
         <translation>No se encontraron archivos multimedia en esa carpeta.</translation>
+    </message>
+    <message>
+        <source>That media folder could not be read.</source>
+        <translation>No se pudo leer esa carpeta de medios.</translation>
     </message>
     <message>
         <source>Matched %1 of %2 media files.</source>
@@ -3660,6 +3676,206 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
         <translation>Diccionario sin conexión listo: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
 </context><context>
+    <name>DownloadTab</name>
+    <message>
+        <source>Progress</source>
+        <translation>Progreso</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Listo</translation>
+    </message>
+    <message>
+        <source>Done: </source>
+        <translation>Listo: </translation>
+    </message>
+    <message>
+        <source>Skipped</source>
+        <translation>Omitido</translation>
+    </message>
+    <message>
+        <source>Skipped: </source>
+        <translation>Omitidos: </translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Cancelling…</source>
+        <translation>Cancelando…</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Cancelado</translation>
+    </message>
+    <message>
+        <source>Failed — see log</source>
+        <translation>Falló — consulte el registro</translation>
+    </message>
+    <message>
+        <source>Some URLs could not be downloaded.</source>
+        <translation>No se pudieron descargar algunas URL.</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded</source>
+        <translation>Completado — %1 descargados</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded, %2 already present</source>
+        <translation>Completado — %1 descargados, %2 ya presentes</translation>
+    </message>
+    <message>
+        <source>Nothing downloaded — all %1 already present in the download folder.</source>
+        <translation>No se descargó nada — los %1 ya están en la carpeta de descargas.</translation>
+    </message>
+    <message>
+        <source>Select Download Folder</source>
+        <translation>Seleccionar carpeta de descargas</translation>
+    </message>
+    <message>
+        <source>Media download</source>
+        <translation>Descarga de medios</translation>
+    </message>
+    <message>
+        <source>URLs</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>yt-dlp not found. Install or update it in Settings → YouTube to enable downloads.</source>
+        <translation>No se encontró yt-dlp. Instálelo o actualícelo en Ajustes → YouTube para habilitar las descargas.</translation>
+    </message>
+    <message>
+        <source>Download videos or audio from any site yt-dlp supports, without mining.</source>
+        <translation>Descargue vídeos o audio de cualquier sitio compatible con yt-dlp, sin minar.</translation>
+    </message>
+    <message>
+        <source>One URL per line</source>
+        <translation>Una URL por línea</translation>
+    </message>
+    <message>
+        <source>Options</source>
+        <translation>Opciones</translation>
+    </message>
+    <message>
+        <source>Quality:</source>
+        <translation>Calidad:</translation>
+    </message>
+    <message>
+        <source>Best available</source>
+        <translation>La mejor disponible</translation>
+    </message>
+    <message>
+        <source>Up to 1080p</source>
+        <translation>Hasta 1080p</translation>
+    </message>
+    <message>
+        <source>Up to 720p</source>
+        <translation>Hasta 720p</translation>
+    </message>
+    <message>
+        <source>Audio only (MP3)</source>
+        <translation>Solo audio (MP3)</translation>
+    </message>
+    <message>
+        <source>Audio only (M4A)</source>
+        <translation>Solo audio (M4A)</translation>
+    </message>
+    <message>
+        <source>Custom format:</source>
+        <translation>Formato personalizado:</translation>
+    </message>
+    <message>
+        <source>Optional yt-dlp format string</source>
+        <translation>Cadena de formato de yt-dlp (opcional)</translation>
+    </message>
+    <message>
+        <source>When set, the quality preset above is ignored.</source>
+        <translation>Si se establece, se ignora el ajuste de calidad de arriba.</translation>
+    </message>
+    <message>
+        <source>Download subtitles</source>
+        <translation>Descargar subtítulos</translation>
+    </message>
+    <message>
+        <source>Save subtitles next to the media file. Prefers manual subtitles, falls back to automatic.</source>
+        <translation>Guardar los subtítulos junto al archivo de medios. Prefiere los subtítulos manuales y recurre a los automáticos.</translation>
+    </message>
+    <message>
+        <source>Languages:</source>
+        <translation>Idiomas:</translation>
+    </message>
+    <message>
+        <source>Comma-separated language codes, e.g. ja,en</source>
+        <translation>Códigos de idioma separados por comas, p. ej. ja,en</translation>
+    </message>
+    <message>
+        <source>Embed thumbnail</source>
+        <translation>Incrustar miniatura</translation>
+    </message>
+    <message>
+        <source>Embed title and metadata</source>
+        <translation>Incrustar título y metadatos</translation>
+    </message>
+    <message>
+        <source>Output</source>
+        <translation>Salida</translation>
+    </message>
+    <message>
+        <source>Output:</source>
+        <translation>Salida:</translation>
+    </message>
+    <message>
+        <source>Choose Folder…</source>
+        <translation>Elegir carpeta…</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Restablecer</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Descargar</translation>
+    </message>
+    <message>
+        <source>Download folder is not writable.</source>
+        <translation>No se puede escribir en la carpeta de descargas.</translation>
+    </message>
+    <message>
+        <source>Check permissions for %1.</source>
+        <translation>Compruebe los permisos de %1.</translation>
+    </message>
+    <message>
+        <source>Some lines are not valid URLs.</source>
+        <translation>Algunas líneas no son URL válidas.</translation>
+    </message>
+    <message>
+        <source>Paste at least one URL to download.</source>
+        <translation>Pegue al menos una URL para descargar.</translation>
+    </message>
+    <message>
+        <source>Downloading %1 of %2</source>
+        <translation>Descargando %1 de %2</translation>
+    </message>
+</context><context>
+    <name>DownloadWorker</name>
+    <message>
+        <source>%1: %2%</source>
+        <translation>%1: %2%</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Listo</translation>
+    </message>
+    <message>
+        <source>Already downloaded</source>
+        <translation>Ya descargado</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Cancelado</translation>
+    </message>
+</context><context>
     <name>EnhancedDialog</name>
     <message>
         <source>Close</source>
@@ -3888,10 +4104,6 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
         <translation>Error: %1</translation>
     </message>
     <message>
-        <source>Unexpected error: %1</source>
-        <translation>Error inesperado: %1</translation>
-    </message>
-    <message>
         <source>No words selected for card creation</source>
         <translation>No se seleccionaron palabras para crear tarjetas</translation>
     </message>
@@ -3916,6 +4128,10 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
             <numerusform>Se extrajeron medios para %n palabra</numerusform>
             <numerusform>Se extrajeron medios para %n palabras</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Unexpected error: %1</source>
+        <translation>Error inesperado: %1</translation>
     </message>
     <message numerus="yes">
         <source>Run failed after creating %n card(s); they remain in Anki and can be undone.</source>
@@ -5271,6 +5487,10 @@ Cierre primero el explorador de tarjetas de Anki y cualquier editor de notas abi
         <translation>Filtro de mazos</translation>
     </message>
     <message>
+        <source>Download</source>
+        <translation>Descargas</translation>
+    </message>
+    <message>
         <source>Single</source>
         <translation>Único</translation>
     </message>
@@ -5285,6 +5505,16 @@ Cierre primero el explorador de tarjetas de Anki y cualquier editor de notas abi
     <message>
         <source>Failed to create desktop shortcut.</source>
         <translation>No se pudo crear el acceso directo en el escritorio.</translation>
+    </message>
+</context><context>
+    <name>MediaDownloader</name>
+    <message>
+        <source>Downloading</source>
+        <translation>Descargando</translation>
+    </message>
+    <message>
+        <source>Processing</source>
+        <translation>Procesando</translation>
     </message>
 </context><context>
     <name>MediaExtractorService</name>
@@ -6631,6 +6861,10 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
         <translation>Primero pegue algún texto.</translation>
     </message>
     <message>
+        <source>This card image has no Picture field to land in. Map one in Settings → Anki, or clear the image to mine without one.</source>
+        <translation>Esta imagen de tarjeta no tiene un campo Imagen en el que colocarla. Asigne uno en Settings → Anki, o borre la imagen para minar sin uno.</translation>
+    </message>
+    <message>
         <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
         <translation>No se puede leer esa imagen. Elija otra, o borre el campo para minar sin ella.</translation>
     </message>
@@ -6831,6 +7065,10 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
         <translation>¿Qué son estos recursos?</translation>
     </message>
     <message>
+        <source>%1 — %2</source>
+        <translation>%1 — %2</translation>
+    </message>
+    <message>
         <source>Download recommended resources</source>
         <translation>Descargar recursos recomendados</translation>
     </message>
@@ -6839,12 +7077,20 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
         <translation>Comprobando un diccionario sin conexión...</translation>
     </message>
     <message>
-        <source>Could not check the offline dictionary: </source>
-        <translation>No se pudo comprobar el diccionario sin conexión: </translation>
+        <source>Could not check the installed resources: </source>
+        <translation>No se pudieron comprobar los recursos instalados: </translation>
     </message>
     <message>
         <source>Dictionary ready: %1</source>
         <translation>Diccionario listo: %1</translation>
+    </message>
+    <message>
+        <source>%1 ready: %2</source>
+        <translation>%1 listo: %2</translation>
+    </message>
+    <message>
+        <source>%1: not set up (optional)</source>
+        <translation>%1: sin configurar (opcional)</translation>
     </message>
     <message>
         <source>Download cancelled. Some resources were installed before cancellation.</source>
@@ -7013,6 +7259,40 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
     <message>
         <source>Failed to delete notes. Check that Anki is running.</source>
         <translation>No se pudieron eliminar las notas. Compruebe que Anki se esté ejecutando.</translation>
+    </message>
+</context><context>
+    <name>RetimeReference</name>
+    <message>
+        <source>Chosen subtitle track %1 is unusable; using audio instead.</source>
+        <translation>La pista de subtítulos elegida %1 no se puede usar; se utiliza audio en su lugar.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: not a dialogue track.</source>
+        <translation>Se omite la pista de subtítulos %1: no es una pista de diálogo.</translation>
+    </message>
+    <message>
+        <source>No usable embedded subtitle track; aligning against audio.</source>
+        <translation>Sin pista de subtítulos incrustada utilizable; alineando contra audio.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: only %2 dialogue lines.</source>
+        <translation>Se omite la pista de subtítulos %1: solo %2 líneas de diálogo.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: covers only %2 of the episode.</source>
+        <translation>Se omite la pista de subtítulos %1: cubre solo %2 del episodio.</translation>
+    </message>
+    <message>
+        <source>Aligning against embedded subtitle track %1 (%2, %3 lines).</source>
+        <translation>Alineando contra pista de subtítulos incrustada %1 (%2, %3 líneas).</translation>
+    </message>
+    <message>
+        <source>No Japanese-tagged audio track found; using the first audio track — on a dual-audio release this may be a dub.</source>
+        <translation>No se encontró pista de audio etiquetada como japonesa; se utiliza la primera pista de audio — en un lanzamiento de audio dual, esto puede ser un doblaje.</translation>
+    </message>
+    <message>
+        <source>Aligning against audio (%1).</source>
+        <translation>Alineando contra audio (%1).</translation>
     </message>
 </context><context>
     <name>RetimeReferenceDialog</name>
@@ -7383,6 +7663,18 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
     <message>
         <source>Download the recommended frequency list, pitch accent data, and dictionary now?</source>
         <translation>¿Descargar ahora la lista de frecuencia recomendada, los datos de acento tonal y el diccionario?</translation>
+    </message>
+    <message>
+        <source>Dictionary</source>
+        <translation>Diccionario</translation>
+    </message>
+    <message>
+        <source>Frequency</source>
+        <translation>Frecuencia</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>Acento tonal</translation>
     </message>
     <message>
         <source>Anki Miner Setup</source>
@@ -7797,12 +8089,12 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Esa carpeta ya no existe.</translation>
     </message>
     <message>
-        <source>That folder could not be read.</source>
-        <translation>No se pudo leer esa carpeta.</translation>
-    </message>
-    <message>
         <source>No video or audio files were found in that folder.</source>
         <translation>No se encontraron archivos de vídeo o audio en esa carpeta.</translation>
+    </message>
+    <message>
+        <source>That folder could not be read.</source>
+        <translation>No se pudo leer esa carpeta.</translation>
     </message>
     <message>
         <source>Transcribing file %1 of %2</source>
@@ -8119,10 +8411,6 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Esa carpeta de subtítulos ya no existe.</translation>
     </message>
     <message>
-        <source>That video folder could not be read.</source>
-        <translation>No se pudo leer esa carpeta de vídeo.</translation>
-    </message>
-    <message>
         <source>Matched %1 of %2 video files.</source>
         <translation>Se emparejaron %1 de %2 archivos de video.</translation>
     </message>
@@ -8133,6 +8421,10 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
     <message>
         <source>No subtitle file could be matched to any video file in those folders.</source>
         <translation>No se pudo asociar ningún archivo de subtítulos con un archivo de vídeo en esas carpetas.</translation>
+    </message>
+    <message>
+        <source>That video folder could not be read.</source>
+        <translation>No se pudo leer esa carpeta de vídeo.</translation>
     </message>
     <message>
         <source>Retiming file %1 of %2</source>
@@ -8153,12 +8445,54 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Listo</translation>
     </message>
     <message>
+        <source>Retimed with %1</source>
+        <translation>Retemporizados con %1</translation>
+    </message>
+    <message>
+        <source>Original backed up as %1</source>
+        <translation>Original respaldado como %1</translation>
+    </message>
+    <message>
         <source>Cancelled</source>
         <translation>Cancelado</translation>
     </message>
     <message>
-        <source>No trustworthy sync for %1; original kept unchanged</source>
-        <translation>No hay sincronía fiable para %1; el original se mantiene sin modificar</translation>
+        <source>no trustworthy sync; original kept unchanged</source>
+        <translation>sin sincronización confiable; original mantenido sin cambios</translation>
+    </message>
+    <message>
+        <source>Retiming failed for %1: %2</source>
+        <translation>La retemporización falló para %1: %2</translation>
+    </message>
+</context><context>
+    <name>SubtitleRetimer</name>
+    <message>
+        <source>Ignoring %1 non-dialogue lines during alignment.</source>
+        <translation>Se ignoran %1 líneas que no son de diálogo durante la alineación.</translation>
+    </message>
+    <message>
+        <source>alass is not installed; skipping alass attempts.</source>
+        <translation>alass no está instalado; se omiten intentos de alass.</translation>
+    </message>
+    <message>
+        <source>%1 result rejected: %2</source>
+        <translation>Resultado de %1 rechazado: %2</translation>
+    </message>
+    <message>
+        <source>no engine produced a trustworthy sync; original left untouched</source>
+        <translation>ningún motor produjo una sincronización confiable; original sin tocar</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (offset %2).</source>
+        <translation>Retemporizados con %1 (desplazamiento %2).</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (%2 blocks, shifts %3..%4).</source>
+        <translation>Retemporizados con %1 (%2 bloques, cambios %3..%4).</translation>
+    </message>
+    <message>
+        <source>Retimed with %1.</source>
+        <translation>Retemporizados con %1.</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8743,14 +9077,6 @@ Sus diccionarios instalados, audio, listas de frecuencia y tema se conservan.</t
         <translation>Filtrar por cualquier campo...</translation>
     </message>
     <message>
-        <source>Add to Known Words</source>
-        <translation>Añadir a Palabras conocidas</translation>
-    </message>
-    <message>
-        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
-        <translation>Marcar las filas resaltadas como Conocidas · pendiente. Confirmar las guarda; Cancelar las descarta.</translation>
-    </message>
-    <message>
         <source>Word (mined)</source>
         <translation>Palabra (minada)</translation>
     </message>
@@ -8789,6 +9115,30 @@ El selector «Frases» ofrece una opción por línea de subtítulos, así que su
     <message>
         <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S incluir/excluir · Ctrl+A incluir visibles · Ctrl+D excluir visibles · Ctrl+Intro confirmar</translation>
+    </message>
+    <message>
+        <source>+ Previous line</source>
+        <translation>+ Línea anterior</translation>
+    </message>
+    <message>
+        <source>+ Next line</source>
+        <translation>+ Línea siguiente</translation>
+    </message>
+    <message>
+        <source>Reset lines</source>
+        <translation>Restablecer líneas</translation>
+    </message>
+    <message>
+        <source>Merge the previous subtitle line into this word's sentence and media clip. Disabled when there is no earlier line or the combined clip would exceed %1 seconds.</source>
+        <translation>Añade la línea de subtítulo anterior a la frase y al clip de esta palabra. Se desactiva si no hay una línea anterior o si el clip combinado superaría los %1 segundos.</translation>
+    </message>
+    <message>
+        <source>Merge the next subtitle line into this word's sentence and media clip. Disabled when there is no later line or the combined clip would exceed %1 seconds.</source>
+        <translation>Añade la línea de subtítulo siguiente a la frase y al clip de esta palabra. Se desactiva si no hay una línea posterior o si el clip combinado superaría los %1 segundos.</translation>
+    </message>
+    <message>
+        <source>Restore this word's original single-line sentence and clip window.</source>
+        <translation>Restaura la frase de una sola línea y el intervalo del clip originales de esta palabra.</translation>
     </message>
     <message>
         <source>Sentences</source>
@@ -8847,6 +9197,22 @@ El selector «Frases» ofrece una opción por línea de subtítulos, así que su
         <translation>Incluir resaltadas (%1)</translation>
     </message>
     <message>
+        <source>Add to Known Words</source>
+        <translation>Añadir a Palabras conocidas</translation>
+    </message>
+    <message>
+        <source>Remove from Known Words</source>
+        <translation>Quitar de Palabras Conocidas</translation>
+    </message>
+    <message>
+        <source>Take the Known · pending mark back off the highlighted rows and return them to this review.</source>
+        <translation>Quite la marca de 'Conocida · pendiente' de las filas resaltadas y devuélvalas a esta revisión.</translation>
+    </message>
+    <message>
+        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
+        <translation>Marcar las filas resaltadas como Conocidas · pendiente. Confirmar las guarda; Cancelar las descarta.</translation>
+    </message>
+    <message>
         <source>Word %1 of %2 · %3 included · %4 shown of %5</source>
         <translation>Palabra %1 de %2 · %3 incluidas · %4 mostradas de %5</translation>
     </message>
@@ -8891,6 +9257,10 @@ El selector «Frases» ofrece una opción por línea de subtítulos, así que su
     <message>
         <source>Auto JA subs</source>
         <translation>Subtítulos JA automáticos</translation>
+    </message>
+    <message>
+        <source>Auto JA subs (dub audio)</source>
+        <translation>Subtítulos JA automáticos (audio doblado)</translation>
     </message>
     <message>
         <source>Checking</source>
@@ -9137,7 +9507,7 @@ El selector «Frases» ofrece una opción por línea de subtítulos, así que su
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner Agentic — Unexpected Error</source>
+        <source>Anki Miner — Unexpected Error</source>
         <translation type="unfinished" />
     </message>
     <message>

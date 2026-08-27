@@ -3,6 +3,7 @@
 import logging
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 
@@ -30,6 +31,34 @@ logger = logging.getLogger(__name__)
 #: day, so this must not fire on a healthy install that simply has auto-update off
 #: and a recent manual download.
 _YTDLP_STALE_AFTER_DAYS = 120
+
+#: How long :meth:`ValidationService._check_ytdlp` waits for the yt-dlp lock before
+#: reporting it busy. Bounded, not zero: at startup the validation worker and the
+#: scheduled auto-update overlap, and a cold-cache SHA-256 of the managed binary or a
+#: ``--version`` probe holds the lock about a second — an instant give-up mislabelled
+#: a healthy install as busy. 10s rides over those and is still nothing against the
+#: 3h transfer this refuses to park behind.
+_YTDLP_LOCK_WAIT_SECONDS = 10.0
+
+
+@dataclass(frozen=True)
+class ResourceReadiness:
+    """What each resource family can actually do right now.
+
+    One object rather than three separate probes because the setup wizard's
+    page base keeps exactly one live-check worker as its generation counter --
+    a second concurrent probe would have no way to be recognised as stale.
+
+    The dictionary's ``bool`` and the other two families' ``bool | None`` are
+    deliberately different types. ``None`` means "nothing configured", which
+    for frequency and pitch is a legitimate resting state and must never be
+    rendered as a problem; a dictionary has no such state, because without one
+    every mined card comes out with no definition (D26).
+    """
+
+    dictionary: tuple[bool, str]
+    frequency: tuple[bool | None, str]
+    pitch: tuple[bool | None, str]
 
 
 def _classify_resolved(base: str, resolved: str) -> str:
@@ -314,6 +343,23 @@ class ValidationService:
         """
         return self._check_offline_dictionary()
 
+    def check_resource_readiness(self) -> ResourceReadiness:
+        """Probe all three resource families in one pass (setup wizard).
+
+        Goes through the public :meth:`check_offline_dictionary` for the
+        dictionary leg so that wrapper stays the single dictionary-readiness
+        entry point rather than becoming a second, drifting copy of the same
+        question.
+
+        Scans registry snapshots only -- see :meth:`_check_offline_dictionary`
+        for why a readiness probe must never open a provider.
+        """
+        return ResourceReadiness(
+            dictionary=self.check_offline_dictionary(),
+            frequency=self._check_frequency_sources(),
+            pitch=self._check_pitch_sources(),
+        )
+
     def _check_ankiconnect(self) -> tuple[bool, str]:
         """Check if AnkiConnect is running and accessible.
 
@@ -367,6 +413,7 @@ class ValidationService:
         try:
             result = subprocess.run(
                 [resolved_path, *prefix_args, version_flag],
+                stdin=subprocess.DEVNULL,
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -445,10 +492,23 @@ class ValidationService:
         documents itself as never raising. Resolving outside would take the whole
         startup validation down over an optional tool.
 
+        The generation lock is taken with a bounded wait
+        (``_YTDLP_LOCK_WAIT_SECONDS``): a run using the app-managed binary holds
+        it for the whole transfer (up to the supervisor's 3h timeout), and
+        waiting on that parked the validation worker — and every surface built
+        on it — behind a download. Past the bound, report the busy state instead
+        of waiting.
+
         Returns:
             Tuple of (success, message).
         """
-        with managed_ytdlp_lock():
+        with managed_ytdlp_lock(timeout=_YTDLP_LOCK_WAIT_SECONDS) as acquired:
+            if not acquired:
+                return (
+                    False,
+                    "yt-dlp is busy — a yt-dlp task is running, so its version could not be checked. "
+                    "Re-run this check once that task finishes.",
+                )
             try:
                 resolved = resolve_ytdlp(self.config)
             except FileNotFoundError:
@@ -665,11 +725,19 @@ class ValidationService:
         degrades the same way but is not upgrade damage, matching how a source
         missing from disk is treated for the other three families.
 
+        A pack is only ever consulted when ``expression_audio`` is also mapped
+        (the fetcher's two-part gate — see ``audio_stage.py``). An unmapped
+        field must report the same as no enabled pack at all, never an
+        OK-green for a feature that will not run.
+
         Returns:
             ``(None, "")`` when nothing is configured, ``(True, names)`` when
             usable, ``(False, message)`` when stale.
         """
         from anki_miner.services.audio_packs.registry import AudioPackRegistry
+
+        if not self.config.anki_fields.get("expression_audio"):
+            return None, ""
 
         enabled_ids = [
             e.pack_id for e in self.config.expression_audio_chain if e.enabled and e.kind == "pack" and e.pack_id
