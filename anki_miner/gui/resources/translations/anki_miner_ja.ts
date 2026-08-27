@@ -24,8 +24,8 @@
         <translation>動画から日本語の単語カードを自動マイニングして Anki に追加 — スクリーンショット、音声、語義もすべて自動で。</translation>
     </message>
     <message>
-        <source>About Anki Miner Agentic</source>
-        <translation type="unfinished" />
+        <source>About Anki Miner</source>
+        <translation type="unfinished">Anki Miner について</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -648,11 +648,11 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Agentic Is Already Running</source>
+        <source>Anki Miner Is Already Running</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
         <translation type="unfinished" />
@@ -838,6 +838,10 @@ Skipped (source folder or database not found; use per-row Re-import…):
 
 スキップ（インポート元のフォルダまたはデータベースが見つかりません。行ごとの「再インポート…」を使用してください）:
 </translation>
+    </message>
+    <message>
+        <source>The selected audio pack is no longer in the chain.</source>
+        <translation>選択されたオーディオパックはチェーンに含まれていません。</translation>
     </message>
     <message>
         <source>No audio packs in the chain.</source>
@@ -2054,6 +2058,14 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>ヘルプメニューから Anki Miner の新しいバージョンを確認したり、設定画面のフッターで起動時の自動確認を切り替えたりできます。</translation>
     </message>
     <message>
+        <source>Download videos or audio</source>
+        <translation>動画・音声のダウンロード</translation>
+    </message>
+    <message>
+        <source>Save videos, audio or subtitles from a URL to a folder using yt-dlp, without mining. Works with any site yt-dlp supports.</source>
+        <translation>URL から動画・音声・字幕を yt-dlp でフォルダに保存します。マイニングは行いません。yt-dlp が対応するすべてのサイトで利用できます。</translation>
+    </message>
+    <message>
         <source>Restyle mined cards</source>
         <translation>マイニングしたカードのスタイルを再適用</translation>
     </message>
@@ -2686,6 +2698,10 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
     <message>
         <source>No media files were found in that folder.</source>
         <translation>そのフォルダにメディアファイルが見つかりませんでした。</translation>
+    </message>
+    <message>
+        <source>That media folder could not be read.</source>
+        <translation>そのメディアフォルダを読み込めませんでした。</translation>
     </message>
     <message>
         <source>Matched %1 of %2 media files.</source>
@@ -3658,6 +3674,206 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>オフライン辞書の準備完了：&lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
 </context><context>
+    <name>DownloadTab</name>
+    <message>
+        <source>Progress</source>
+        <translation>進捗</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>完了</translation>
+    </message>
+    <message>
+        <source>Done: </source>
+        <translation>完了: </translation>
+    </message>
+    <message>
+        <source>Skipped</source>
+        <translation>スキップ</translation>
+    </message>
+    <message>
+        <source>Skipped: </source>
+        <translation>スキップ: </translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>キャンセル</translation>
+    </message>
+    <message>
+        <source>Cancelling…</source>
+        <translation>キャンセル中…</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>キャンセルされました</translation>
+    </message>
+    <message>
+        <source>Failed — see log</source>
+        <translation>失敗しました — ログを確認してください</translation>
+    </message>
+    <message>
+        <source>Some URLs could not be downloaded.</source>
+        <translation>一部の URL をダウンロードできませんでした。</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded</source>
+        <translation>完了 — %1 件をダウンロードしました</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded, %2 already present</source>
+        <translation>完了 — %1 件をダウンロード、%2 件は既存</translation>
+    </message>
+    <message>
+        <source>Nothing downloaded — all %1 already present in the download folder.</source>
+        <translation>ダウンロードなし — %1 件はすべてダウンロードフォルダに既にあります。</translation>
+    </message>
+    <message>
+        <source>Select Download Folder</source>
+        <translation>ダウンロードフォルダを選択</translation>
+    </message>
+    <message>
+        <source>Media download</source>
+        <translation>メディアのダウンロード</translation>
+    </message>
+    <message>
+        <source>URLs</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>yt-dlp not found. Install or update it in Settings → YouTube to enable downloads.</source>
+        <translation>yt-dlp が見つかりません。ダウンロードを有効にするには「設定 → YouTube」でインストールまたは更新してください。</translation>
+    </message>
+    <message>
+        <source>Download videos or audio from any site yt-dlp supports, without mining.</source>
+        <translation>yt-dlp が対応するあらゆるサイトから動画・音声をダウンロードします（マイニングなし）。</translation>
+    </message>
+    <message>
+        <source>One URL per line</source>
+        <translation>1 行に 1 つの URL</translation>
+    </message>
+    <message>
+        <source>Options</source>
+        <translation>オプション</translation>
+    </message>
+    <message>
+        <source>Quality:</source>
+        <translation>画質:</translation>
+    </message>
+    <message>
+        <source>Best available</source>
+        <translation>利用可能な最高画質</translation>
+    </message>
+    <message>
+        <source>Up to 1080p</source>
+        <translation>1080p まで</translation>
+    </message>
+    <message>
+        <source>Up to 720p</source>
+        <translation>720p まで</translation>
+    </message>
+    <message>
+        <source>Audio only (MP3)</source>
+        <translation>音声のみ (MP3)</translation>
+    </message>
+    <message>
+        <source>Audio only (M4A)</source>
+        <translation>音声のみ (M4A)</translation>
+    </message>
+    <message>
+        <source>Custom format:</source>
+        <translation>カスタム形式:</translation>
+    </message>
+    <message>
+        <source>Optional yt-dlp format string</source>
+        <translation>yt-dlp のフォーマット文字列（任意）</translation>
+    </message>
+    <message>
+        <source>When set, the quality preset above is ignored.</source>
+        <translation>指定すると、上の画質プリセットは無視されます。</translation>
+    </message>
+    <message>
+        <source>Download subtitles</source>
+        <translation>字幕をダウンロード</translation>
+    </message>
+    <message>
+        <source>Save subtitles next to the media file. Prefers manual subtitles, falls back to automatic.</source>
+        <translation>字幕をメディアファイルと同じ場所に保存します。手動字幕を優先し、なければ自動字幕を使用します。</translation>
+    </message>
+    <message>
+        <source>Languages:</source>
+        <translation>言語:</translation>
+    </message>
+    <message>
+        <source>Comma-separated language codes, e.g. ja,en</source>
+        <translation>カンマ区切りの言語コード（例: ja,en）</translation>
+    </message>
+    <message>
+        <source>Embed thumbnail</source>
+        <translation>サムネイルを埋め込む</translation>
+    </message>
+    <message>
+        <source>Embed title and metadata</source>
+        <translation>タイトルとメタデータを埋め込む</translation>
+    </message>
+    <message>
+        <source>Output</source>
+        <translation>出力</translation>
+    </message>
+    <message>
+        <source>Output:</source>
+        <translation>出力:</translation>
+    </message>
+    <message>
+        <source>Choose Folder…</source>
+        <translation>フォルダを選択…</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>リセット</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>ダウンロード</translation>
+    </message>
+    <message>
+        <source>Download folder is not writable.</source>
+        <translation>ダウンロードフォルダに書き込めません。</translation>
+    </message>
+    <message>
+        <source>Check permissions for %1.</source>
+        <translation>%1 の権限を確認してください。</translation>
+    </message>
+    <message>
+        <source>Some lines are not valid URLs.</source>
+        <translation>有効な URL でない行があります。</translation>
+    </message>
+    <message>
+        <source>Paste at least one URL to download.</source>
+        <translation>ダウンロードする URL を 1 つ以上貼り付けてください。</translation>
+    </message>
+    <message>
+        <source>Downloading %1 of %2</source>
+        <translation>%2 件中 %1 件をダウンロード中</translation>
+    </message>
+</context><context>
+    <name>DownloadWorker</name>
+    <message>
+        <source>%1: %2%</source>
+        <translation>%1: %2%</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>完了</translation>
+    </message>
+    <message>
+        <source>Already downloaded</source>
+        <translation>ダウンロード済み</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>キャンセルされました</translation>
+    </message>
+</context><context>
     <name>EnhancedDialog</name>
     <message>
         <source>Close</source>
@@ -3878,10 +4094,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>エラー: %1</translation>
     </message>
     <message>
-        <source>Unexpected error: %1</source>
-        <translation>予期しないエラー: %1</translation>
-    </message>
-    <message>
         <source>No words selected for card creation</source>
         <translation>カード作成用に選択された単語がありません</translation>
     </message>
@@ -3904,6 +4116,10 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>
             <numerusform>%n 単語分のメディアを抽出しました</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Unexpected error: %1</source>
+        <translation>予期しないエラー: %1</translation>
     </message>
     <message numerus="yes">
         <source>Run failed after creating %n card(s); they remain in Anki and can be undone.</source>
@@ -5258,6 +5474,10 @@ Continue?</source>
         <translation>デッキフィルター</translation>
     </message>
     <message>
+        <source>Download</source>
+        <translation>ダウンロード</translation>
+    </message>
+    <message>
         <source>Single</source>
         <translation>単一</translation>
     </message>
@@ -5272,6 +5492,16 @@ Continue?</source>
     <message>
         <source>Failed to create desktop shortcut.</source>
         <translation>デスクトップショートカットの作成に失敗しました。</translation>
+    </message>
+</context><context>
+    <name>MediaDownloader</name>
+    <message>
+        <source>Downloading</source>
+        <translation>ダウンロード中</translation>
+    </message>
+    <message>
+        <source>Processing</source>
+        <translation>処理中</translation>
     </message>
 </context><context>
     <name>MediaExtractorService</name>
@@ -6618,6 +6848,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>先にテキストを貼り付けてください。</translation>
     </message>
     <message>
+        <source>This card image has no Picture field to land in. Map one in Settings → Anki, or clear the image to mine without one.</source>
+        <translation>このカードイメージには配置先の画像フィールドがありません。設定 → Anki でマッピングするか、イメージを削除してマイニングしてください。</translation>
+    </message>
+    <message>
         <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
         <translation>この画像を読み込めません。別の画像を選択するか、フィールドを空にして画像なしでマイニングしてください。</translation>
     </message>
@@ -6818,6 +7052,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>これらのリソースとは？</translation>
     </message>
     <message>
+        <source>%1 — %2</source>
+        <translation>%1 — %2</translation>
+    </message>
+    <message>
         <source>Download recommended resources</source>
         <translation>推奨リソースをダウンロード</translation>
     </message>
@@ -6826,12 +7064,20 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>オフライン辞書を確認しています...</translation>
     </message>
     <message>
-        <source>Could not check the offline dictionary: </source>
-        <translation>オフライン辞書を確認できませんでした： </translation>
+        <source>Could not check the installed resources: </source>
+        <translation>インストール済みリソースを確認できませんでした: </translation>
     </message>
     <message>
         <source>Dictionary ready: %1</source>
         <translation>辞書の準備完了：%1</translation>
+    </message>
+    <message>
+        <source>%1 ready: %2</source>
+        <translation>%1 準備完了: %2</translation>
+    </message>
+    <message>
+        <source>%1: not set up (optional)</source>
+        <translation>%1: 未設定（任意）</translation>
     </message>
     <message>
         <source>Download cancelled. Some resources were installed before cancellation.</source>
@@ -7000,6 +7246,40 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Failed to delete notes. Check that Anki is running.</source>
         <translation>ノートを削除できませんでした。Anki が起動していることを確認してください。</translation>
+    </message>
+</context><context>
+    <name>RetimeReference</name>
+    <message>
+        <source>Chosen subtitle track %1 is unusable; using audio instead.</source>
+        <translation>選択された字幕トラック %1 は使用できません。代わりにオーディオを使用します。</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: not a dialogue track.</source>
+        <translation>字幕トラック %1 をスキップ。対話トラックではありません。</translation>
+    </message>
+    <message>
+        <source>No usable embedded subtitle track; aligning against audio.</source>
+        <translation>使用可能な埋め込み字幕トラックがありません。オーディオで調整します。</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: only %2 dialogue lines.</source>
+        <translation>字幕トラック %1 をスキップ。対話行は %2 行のみです。</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: covers only %2 of the episode.</source>
+        <translation>字幕トラック %1 をスキップ。エピソード全体の %2 のみをカバーしています。</translation>
+    </message>
+    <message>
+        <source>Aligning against embedded subtitle track %1 (%2, %3 lines).</source>
+        <translation>埋め込み字幕トラック %1（%2、%3 行）で調整します。</translation>
+    </message>
+    <message>
+        <source>No Japanese-tagged audio track found; using the first audio track — on a dual-audio release this may be a dub.</source>
+        <translation>日本語タグ付きオーディオトラックが見つかりません。最初のオーディオトラックを使用します。二重音声リリースでは、ダブの場合があります。</translation>
+    </message>
+    <message>
+        <source>Aligning against audio (%1).</source>
+        <translation>オーディオで調整します（%1）。</translation>
     </message>
 </context><context>
     <name>RetimeReferenceDialog</name>
@@ -7370,6 +7650,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>Download the recommended frequency list, pitch accent data, and dictionary now?</source>
         <translation>推奨の頻度リスト、ピッチアクセントデータ、辞書を今すぐダウンロードしますか？</translation>
+    </message>
+    <message>
+        <source>Dictionary</source>
+        <translation>辞書</translation>
+    </message>
+    <message>
+        <source>Frequency</source>
+        <translation>頻度</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>ピッチアクセント</translation>
     </message>
     <message>
         <source>Anki Miner Setup</source>
@@ -7782,12 +8074,12 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>そのフォルダは存在しなくなっています。</translation>
     </message>
     <message>
-        <source>That folder could not be read.</source>
-        <translation>そのフォルダーを読み取れませんでした。</translation>
-    </message>
-    <message>
         <source>No video or audio files were found in that folder.</source>
         <translation>そのフォルダーに動画・音声ファイルが見つかりませんでした。</translation>
+    </message>
+    <message>
+        <source>That folder could not be read.</source>
+        <translation>そのフォルダーを読み取れませんでした。</translation>
     </message>
     <message>
         <source>Transcribing file %1 of %2</source>
@@ -8104,10 +8396,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>その字幕フォルダは存在しなくなっています。</translation>
     </message>
     <message>
-        <source>That video folder could not be read.</source>
-        <translation>その動画フォルダーを読み取れませんでした。</translation>
-    </message>
-    <message>
         <source>Matched %1 of %2 video files.</source>
         <translation>%2 件中 %1 件の動画ファイルとマッチしました。</translation>
     </message>
@@ -8118,6 +8406,10 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>No subtitle file could be matched to any video file in those folders.</source>
         <translation>これらのフォルダ内のどの動画ファイルにも字幕ファイルを一致させられませんでした。</translation>
+    </message>
+    <message>
+        <source>That video folder could not be read.</source>
+        <translation>その動画フォルダーを読み取れませんでした。</translation>
     </message>
     <message>
         <source>Retiming file %1 of %2</source>
@@ -8138,12 +8430,54 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>完了</translation>
     </message>
     <message>
+        <source>Retimed with %1</source>
+        <translation>%1 で再タイミング</translation>
+    </message>
+    <message>
+        <source>Original backed up as %1</source>
+        <translation>オリジナルは %1 にバックアップされました</translation>
+    </message>
+    <message>
         <source>Cancelled</source>
         <translation>キャンセルされました</translation>
     </message>
     <message>
-        <source>No trustworthy sync for %1; original kept unchanged</source>
-        <translation>%1 の同期結果は信頼できません；元のファイルは変更されていません</translation>
+        <source>no trustworthy sync; original kept unchanged</source>
+        <translation>信頼できる同期がありません。オリジナルは変更されていません</translation>
+    </message>
+    <message>
+        <source>Retiming failed for %1: %2</source>
+        <translation>%1 の再タイミングに失敗しました。%2</translation>
+    </message>
+</context><context>
+    <name>SubtitleRetimer</name>
+    <message>
+        <source>Ignoring %1 non-dialogue lines during alignment.</source>
+        <translation>調整中に %1 個の非対話行を無視します。</translation>
+    </message>
+    <message>
+        <source>alass is not installed; skipping alass attempts.</source>
+        <translation>alass がインストールされていません。alass の試行をスキップします。</translation>
+    </message>
+    <message>
+        <source>%1 result rejected: %2</source>
+        <translation>%1 の結果が拒否されました。%2</translation>
+    </message>
+    <message>
+        <source>no engine produced a trustworthy sync; original left untouched</source>
+        <translation>エンジンが信頼できる同期を生成しませんでした。オリジナルは変更されていません</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (offset %2).</source>
+        <translation>%1 で再タイミングしました（オフセット %2）。</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (%2 blocks, shifts %3..%4).</source>
+        <translation>%1 で再タイミングしました（%2 ブロック、シフト %3..%4）。</translation>
+    </message>
+    <message>
+        <source>Retimed with %1.</source>
+        <translation>%1 で再タイミングしました。</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8728,14 +9062,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>任意のフィールドで絞り込み...</translation>
     </message>
     <message>
-        <source>Add to Known Words</source>
-        <translation>既知単語に追加</translation>
-    </message>
-    <message>
-        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
-        <translation>ハイライト行を「既知・保留中」としてマークします。確認で保存、キャンセルで破棄します。</translation>
-    </message>
-    <message>
         <source>Word (mined)</source>
         <translation>単語（マイニング済み）</translation>
     </message>
@@ -8774,6 +9100,30 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
     <message>
         <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S：含める／除外　Ctrl+A：表示中を含める　Ctrl+D：表示中を除外　Ctrl+Enter：確認</translation>
+    </message>
+    <message>
+        <source>+ Previous line</source>
+        <translation>+ 前の行</translation>
+    </message>
+    <message>
+        <source>+ Next line</source>
+        <translation>+ 次の行</translation>
+    </message>
+    <message>
+        <source>Reset lines</source>
+        <translation>行をリセット</translation>
+    </message>
+    <message>
+        <source>Merge the previous subtitle line into this word's sentence and media clip. Disabled when there is no earlier line or the combined clip would exceed %1 seconds.</source>
+        <translation>前の字幕行をこの単語の文とクリップに結合します。前の行がない場合、または結合後のクリップが %1 秒を超える場合は無効になります。</translation>
+    </message>
+    <message>
+        <source>Merge the next subtitle line into this word's sentence and media clip. Disabled when there is no later line or the combined clip would exceed %1 seconds.</source>
+        <translation>次の字幕行をこの単語の文とクリップに結合します。次の行がない場合、または結合後のクリップが %1 秒を超える場合は無効になります。</translation>
+    </message>
+    <message>
+        <source>Restore this word's original single-line sentence and clip window.</source>
+        <translation>この単語の元の 1 行の文とクリップ範囲に戻します。</translation>
     </message>
     <message>
         <source>Sentences</source>
@@ -8832,6 +9182,22 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
         <translation>ハイライトを含める（%1）</translation>
     </message>
     <message>
+        <source>Add to Known Words</source>
+        <translation>既知単語に追加</translation>
+    </message>
+    <message>
+        <source>Remove from Known Words</source>
+        <translation>既知単語から削除</translation>
+    </message>
+    <message>
+        <source>Take the Known · pending mark back off the highlighted rows and return them to this review.</source>
+        <translation>ハイライト行から既知単語・保留中マークを削除して、このレビューに戻します</translation>
+    </message>
+    <message>
+        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
+        <translation>ハイライト行を「既知・保留中」としてマークします。確認で保存、キャンセルで破棄します。</translation>
+    </message>
+    <message>
         <source>Word %1 of %2 · %3 included · %4 shown of %5</source>
         <translation>単語 %2 件中 %1 件・%3 件を含めた・%5 件中 %4 件を表示</translation>
     </message>
@@ -8876,6 +9242,10 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
     <message>
         <source>Auto JA subs</source>
         <translation>自動日本語字幕</translation>
+    </message>
+    <message>
+        <source>Auto JA subs (dub audio)</source>
+        <translation>自動 JA 字幕（吹き替え音声）</translation>
     </message>
     <message>
         <source>Checking</source>
@@ -9122,7 +9492,7 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner Agentic — Unexpected Error</source>
+        <source>Anki Miner — Unexpected Error</source>
         <translation type="unfinished" />
     </message>
     <message>

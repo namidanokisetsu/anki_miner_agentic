@@ -3,7 +3,6 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-
 _AGENTIC_PACKAGES = (
     "anki_miner.agent",
     "anki_miner.headless",

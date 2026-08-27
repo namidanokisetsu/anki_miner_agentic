@@ -83,9 +83,12 @@ class AgentMiningApplication:
                 parsed.append(YouTubeInput.from_dict(item))
             else:
                 raise AgentMiningError("invalid_input", f"Unsupported input type: {item.get('type')!r}")
+        max_cards = request.get("max_cards")
+        if type(max_cards) is not int:
+            raise AgentMiningError("invalid_limit", "max_cards must be an integer")
         return self.candidate_service.prepare(
             parsed,
-            max_cards=request.get("max_cards"),
+            max_cards=max_cards,
         )
 
     def prepare_mining_run(self, request: dict[str, Any]) -> dict[str, Any]:

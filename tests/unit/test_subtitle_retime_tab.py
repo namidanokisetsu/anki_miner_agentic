@@ -25,6 +25,7 @@ import pytest
 pytest.importorskip("PyQt6.QtWidgets")
 
 from anki_miner.config import AnkiMinerConfig
+from anki_miner.gui.controllers.task_registry import TaskOutcome, TaskRegistry
 from anki_miner.gui.widgets.subtitle_retime_tab import SubtitleRetimeTab
 from anki_miner.models import TerminalOutcome
 from anki_miner.services.retime_reference import ReferenceOverride
@@ -63,6 +64,7 @@ class _FakeWorker:
         self.file_started = MagicMock()
         self.file_progress = MagicMock()
         self.file_finished = MagicMock()
+        self.file_note = MagicMock()
         self.file_skipped = MagicMock()
         self.queue_finished = MagicMock()
         self.error = MagicMock()
@@ -249,7 +251,7 @@ def test_single_mode_collects_pair(qtbot, tmp_path):
     tab.video_file_selector.set_path(str(video))
     tab.subtitle_file_selector.set_path(str(sub))
 
-    pairs = tab._collect_pairs()
+    pairs = tab._collect_single_pair()
     assert pairs == [(video, sub)]
 
 
@@ -262,7 +264,7 @@ def test_single_mode_missing_subtitle_warns(qtbot, tmp_path):
     tab = _make_tab(config, qtbot)
     tab.video_file_selector.set_path(str(video))
 
-    pairs = tab._collect_pairs()
+    pairs = tab._collect_single_pair()
 
     assert tab.issue_banner().current_issue() is not None
     assert pairs == []
@@ -277,7 +279,7 @@ def test_single_mode_missing_video_warns(qtbot, tmp_path):
     tab = _make_tab(config, qtbot)
     tab.subtitle_file_selector.set_path(str(sub))
 
-    pairs = tab._collect_pairs()
+    pairs = tab._collect_single_pair()
 
     assert tab.issue_banner().current_issue() is not None
     assert pairs == []
@@ -311,10 +313,12 @@ def test_folder_mode_collects_pairs_and_logs_matched(qtbot, tmp_path):
     tab.subtitle_folder_selector.set_path(str(sub_folder))
 
     fake_pairs = [FilePair(v1, s1), FilePair(v2, s2)]
+    result: list[list[tuple[Path, Path]]] = []
     with patch(_FIND_PAIRS, return_value=fake_pairs):
-        pairs = tab._collect_pairs()
+        tab._collect_folder_pairs_async(result.append)
+        qtbot.waitUntil(lambda: bool(result), timeout=3000)
 
-    assert pairs == [(v1, s1), (v2, s2)]
+    assert result[0] == [(v1, s1), (v2, s2)]
     log_text = tab.log_widget.text_edit.toPlainText()
     assert "Matched 2 of 2" in log_text
 
@@ -351,6 +355,7 @@ def test_pairing_summary_survives_log_clear_on_start(qtbot, tmp_path):
         patch(_WORKER_CLS, return_value=fake_worker),
     ):
         tab.retime_button.click()
+        qtbot.waitUntil(lambda: fake_worker._started, timeout=3000)
 
     assert fake_worker._started
     assert "Matched 2 of 2" in tab.log_widget.text_edit.toPlainText()
@@ -377,10 +382,12 @@ def test_folder_mode_unmatched_logs_warning(qtbot, tmp_path):
     tab.subtitle_folder_selector.set_path(str(sub_folder))
 
     fake_pairs = [FilePair(v1, s1)]
+    result: list[list[tuple[Path, Path]]] = []
     with patch(_FIND_PAIRS, return_value=fake_pairs):
-        pairs = tab._collect_pairs()
+        tab._collect_folder_pairs_async(result.append)
+        qtbot.waitUntil(lambda: bool(result), timeout=3000)
 
-    assert pairs == [(v1, s1)]
+    assert result[0] == [(v1, s1)]
     log_text = tab.log_widget.text_edit.toPlainText()
     assert "Matched 1 of 2" in log_text
     # Independent assertion against the unmatched-warning message text.
@@ -401,23 +408,39 @@ def test_folder_mode_no_pairs_warns(qtbot, tmp_path):
     tab.video_folder_selector.set_path(str(video_folder))
     tab.subtitle_folder_selector.set_path(str(sub_folder))
 
+    result: list[list[tuple[Path, Path]]] = []
     with patch(_FIND_PAIRS, return_value=[]):
-        pairs = tab._collect_pairs()
+        tab._collect_folder_pairs_async(result.append)
+        qtbot.waitUntil(lambda: tab.issue_banner().current_issue() is not None, timeout=3000)
 
-    assert tab.issue_banner().current_issue() is not None
-    assert pairs == []
+    assert result == [[]]
 
 
 def test_folder_mode_missing_video_folder_warns(qtbot, tmp_path):
-    """No video folder selected → warning, returns []."""
+    """No video folder selected → warning, returns [] — synchronously, before
+    any scan is dispatched (no folder picked yet to scan). on_pairs is still
+    called with [] so the caller (_on_retime) re-enables the run button."""
     config = _make_config(tmp_path)
     tab = _make_tab(config, qtbot)
     tab.folder_mode_button.click()
 
-    pairs = tab._collect_pairs()
+    result: list[list[tuple[Path, Path]]] = []
+    tab._collect_folder_pairs_async(result.append)
 
     assert tab.issue_banner().current_issue() is not None
-    assert pairs == []
+    assert result == [[]]
+
+
+def test_folder_mode_failed_collection_leaves_button_enabled(qtbot, tmp_path):
+    """A synchronous bail (no folder picked) must not leave Retime dead:
+    _on_retime disables it before dispatch, so the collector must always
+    call on_pairs — even on an early return — for the caller to re-enable it."""
+    tab = _make_tab(_make_config(tmp_path), qtbot)
+    tab.folder_mode_button.click()
+
+    tab.retime_button.click()
+
+    assert tab.retime_button.isEnabled()
 
 
 def test_unreadable_video_folder_reports_issue_without_raising(qtbot, tmp_path):
@@ -431,10 +454,12 @@ def test_unreadable_video_folder_reports_issue_without_raising(qtbot, tmp_path):
     tab.video_folder_selector.set_path(str(video_folder))
     tab.subtitle_folder_selector.set_path(str(sub_folder))
 
+    result: list[list[tuple[Path, Path]]] = []
     with patch.object(Path, "iterdir", side_effect=PermissionError("denied")):
-        pairs = tab._collect_pairs()
+        tab._collect_folder_pairs_async(result.append)
+        qtbot.waitUntil(lambda: bool(result), timeout=3000)
 
-    assert pairs == []
+    assert result == [[]]
     assert tab.issue_banner().current_issue() is not None
 
 
@@ -528,6 +553,7 @@ def test_pair_preview_lists_matches_and_unmatched(qtbot, tmp_path):
     tab._on_folder_mode()
     tab.video_folder_selector.set_path(str(video_dir))
     tab.subtitle_folder_selector.set_path(str(sub_dir))
+    qtbot.waitUntil(lambda: tab.pair_preview.count() == 3, timeout=3000)
 
     assert not tab.pair_preview.isHidden()
     items = [tab.pair_preview.item(i).text() for i in range(tab.pair_preview.count())]
@@ -537,13 +563,33 @@ def test_pair_preview_lists_matches_and_unmatched(qtbot, tmp_path):
     assert "2" in tab.pair_preview_label.text()
 
 
+def test_pair_preview_clears_on_scan_error(qtbot, tmp_path):
+    """A failed background scan must not leave a previous successful scan's
+    pairs on screen looking current — the preview clears and hides."""
+    tab = _make_tab(_make_config(tmp_path), qtbot)
+    video_dir, sub_dir = _folder_fixture(tmp_path)
+
+    tab._on_folder_mode()
+    tab.video_folder_selector.set_path(str(video_dir))
+    tab.subtitle_folder_selector.set_path(str(sub_dir))
+    qtbot.waitUntil(lambda: tab.pair_preview.count() == 3, timeout=3000)
+    assert not tab.pair_preview.isHidden()
+
+    with patch(_FIND_PAIRS, side_effect=OSError("boom")):
+        tab._refresh_pair_preview()
+        qtbot.waitUntil(lambda: tab.pair_preview.isHidden(), timeout=3000)
+
+    assert tab.pair_preview.count() == 0
+    assert tab.pair_preview_label.isHidden()
+
+
 def test_pair_preview_hidden_in_single_file_mode(qtbot, tmp_path):
     tab = _make_tab(_make_config(tmp_path), qtbot)
     video_dir, sub_dir = _folder_fixture(tmp_path)
     tab._on_folder_mode()
     tab.video_folder_selector.set_path(str(video_dir))
     tab.subtitle_folder_selector.set_path(str(sub_dir))
-    assert not tab.pair_preview.isHidden()
+    qtbot.waitUntil(lambda: not tab.pair_preview.isHidden(), timeout=3000)
 
     tab._on_file_mode()
     assert tab.pair_preview.isHidden()
@@ -874,6 +920,7 @@ def test_file_skipped_advances_progress(qtbot, tmp_path):
         patch(_FIND_PAIRS, return_value=fake_pairs),
     ):
         tab.retime_button.click()
+        qtbot.waitUntil(lambda: fake_worker._started, timeout=3000)
 
     assert tab.progress_widget.progress_bar.value() == 0
 
@@ -915,6 +962,7 @@ def test_all_skipped_run_names_the_remedy(qtbot, tmp_path):
         patch(_FIND_PAIRS, return_value=fake_pairs),
     ):
         tab.retime_button.click()
+        qtbot.waitUntil(lambda: fake_worker._started, timeout=3000)
 
     for slot in skipped_slots:
         slot(0, sub1, "Output equals input; enable Overwrite to retime in place")
@@ -927,6 +975,96 @@ def test_all_skipped_run_names_the_remedy(qtbot, tmp_path):
     assert "2" in status
     assert "Overwrite" in status
     assert "files processed" not in status
+
+
+def test_all_skipped_run_publishes_failed_outcome(qtbot, tmp_path):
+    """An all-skipped run names the remedy on screen but must not report
+    SUCCEEDED to the Activity drawer/pinned bar/notification (C-2): those
+    global surfaces publish the failed outcome instead."""
+    config = _make_config(tmp_path)
+    video1 = tmp_path / "ep01.mp4"
+    video2 = tmp_path / "ep02.mp4"
+    sub1 = tmp_path / "ep01.srt"
+    sub2 = tmp_path / "ep02.srt"
+    for p in (video1, video2, sub1, sub2):
+        p.write_bytes(b"fake")
+
+    fake_worker = _FakeWorker()
+    skipped_slots = _capture_signal_slots(fake_worker.file_skipped)
+    finished_slots = _capture_signal_slots(fake_worker.queue_finished)
+
+    tab = _make_tab(config, qtbot)
+    registry = TaskRegistry()
+    tab.bind_task_registry(registry)
+    tab.folder_mode_button.click()
+    tab.video_folder_selector.set_path(str(tmp_path))
+    tab.subtitle_folder_selector.set_path(str(tmp_path))
+
+    fake_pairs = [FilePair(video1, sub1), FilePair(video2, sub2)]
+    with (
+        patch(_AVAILABLE, return_value=True),
+        patch(_OS_ACCESS, return_value=True),
+        patch(_WORKER_CLS, return_value=fake_worker),
+        patch(_FIND_PAIRS, return_value=fake_pairs),
+    ):
+        tab.retime_button.click()
+        qtbot.waitUntil(lambda: fake_worker._started, timeout=3000)
+
+    for slot in skipped_slots:
+        slot(0, sub1, "Output equals input; enable Overwrite to retime in place")
+        slot(1, sub2, "Output equals input; enable Overwrite to retime in place")
+    for slot in finished_slots:
+        slot(TerminalOutcome.SUCCESS)
+
+    closed = registry.snapshot("tools.retime")
+    assert closed.outcome is TaskOutcome.FAILED
+
+    registry.shutdown()
+
+
+def test_cancelled_all_skipped_run_publishes_cancelled_outcome(qtbot, tmp_path):
+    """A cancelled run that happened to skip everything stays CANCELLED, not
+    relabelled FAILED by the all-skipped rule (cancel wins)."""
+    config = _make_config(tmp_path)
+    video1 = tmp_path / "ep01.mp4"
+    video2 = tmp_path / "ep02.mp4"
+    sub1 = tmp_path / "ep01.srt"
+    sub2 = tmp_path / "ep02.srt"
+    for p in (video1, video2, sub1, sub2):
+        p.write_bytes(b"fake")
+
+    fake_worker = _FakeWorker()
+    skipped_slots = _capture_signal_slots(fake_worker.file_skipped)
+    finished_slots = _capture_signal_slots(fake_worker.queue_finished)
+
+    tab = _make_tab(config, qtbot)
+    registry = TaskRegistry()
+    tab.bind_task_registry(registry)
+    tab.folder_mode_button.click()
+    tab.video_folder_selector.set_path(str(tmp_path))
+    tab.subtitle_folder_selector.set_path(str(tmp_path))
+
+    fake_pairs = [FilePair(video1, sub1), FilePair(video2, sub2)]
+    with (
+        patch(_AVAILABLE, return_value=True),
+        patch(_OS_ACCESS, return_value=True),
+        patch(_WORKER_CLS, return_value=fake_worker),
+        patch(_FIND_PAIRS, return_value=fake_pairs),
+    ):
+        tab.retime_button.click()
+        qtbot.waitUntil(lambda: fake_worker._started, timeout=3000)
+
+    for slot in skipped_slots:
+        slot(0, sub1, "Output equals input; enable Overwrite to retime in place")
+        slot(1, sub2, "Output equals input; enable Overwrite to retime in place")
+    tab._on_cancel()
+    for slot in finished_slots:
+        slot(TerminalOutcome.CANCELLED)
+
+    closed = registry.snapshot("tools.retime")
+    assert closed.outcome is TaskOutcome.CANCELLED
+
+    registry.shutdown()
 
 
 def test_partially_skipped_run_reports_both_counts(qtbot, tmp_path):
@@ -957,6 +1095,7 @@ def test_partially_skipped_run_reports_both_counts(qtbot, tmp_path):
         patch(_FIND_PAIRS, return_value=fake_pairs),
     ):
         tab.retime_button.click()
+        qtbot.waitUntil(lambda: fake_worker._started, timeout=3000)
 
     for slot in done_slots:
         slot(0, sub1, None)
@@ -1032,6 +1171,51 @@ def test_file_finished_still_logs_done_for_success(qtbot, tmp_path):
     log_text = tab.log_widget.text_edit.toPlainText()
     assert "Done" in log_text
     assert "episode.srt" in log_text
+
+
+def test_file_note_durably_logs_engine_and_backup(qtbot, tmp_path):
+    """file_note(idx, line) — the engine used and the .pre-retime.bak sibling —
+    lands in the Activity log and survives past the transient status label
+    the next file_progress/file_finished overwrites (C-7/C-10)."""
+    config = _make_config(tmp_path)
+    video = tmp_path / "episode.mp4"
+    sub = tmp_path / "episode.srt"
+    video.write_bytes(b"fake")
+    sub.write_text("1\n")
+    out_srt = tmp_path / "episode.srt"
+
+    fake_worker = _FakeWorker()
+    note_slots = _capture_signal_slots(fake_worker.file_note)
+    progress_slots = _capture_signal_slots(fake_worker.file_progress)
+    finished_slots = _capture_signal_slots(fake_worker.file_finished)
+
+    tab = _make_tab(config, qtbot)
+    tab.video_file_selector.set_path(str(video))
+    tab.subtitle_file_selector.set_path(str(sub))
+
+    with (
+        patch(_AVAILABLE, return_value=True),
+        patch(_OS_ACCESS, return_value=True),
+        patch(_WORKER_CLS, return_value=fake_worker),
+    ):
+        tab.retime_button.click()
+
+    # Mirrors the real worker's emission order: notes, then the transient
+    # "Done" progress flash, then file_finished.
+    for slot in note_slots:
+        slot(0, "Retimed with ffsubsync")
+        slot(0, "Original backed up as episode.srt.pre-retime.bak")
+    for slot in progress_slots:
+        slot(0, 100, "Done")
+    for slot in finished_slots:
+        slot(0, out_srt, None)
+
+    # A later status update would blank the transient label, but the log
+    # widget is append-only — the durable content must still be there.
+    log_text = tab.log_widget.text_edit.toPlainText()
+    assert "Retimed with ffsubsync" in log_text
+    assert "episode.srt.pre-retime.bak" in log_text
+    assert "Done" in log_text
 
 
 # ---------------------------------------------------------------------------

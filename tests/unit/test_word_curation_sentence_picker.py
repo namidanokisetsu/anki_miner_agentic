@@ -18,6 +18,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from PyQt6.QtWidgets import QAbstractItemView, QApplication, QMenu
 
+from anki_miner.gui.utils.phrase_wrap import WORD_JOINER
 from anki_miner.gui.utils.qt_helpers import COPY_ROLE
 from anki_miner.gui.widgets.dialogs import word_curation_dialog as wcd
 from anki_miner.gui.widgets.dialogs.word_curation_dialog import (
@@ -357,9 +358,11 @@ class TestPlayPauseShortcut:
         assert self._has_space_play_pause(dlg.sentence_list)
 
     def test_space_shortcut_on_player_pane(self, qtbot, mixed_words, tmp_path):
+        """The shortcut hangs off the pane container, so it also covers the clip
+        strip and the prev/next line buttons that sit beside the player (#120)."""
         dlg = _dialog_with_stub_player(mixed_words, tmp_path)
         qtbot.addWidget(dlg)
-        assert self._has_space_play_pause(dlg.player_widget)
+        assert self._has_space_play_pause(dlg.player_pane)
 
 
 class TestContextMenuCopy:
@@ -630,7 +633,7 @@ class TestPickRefreshesDefinitionPane:
     def test_a_pick_looks_up_the_chosen_mined_form(self, qtbot, noun_words, sync_off_thread):
         terms: list[str] = []
 
-        def lookup(term: str):
+        def lookup(term: str, lemma: str | None = None):
             terms.append(term)
             return [(term, f"gloss for {term}")]
 
@@ -649,7 +652,7 @@ class TestPickRefreshesDefinitionPane:
         and back re-rendered the first occurrence's definition."""
         terms: list[str] = []
 
-        def lookup(term: str):
+        def lookup(term: str, lemma: str | None = None):
             terms.append(term)
             return [(term, f"gloss for {term}")]
 
@@ -680,7 +683,7 @@ class TestPickRefreshesDefinitionPane:
 
         monkeypatch.setattr(wcd, "run_off_thread", fake_run_off_thread)
 
-        dlg = WordCurationDialog(noun_words, lookup_fn=lambda term: [(term, f"gloss for {term}")])
+        dlg = WordCurationDialog(noun_words, lookup_fn=lambda term, lemma=None: [(term, f"gloss for {term}")])
         qtbot.addWidget(dlg)
         # Land the focus lookup first: only one request is ever in flight, so a
         # pick made while it is outstanding would queue rather than dispatch.
@@ -700,3 +703,32 @@ class TestPickRefreshesDefinitionPane:
         done(work())
         assert "子ども" not in dlg.definition_view.toHtml()
         assert "子供" in dlg.definition_view.toHtml()
+
+
+class TestPhraseWrappedDisplay:
+    """Candidate rows wrap at BudouX phrase boundaries — display text only.
+
+    The joiner is U+2060 WORD JOINER, injected by ``phrase_wrap_ja``. Every
+    other surface stays pristine: ``COPY_ROLE`` (what Ctrl+C lifts), the
+    tooltip, and the candidate model itself, so no invisible character can
+    reach the clipboard or a card.
+    """
+
+    def test_display_wrapped_copy_tooltip_and_model_pristine(self, qtbot, mixed_words):
+        dlg = WordCurationDialog(mixed_words)
+        qtbot.addWidget(dlg)
+        _select_and_fire(dlg, 0)
+
+        cands = mixed_words[0].sentence_candidates
+        assert dlg.sentence_list.count() == len(cands)
+        saw_joiner = False
+        for i, cand in enumerate(cands):
+            item = dlg.sentence_list.item(i)
+            assert item.text().replace(WORD_JOINER, "") == cand.sentence
+            assert item.data(COPY_ROLE) == cand.sentence
+            assert item.toolTip() == cand.sentence
+            saw_joiner = saw_joiner or WORD_JOINER in item.text()
+        # The fixtures are real multi-phrase sentences; at least one must
+        # actually gain a boundary or the transform is wired to nothing.
+        assert saw_joiner
+        assert all(WORD_JOINER not in cand.sentence for cand in cands)

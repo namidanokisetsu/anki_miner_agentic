@@ -2,13 +2,17 @@
 
 import subprocess
 import sys
+import threading
+import time
 from dataclasses import replace
 from datetime import date
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from anki_miner.services import validation_service
 from anki_miner.services.validation_service import ValidationService
+from anki_miner.utils import ytdlp_resolver
 
 
 class TestValidationService:
@@ -86,11 +90,12 @@ class TestValidationService:
             mock_result.returncode = 0
             mock_result.stdout = "ffmpeg version 5.0"
 
-            with patch("anki_miner.services.validation_service.subprocess.run", return_value=mock_result):
+            with patch("anki_miner.services.validation_service.subprocess.run", return_value=mock_result) as mock_run:
                 success, message = service._check_ffmpeg()
 
             assert success is True
             assert "ffmpeg version" in message
+            assert mock_run.call_args.kwargs["stdin"] is subprocess.DEVNULL
 
         def test_not_found(self, test_config):
             service = ValidationService(test_config)
@@ -1181,6 +1186,70 @@ class TestCheckYtdlp:
         assert ok is False
         assert "unverified" in message.lower()
 
+    def test_busy_lock_reports_instead_of_waiting(self, test_config, monkeypatch):
+        """A running yt-dlp task must not park the validation worker for hours.
+
+        The generation lock is held for the whole managed-binary transfer (up to the
+        3h supervisor timeout); waiting on it froze System Health behind a download.
+        """
+        monkeypatch.setattr(validation_service, "_YTDLP_LOCK_WAIT_SECONDS", 0.2)
+        service = ValidationService(test_config)
+        released = threading.Event()
+        holding = threading.Event()
+
+        def hold() -> None:
+            with ytdlp_resolver.managed_ytdlp_lock():
+                holding.set()
+                released.wait(10)
+
+        holder = threading.Thread(target=hold)
+        holder.start()
+        try:
+            assert holding.wait(10)
+            with patch(
+                "anki_miner.services.validation_service.resolve_ytdlp",
+                side_effect=AssertionError("must not resolve while another task holds the lock"),
+            ):
+                ok, message = service._check_ytdlp()
+        finally:
+            released.set()
+            holder.join(10)
+        assert not holder.is_alive()
+
+        assert ok is False
+        assert "busy" in message.lower()
+
+    def test_transient_holder_is_waited_out_rather_than_reported_busy(self, test_config, monkeypatch):
+        """A sub-second holder must not cost a healthy install its version.
+
+        At startup the validation worker and the scheduled yt-dlp auto-update
+        overlap; a cold-cache SHA-256 of the managed binary or a ``--version``
+        probe holds the lock about a second. A non-blocking acquire turned that
+        into a WARNING and an empty tool version on a working install.
+        """
+        monkeypatch.setattr(validation_service, "_YTDLP_LOCK_WAIT_SECONDS", 10.0)
+        service = ValidationService(test_config)
+        holding = threading.Event()
+
+        def hold() -> None:
+            with ytdlp_resolver.managed_ytdlp_lock():
+                holding.set()
+                time.sleep(0.2)
+
+        holder = threading.Thread(target=hold)
+        holder.start()
+        try:
+            assert holding.wait(10)
+            mock_result = MagicMock(returncode=0, stdout="2026.06.09\n")
+            with patch("anki_miner.services.validation_service.subprocess.run", return_value=mock_result):
+                ok, message = service._check_ytdlp()
+        finally:
+            holder.join(10)
+        assert not holder.is_alive()
+
+        assert ok is True
+        assert "2026.06.09" in message
+
     def test_validate_setup_does_not_raise_on_unverified_binary(self, test_config):
         service = ValidationService(test_config)
 
@@ -1371,6 +1440,32 @@ class TestPublicChecks:
         assert isinstance(public, tuple) and len(public) == 2
         assert isinstance(public[0], bool) and isinstance(public[1], str)
 
+    def test_check_resource_readiness_gathers_all_three_families(self, test_config):
+        from anki_miner.services.validation_service import ResourceReadiness
+
+        service = ValidationService(test_config)
+        with (
+            patch.object(service, "_check_offline_dictionary", return_value=(True, "JMdict (100 entries)")),
+            patch.object(service, "_check_frequency_sources", return_value=(None, "")),
+            patch.object(service, "_check_pitch_sources", return_value=(False, "needs reimport")),
+        ):
+            readiness = service.check_resource_readiness()
+
+        assert isinstance(readiness, ResourceReadiness)
+        assert readiness.dictionary == (True, "JMdict (100 entries)")
+        assert readiness.frequency == (None, "")
+        assert readiness.pitch == (False, "needs reimport")
+
+    def test_check_resource_readiness_reuses_the_public_dictionary_check(self, test_config):
+        service = ValidationService(test_config)
+        with (
+            patch.object(service, "check_offline_dictionary", return_value=(True, "ok")) as pub,
+            patch.object(service, "_check_frequency_sources", return_value=(None, "")),
+            patch.object(service, "_check_pitch_sources", return_value=(None, "")),
+        ):
+            service.check_resource_readiness()
+        pub.assert_called_once_with()
+
 
 class TestOptionalIndexedResourceChecks:
     """Frequency and pitch: reported when broken, silent when simply absent.
@@ -1554,6 +1649,7 @@ class TestOptionalIndexedResourceChecks:
         self._build_pack(packs_root, "nhk16", entries=5000, name="NHK 2016")
         config = replace(
             test_config,
+            anki_fields={**test_config.anki_fields, "expression_audio": "ExpressionAudio"},
             audio_packs_root=packs_root,
             expression_audio_chain=(AudioSourceEntry(kind="pack", pack_id="nhk16"),),
         )
@@ -1571,6 +1667,7 @@ class TestOptionalIndexedResourceChecks:
         self._build_pack(packs_root, "nhk16", stale=True, name="NHK 2016")
         config = replace(
             test_config,
+            anki_fields={**test_config.anki_fields, "expression_audio": "ExpressionAudio"},
             audio_packs_root=packs_root,
             expression_audio_chain=(AudioSourceEntry(kind="pack", pack_id="nhk16"),),
         )
@@ -1580,6 +1677,27 @@ class TestOptionalIndexedResourceChecks:
         assert ok is False
         assert "NHK 2016" in message
         assert "Settings → Audio → Reimport All" in message
+
+    def test_audio_packs_report_not_configured_when_field_unmapped(self, test_config, tmp_path):
+        """A pack is only ever consulted when expression_audio is mapped too.
+
+        An enabled, schema-current, usable pack must still report itself as
+        unconfigured (not an OK-green) when the field the fetcher gates on is
+        unmapped — the same two-part condition the fetcher and the pre-run
+        stale-reimport gate use.
+        """
+        from anki_miner.config import AudioSourceEntry
+
+        packs_root = tmp_path / "audio_packs"
+        self._build_pack(packs_root, "nhk16", entries=5000, name="NHK 2016")
+        assert not test_config.anki_fields.get("expression_audio")
+        config = replace(
+            test_config,
+            audio_packs_root=packs_root,
+            expression_audio_chain=(AudioSourceEntry(kind="pack", pack_id="nhk16"),),
+        )
+
+        assert ValidationService(config)._check_audio_packs() == (None, "")
 
     def test_pack_absent_from_disk_stays_silent(self, test_config, tmp_path):
         from anki_miner.config import AudioSourceEntry
@@ -1615,6 +1733,7 @@ class TestOptionalIndexedResourceChecks:
         self._build_pack(packs_root, "nhk16", stale=True, name="NHK 2016")
         config = replace(
             test_config,
+            anki_fields={**test_config.anki_fields, "expression_audio": "ExpressionAudio"},
             audio_packs_root=packs_root,
             expression_audio_chain=(AudioSourceEntry(kind="pack", pack_id="nhk16"),),
             media_temp_folder=tmp_path / "temp",

@@ -38,7 +38,7 @@ class AboutDialog(EnhancedDialog):
 
     def __init__(self, version: str, parent=None):
         """Build the dialog for the given version string."""
-        super().__init__(parent, title=self.tr("About Anki Miner Agentic"))
+        super().__init__(parent, title=self.tr("About Anki Miner"))
         self.setMinimumWidth(440)
         self._build(version)
 

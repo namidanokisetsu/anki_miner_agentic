@@ -121,6 +121,14 @@ class DefinitionService:
         self._providers = providers
         self._registry = registry
         self._loaded = False
+        # Per-run cache for _provider_attest_quality, keyed on (id(provider),
+        # include_readings). See clear_run_cache() for scope/lifetime. Using
+        # id(provider) is safe because self._providers strong-holds all provider
+        # objects for this instance's lifetime. Plain dict is fine unlocked
+        # because a DefinitionService (like the rest of this class —
+        # ensure_loaded/_loaded above included) is only ever touched from the
+        # one worker thread processing a run.
+        self._attest_cache: dict[tuple[int, bool], dict[str, dict[str, frozenset[str]]]] = {}
 
     def ensure_loaded(self) -> bool:
         """Call load() on every provider exactly once. Returns True if at
@@ -134,6 +142,36 @@ class DefinitionService:
             except Exception as e:  # pragma: no cover - defensive
                 logger.warning("Failed to load provider '%s': %s", provider.name, e)
         return any(p.is_available() for p in self._providers)
+
+    def css_entries(self) -> list[tuple[str, str, str]]:
+        """(dict_id, display_name, scoped_css) from the ALREADY-LOADED chain.
+
+        Same filters and order as the scan-based ``collect_dictionary_css_entries``
+        (non-str ``dict_id`` skipped, empty/blank CSS skipped, ``.strip()``
+        applied, chain order) but reads straight off ``self._providers`` —
+        no ``DictionaryRegistry`` construction, no per-dict SQLite open/close.
+        This is the ``EpisodeProcessor._phase5_create`` seam (PB1): by Phase 5
+        the processor already holds a fully loaded chain, so rescanning
+        ``dicts_root`` and reopening every dict's ``index.sqlite`` per episode
+        is pure waste.
+
+        Known asymmetry vs. the scan-based collector: a provider whose
+        ``load()`` failed at run start contributes no CSS here (its CSS
+        attribute stays empty), whereas the scan-based collector calls
+        ``load()`` fresh each time and would retry. Callers with no
+        already-loaded chain (``card_restyler``, ``card_backfiller`` — once
+        per run) should keep using ``collect_dictionary_css_entries``.
+        """
+        self.ensure_loaded()
+        entries: list[tuple[str, str, str]] = []
+        for provider in self._providers:
+            css = getattr(provider, "dictionary_css", "")
+            if not css or not css.strip():
+                continue
+            dict_id = getattr(provider, "dict_id", None)
+            if isinstance(dict_id, str):
+                entries.append((dict_id, provider.name, css.strip()))
+        return entries
 
     def has_usable_offline_provider(self) -> bool:
         """Whether the loaded chain has an available, non-empty offline index.
@@ -698,22 +736,61 @@ class DefinitionService:
             logger.warning("Provider '%s' raised reading commonness_aware; treating as unaware: %s", provider.name, e)
             return False
 
-    @staticmethod
-    def _provider_attest_quality(
-        provider: DictionaryProvider, words: list[str], include_readings: bool
-    ) -> dict[str, dict[str, frozenset[str]]]:
-        """Call ``provider.attest_quality`` under the never-raises boundary.
+    def clear_run_cache(self) -> None:
+        """Drop the per-run ``_provider_attest_quality`` cache.
 
-        Providers without the optional method (or that raise) contribute nothing
-        (empty map), so a single buggy provider can never abort the probe."""
-        fn = getattr(provider, "attest_quality", None)
-        if not callable(fn):
-            return {}
-        try:
-            return fn(words, include_readings)  # type: ignore[no-any-return]
-        except Exception as e:
-            logger.warning("Provider '%s' raised during attest_quality; skipping: %s", provider.name, e)
-            return {}
+        Called by ``EpisodeProcessor._run_pipeline`` at the end of every
+        episode/reading item. A provider's dictionary content cannot change
+        mid-run, so nothing here is invalidated by clearing — this exists
+        purely to bound memory: ``SharedLookupServices`` keeps one
+        ``DefinitionService`` alive across an entire multi-item batch, so
+        without this the cache would accumulate every distinct surface ever
+        probed across the whole batch instead of just the current item's
+        vocabulary. That per-item ceiling is also why no size cap is needed
+        (contrast the clear-on-cap memos in ``SubtitleParserService``, which
+        bound a single corpus-wide instance): this cache clears out from under
+        itself before the next item has a chance to grow it back.
+        """
+        self._attest_cache.clear()
+
+    def _provider_attest_quality(
+        self, provider: DictionaryProvider, words: list[str], include_readings: bool
+    ) -> dict[str, dict[str, frozenset[str]]]:
+        """Cached, never-raises wrapper over ``provider.attest_quality``.
+
+        Cached per ``(provider, include_readings)`` for the run (see
+        ``clear_run_cache``): ``offline_deinflection_terms_exist``,
+        ``offline_term_commonness`` and ``offline_kana_attest_quality`` all
+        read the same per-word rule sets off the same providers, so a word
+        already probed by one is free to the others. Only words NOT already
+        cached for this ``(provider, include_readings)`` pair trigger a
+        provider call, and that call covers just the missing words — a later
+        call that introduces new words does an incremental batch for the
+        delta, never a re-probe of words already known.
+
+        Providers without the optional method (or that raise) contribute
+        nothing (empty entries for every requested word — and that miss is
+        itself cached, since a provider that can't answer now won't answer
+        later within the same run), so a single buggy provider can never
+        abort the probe."""
+        cached = self._attest_cache.setdefault((id(provider), include_readings), {})
+        missing = [w for w in dict.fromkeys(words) if w not in cached]
+        if missing:
+            fn = getattr(provider, "attest_quality", None)
+            fresh: dict[str, dict[str, frozenset[str]]] = {}
+            if callable(fn):
+                try:
+                    fresh = fn(missing, include_readings)
+                except Exception as e:
+                    logger.warning("Provider '%s' raised during attest_quality; skipping: %s", provider.name, e)
+            # A provider that raises is cached as an empty verdict for the rest
+            # of the episode (sticky): fresh remains {} so .get(w, empty) fills
+            # with empty entries. A future provider that raises transiently should
+            # know this — one raise poisons the cache for the full run.
+            empty = {"term_rules": frozenset[str](), "common_rules": frozenset[str]()}
+            for w in missing:
+                cached[w] = fresh.get(w, empty)
+        return {w: cached[w] for w in words if w in cached}
 
     def offline_term_commonness(self, terms: list[str]) -> dict[str, bool] | None:
         """Whether each term is a COMMON headword in a commonness-aware offline dict.
@@ -938,7 +1015,7 @@ class DefinitionService:
             progress_callback.on_complete()
         return results
 
-    def lookup_all_offline(self, word: str) -> list[tuple[str, str]]:
+    def lookup_all_offline(self, word: str, lemma: str | None = None) -> list[tuple[str, str]]:
         """Aggregate results from all available OFFLINE providers.
 
         Returns a list of (provider_name, html) tuples for every offline
@@ -958,6 +1035,19 @@ class DefinitionService:
 
         Args:
             word: Japanese word (raw user input or a lemma form).
+            lemma: the token's UniDic lemma, for the curator side pane's Rule
+                A′ homograph scope (mirrors ``get_definitions_batch``'s
+                ``lemma_context``, one word at a time) — the card and the pane
+                beside it must agree on which lexeme a kana front (ゆう, lemma
+                言う) names, not just the reading. When non-empty, the exact
+                ``word`` hit is routed through a provider's optional
+                ``lookup_many`` (via the same getattr probe used elsewhere) so
+                the storage-side ``_homograph_keep_mask`` can prefer the
+                lemma-exact rows; a provider without ``lookup_many`` (e.g. the
+                online Jisho fallback, already excluded here, or a legacy
+                offline stub) keeps the arity-1 ``lookup(word)`` path.
+                ``None``/empty skips the probe entirely, so this is
+                byte-identical to pre-A′ behavior for every existing caller.
 
         Returns:
             List of (provider_name, html) tuples in provider chain order. Empty
@@ -970,8 +1060,12 @@ class DefinitionService:
             if p.is_online or not p.is_available():
                 continue
             seen_html: set[str] = set()
+            batch_fn = getattr(p, "lookup_many", None) if lemma else None
             try:
-                html = p.lookup(word)
+                if callable(batch_fn):
+                    html = batch_fn([(word, None)], lemmas={word: lemma}).get(word)
+                else:
+                    html = p.lookup(word)
             except Exception as e:
                 logger.warning(
                     "Provider '%s' raised during lookup of '%s'; skipping: %s",

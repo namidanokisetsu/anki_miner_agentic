@@ -24,7 +24,7 @@
         <translation type="unfinished" />
     </message>
     <message>
-        <source>About Anki Miner Agentic</source>
+        <source>About Anki Miner</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -648,11 +648,11 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Agentic Is Already Running</source>
+        <source>Anki Miner Is Already Running</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
         <translation type="unfinished" />
@@ -831,6 +831,10 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
 
 Skipped (source folder or database not found; use per-row Re-import…):
 </source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>The selected audio pack is no longer in the chain.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -2043,6 +2047,14 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Download videos or audio</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Save videos, audio or subtitles from a URL to a folder using yt-dlp, without mining. Works with any site yt-dlp supports.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Restyle mined cards</source>
         <translation type="unfinished" />
     </message>
@@ -2672,6 +2684,10 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
     </message>
     <message>
         <source>No media files were found in that folder.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>That media folder could not be read.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -3636,6 +3652,206 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation type="unfinished" />
     </message>
 </context><context>
+    <name>DownloadTab</name>
+    <message>
+        <source>Progress</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Done</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Done: </source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Skipped</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Skipped: </source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancelling…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Failed — see log</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Some URLs could not be downloaded.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Complete — %1 downloaded</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Complete — %1 downloaded, %2 already present</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Nothing downloaded — all %1 already present in the download folder.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Select Download Folder</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Media download</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>URLs</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>yt-dlp not found. Install or update it in Settings → YouTube to enable downloads.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Download videos or audio from any site yt-dlp supports, without mining.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>One URL per line</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Options</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Quality:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Best available</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Up to 1080p</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Up to 720p</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Audio only (MP3)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Audio only (M4A)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Custom format:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Optional yt-dlp format string</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>When set, the quality preset above is ignored.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Download subtitles</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Save subtitles next to the media file. Prefers manual subtitles, falls back to automatic.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Languages:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Comma-separated language codes, e.g. ja,en</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Embed thumbnail</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Embed title and metadata</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Output</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Output:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Choose Folder…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Download</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Download folder is not writable.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Check permissions for %1.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Some lines are not valid URLs.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Paste at least one URL to download.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Downloading %1 of %2</source>
+        <translation type="unfinished" />
+    </message>
+</context><context>
+    <name>DownloadWorker</name>
+    <message>
+        <source>%1: %2%</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Done</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Already downloaded</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation type="unfinished" />
+    </message>
+</context><context>
     <name>EnhancedDialog</name>
     <message>
         <source>Close</source>
@@ -3856,10 +4072,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Unexpected error: %1</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>No words selected for card creation</source>
         <translation type="unfinished" />
     </message>
@@ -3882,6 +4094,10 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation type="unfinished">
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Unexpected error: %1</source>
+        <translation type="unfinished" />
     </message>
     <message numerus="yes">
         <source>Run failed after creating %n card(s); they remain in Anki and can be undone.</source>
@@ -5221,6 +5437,10 @@ Continue?</source>
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Download</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Single</source>
         <translation type="unfinished" />
     </message>
@@ -5234,6 +5454,16 @@ Continue?</source>
     </message>
     <message>
         <source>Failed to create desktop shortcut.</source>
+        <translation type="unfinished" />
+    </message>
+</context><context>
+    <name>MediaDownloader</name>
+    <message>
+        <source>Downloading</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Processing</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -6575,6 +6805,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
+        <source>This card image has no Picture field to land in. Map one in Settings → Anki, or clear the image to mine without one.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
         <translation type="unfinished" />
     </message>
@@ -6774,6 +7008,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
+        <source>%1 — %2</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Download recommended resources</source>
         <translation type="unfinished" />
     </message>
@@ -6782,11 +7020,19 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Could not check the offline dictionary: </source>
+        <source>Could not check the installed resources: </source>
         <translation type="unfinished" />
     </message>
     <message>
         <source>Dictionary ready: %1</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>%1 ready: %2</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>%1: not set up (optional)</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -6955,6 +7201,40 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Failed to delete notes. Check that Anki is running.</source>
+        <translation type="unfinished" />
+    </message>
+</context><context>
+    <name>RetimeReference</name>
+    <message>
+        <source>Chosen subtitle track %1 is unusable; using audio instead.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: not a dialogue track.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No usable embedded subtitle track; aligning against audio.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: only %2 dialogue lines.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: covers only %2 of the episode.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Aligning against embedded subtitle track %1 (%2, %3 lines).</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No Japanese-tagged audio track found; using the first audio track — on a dual-audio release this may be a dub.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Aligning against audio (%1).</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -7315,6 +7595,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <name>SetupWizard</name>
     <message>
         <source>Download the recommended frequency list, pitch accent data, and dictionary now?</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Dictionary</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Frequency</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Pitch accent</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -7728,11 +8020,11 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
-        <source>That folder could not be read.</source>
+        <source>No video or audio files were found in that folder.</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>No video or audio files were found in that folder.</source>
+        <source>That folder could not be read.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -8050,10 +8342,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
-        <source>That video folder could not be read.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Matched %1 of %2 video files.</source>
         <translation type="unfinished" />
     </message>
@@ -8063,6 +8351,10 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     </message>
     <message>
         <source>No subtitle file could be matched to any video file in those folders.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>That video folder could not be read.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -8084,11 +8376,53 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Retimed with %1</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Original backed up as %1</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Cancelled</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>No trustworthy sync for %1; original kept unchanged</source>
+        <source>no trustworthy sync; original kept unchanged</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Retiming failed for %1: %2</source>
+        <translation type="unfinished" />
+    </message>
+</context><context>
+    <name>SubtitleRetimer</name>
+    <message>
+        <source>Ignoring %1 non-dialogue lines during alignment.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>alass is not installed; skipping alass attempts.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>%1 result rejected: %2</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>no engine produced a trustworthy sync; original left untouched</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Retimed with %1 (offset %2).</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Retimed with %1 (%2 blocks, shifts %3..%4).</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Retimed with %1.</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -8674,14 +9008,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Add to Known Words</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Word (mined)</source>
         <translation type="unfinished" />
     </message>
@@ -8717,6 +9043,30 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
     </message>
     <message>
         <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>+ Previous line</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>+ Next line</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Reset lines</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Merge the previous subtitle line into this word's sentence and media clip. Disabled when there is no earlier line or the combined clip would exceed %1 seconds.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Merge the next subtitle line into this word's sentence and media clip. Disabled when there is no later line or the combined clip would exceed %1 seconds.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Restore this word's original single-line sentence and clip window.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -8774,6 +9124,22 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Add to Known Words</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Remove from Known Words</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Take the Known · pending mark back off the highlighted rows and return them to this review.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Word %1 of %2 · %3 included · %4 shown of %5</source>
         <translation type="unfinished" />
     </message>
@@ -8817,6 +9183,10 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
     </message>
     <message>
         <source>Auto JA subs</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Auto JA subs (dub audio)</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -9064,7 +9434,7 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner Agentic — Unexpected Error</source>
+        <source>Anki Miner — Unexpected Error</source>
         <translation type="unfinished" />
     </message>
     <message>

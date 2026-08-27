@@ -24,8 +24,8 @@
         <translation>自動從影片採集日文單字卡片到 Anki——螢幕截圖、音訊與釋義。</translation>
     </message>
     <message>
-        <source>About Anki Miner Agentic</source>
-        <translation type="unfinished" />
+        <source>About Anki Miner</source>
+        <translation type="unfinished">關於 Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -648,11 +648,11 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Agentic Is Already Running</source>
+        <source>Anki Miner Is Already Running</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
         <translation type="unfinished" />
@@ -838,6 +838,10 @@ Skipped (source folder or database not found; use per-row Re-import…):
 
 已略過（找不到來源資料夾或資料庫；請使用逐列的重新匯入…）：
 </translation>
+    </message>
+    <message>
+        <source>The selected audio pack is no longer in the chain.</source>
+        <translation>所選的音聲套件已不在鏈中。</translation>
     </message>
     <message>
         <source>No audio packs in the chain.</source>
@@ -2054,6 +2058,14 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>從「說明」選單檢查新版 Anki Miner，或在設定頁尾切換啟動時自動檢查。</translation>
     </message>
     <message>
+        <source>Download videos or audio</source>
+        <translation>下載影片或音訊</translation>
+    </message>
+    <message>
+        <source>Save videos, audio or subtitles from a URL to a folder using yt-dlp, without mining. Works with any site yt-dlp supports.</source>
+        <translation>使用 yt-dlp 將網址中的影片、音訊或字幕儲存到資料夾，不進行採集。支援 yt-dlp 支援的所有網站。</translation>
+    </message>
+    <message>
         <source>Restyle mined cards</source>
         <translation>重新套用已採集卡片樣式</translation>
     </message>
@@ -2686,6 +2698,10 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
     <message>
         <source>No media files were found in that folder.</source>
         <translation>該資料夾中找不到媒體檔案。</translation>
+    </message>
+    <message>
+        <source>That media folder could not be read.</source>
+        <translation>無法讀取該媒體資料夾。</translation>
     </message>
     <message>
         <source>Matched %1 of %2 media files.</source>
@@ -3658,6 +3674,206 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>離線字典已就緒：&lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
 </context><context>
+    <name>DownloadTab</name>
+    <message>
+        <source>Progress</source>
+        <translation>進度</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>完成</translation>
+    </message>
+    <message>
+        <source>Done: </source>
+        <translation>完成：</translation>
+    </message>
+    <message>
+        <source>Skipped</source>
+        <translation>已略過</translation>
+    </message>
+    <message>
+        <source>Skipped: </source>
+        <translation>已略過：</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Cancelling…</source>
+        <translation>取消中……</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>已取消</translation>
+    </message>
+    <message>
+        <source>Failed — see log</source>
+        <translation>失敗 — 請查看日誌</translation>
+    </message>
+    <message>
+        <source>Some URLs could not be downloaded.</source>
+        <translation>部分網址無法下載。</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded</source>
+        <translation>完成 — 已下載 %1 個</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded, %2 already present</source>
+        <translation>完成 — 已下載 %1 個，%2 個已存在</translation>
+    </message>
+    <message>
+        <source>Nothing downloaded — all %1 already present in the download folder.</source>
+        <translation>未下載任何項目 — 這 %1 個在下載資料夾中都已存在。</translation>
+    </message>
+    <message>
+        <source>Select Download Folder</source>
+        <translation>選擇下載資料夾</translation>
+    </message>
+    <message>
+        <source>Media download</source>
+        <translation>媒體下載</translation>
+    </message>
+    <message>
+        <source>URLs</source>
+        <translation>網址</translation>
+    </message>
+    <message>
+        <source>yt-dlp not found. Install or update it in Settings → YouTube to enable downloads.</source>
+        <translation>找不到 yt-dlp。請在「設定」→「YouTube」中安裝或更新，以啟用下載。</translation>
+    </message>
+    <message>
+        <source>Download videos or audio from any site yt-dlp supports, without mining.</source>
+        <translation>從 yt-dlp 支援的任何網站下載影片或音訊，不進行採集。</translation>
+    </message>
+    <message>
+        <source>One URL per line</source>
+        <translation>每行一個網址</translation>
+    </message>
+    <message>
+        <source>Options</source>
+        <translation>選項</translation>
+    </message>
+    <message>
+        <source>Quality:</source>
+        <translation>畫質：</translation>
+    </message>
+    <message>
+        <source>Best available</source>
+        <translation>最佳可用畫質</translation>
+    </message>
+    <message>
+        <source>Up to 1080p</source>
+        <translation>最高 1080p</translation>
+    </message>
+    <message>
+        <source>Up to 720p</source>
+        <translation>最高 720p</translation>
+    </message>
+    <message>
+        <source>Audio only (MP3)</source>
+        <translation>僅音訊 (MP3)</translation>
+    </message>
+    <message>
+        <source>Audio only (M4A)</source>
+        <translation>僅音訊 (M4A)</translation>
+    </message>
+    <message>
+        <source>Custom format:</source>
+        <translation>自訂格式：</translation>
+    </message>
+    <message>
+        <source>Optional yt-dlp format string</source>
+        <translation>選填的 yt-dlp 格式字串</translation>
+    </message>
+    <message>
+        <source>When set, the quality preset above is ignored.</source>
+        <translation>設定後將忽略上方的畫質預設。</translation>
+    </message>
+    <message>
+        <source>Download subtitles</source>
+        <translation>下載字幕</translation>
+    </message>
+    <message>
+        <source>Save subtitles next to the media file. Prefers manual subtitles, falls back to automatic.</source>
+        <translation>將字幕儲存在媒體檔案旁邊。優先使用人工字幕，沒有時改用自動字幕。</translation>
+    </message>
+    <message>
+        <source>Languages:</source>
+        <translation>語言：</translation>
+    </message>
+    <message>
+        <source>Comma-separated language codes, e.g. ja,en</source>
+        <translation>以逗號分隔的語言代碼，例如 ja,en</translation>
+    </message>
+    <message>
+        <source>Embed thumbnail</source>
+        <translation>嵌入縮圖</translation>
+    </message>
+    <message>
+        <source>Embed title and metadata</source>
+        <translation>嵌入標題與中繼資料</translation>
+    </message>
+    <message>
+        <source>Output</source>
+        <translation>輸出</translation>
+    </message>
+    <message>
+        <source>Output:</source>
+        <translation>輸出：</translation>
+    </message>
+    <message>
+        <source>Choose Folder…</source>
+        <translation>選擇資料夾…</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>重設</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>下載</translation>
+    </message>
+    <message>
+        <source>Download folder is not writable.</source>
+        <translation>下載資料夾無法寫入。</translation>
+    </message>
+    <message>
+        <source>Check permissions for %1.</source>
+        <translation>請檢查 %1 的權限。</translation>
+    </message>
+    <message>
+        <source>Some lines are not valid URLs.</source>
+        <translation>有些行不是有效的網址。</translation>
+    </message>
+    <message>
+        <source>Paste at least one URL to download.</source>
+        <translation>請至少貼上一個要下載的網址。</translation>
+    </message>
+    <message>
+        <source>Downloading %1 of %2</source>
+        <translation>正在下載第 %1 個，共 %2 個</translation>
+    </message>
+</context><context>
+    <name>DownloadWorker</name>
+    <message>
+        <source>%1: %2%</source>
+        <translation>%1: %2%</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>完成</translation>
+    </message>
+    <message>
+        <source>Already downloaded</source>
+        <translation>已下載</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>已取消</translation>
+    </message>
+</context><context>
     <name>EnhancedDialog</name>
     <message>
         <source>Close</source>
@@ -3878,10 +4094,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>錯誤：%1</translation>
     </message>
     <message>
-        <source>Unexpected error: %1</source>
-        <translation>未預期的錯誤：%1</translation>
-    </message>
-    <message>
         <source>No words selected for card creation</source>
         <translation>未選擇要建立卡片的單字</translation>
     </message>
@@ -3904,6 +4116,10 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>
             <numerusform>已為 %n 個單字擷取媒體</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Unexpected error: %1</source>
+        <translation>未預期的錯誤：%1</translation>
     </message>
     <message numerus="yes">
         <source>Run failed after creating %n card(s); they remain in Anki and can be undone.</source>
@@ -5258,6 +5474,10 @@ Continue?</source>
         <translation>牌組篩選</translation>
     </message>
     <message>
+        <source>Download</source>
+        <translation>下載</translation>
+    </message>
+    <message>
         <source>Single</source>
         <translation>單一</translation>
     </message>
@@ -5272,6 +5492,16 @@ Continue?</source>
     <message>
         <source>Failed to create desktop shortcut.</source>
         <translation>建立桌面捷徑失敗。</translation>
+    </message>
+</context><context>
+    <name>MediaDownloader</name>
+    <message>
+        <source>Downloading</source>
+        <translation>正在下載</translation>
+    </message>
+    <message>
+        <source>Processing</source>
+        <translation>處理中</translation>
     </message>
 </context><context>
     <name>MediaExtractorService</name>
@@ -6618,6 +6848,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>請先貼上文字。</translation>
     </message>
     <message>
+        <source>This card image has no Picture field to land in. Map one in Settings → Anki, or clear the image to mine without one.</source>
+        <translation>此卡片圖片沒有圖片欄位可以放置。請在「設定 → Anki」中設定圖片欄位，或清除圖片以不使用圖片進行採集。</translation>
+    </message>
+    <message>
         <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
         <translation>此圖片無法讀取。請另選一張圖片，或清除此欄位以在不使用圖片的情況下採集。</translation>
     </message>
@@ -6818,6 +7052,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>這些資源是什麼？</translation>
     </message>
     <message>
+        <source>%1 — %2</source>
+        <translation>%1 — %2</translation>
+    </message>
+    <message>
         <source>Download recommended resources</source>
         <translation>下載建議資源</translation>
     </message>
@@ -6826,12 +7064,20 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>正在檢查離線字典...</translation>
     </message>
     <message>
-        <source>Could not check the offline dictionary: </source>
-        <translation>無法檢查離線字典： </translation>
+        <source>Could not check the installed resources: </source>
+        <translation>無法檢查已安裝的資源：</translation>
     </message>
     <message>
         <source>Dictionary ready: %1</source>
         <translation>字典已就緒：%1</translation>
+    </message>
+    <message>
+        <source>%1 ready: %2</source>
+        <translation>%1 已就緒：%2</translation>
+    </message>
+    <message>
+        <source>%1: not set up (optional)</source>
+        <translation>%1：未設定（選用）</translation>
     </message>
     <message>
         <source>Download cancelled. Some resources were installed before cancellation.</source>
@@ -7000,6 +7246,40 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Failed to delete notes. Check that Anki is running.</source>
         <translation>無法刪除筆記。請確認 Anki 正在執行。</translation>
+    </message>
+</context><context>
+    <name>RetimeReference</name>
+    <message>
+        <source>Chosen subtitle track %1 is unusable; using audio instead.</source>
+        <translation>所選字幕軌道 %1 無法使用；改用音聲。</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: not a dialogue track.</source>
+        <translation>跳過字幕軌道 %1：不是對話軌道。</translation>
+    </message>
+    <message>
+        <source>No usable embedded subtitle track; aligning against audio.</source>
+        <translation>沒有可用的內嵌字幕軌道；將對齊音聲。</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: only %2 dialogue lines.</source>
+        <translation>跳過字幕軌道 %1：僅 %2 行對話。</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: covers only %2 of the episode.</source>
+        <translation>跳過字幕軌道 %1：只涵蓋該集數的 %2。</translation>
+    </message>
+    <message>
+        <source>Aligning against embedded subtitle track %1 (%2, %3 lines).</source>
+        <translation>對齊內嵌字幕軌道 %1（%2，%3 行）。</translation>
+    </message>
+    <message>
+        <source>No Japanese-tagged audio track found; using the first audio track — on a dual-audio release this may be a dub.</source>
+        <translation>未找到標記為日語的音聲軌道；使用第一個音聲軌道——在雙音聲版本中這可能是配音版。</translation>
+    </message>
+    <message>
+        <source>Aligning against audio (%1).</source>
+        <translation>對齊音聲（%1）。</translation>
     </message>
 </context><context>
     <name>RetimeReferenceDialog</name>
@@ -7370,6 +7650,18 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>Download the recommended frequency list, pitch accent data, and dictionary now?</source>
         <translation>是否要立即下載建議的頻率清單、高低音調資料與字典？</translation>
+    </message>
+    <message>
+        <source>Dictionary</source>
+        <translation>字典</translation>
+    </message>
+    <message>
+        <source>Frequency</source>
+        <translation>頻率</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>高低音調</translation>
     </message>
     <message>
         <source>Anki Miner Setup</source>
@@ -7782,12 +8074,12 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>該資料夾已不存在。</translation>
     </message>
     <message>
-        <source>That folder could not be read.</source>
-        <translation>該資料夾無法讀取。</translation>
-    </message>
-    <message>
         <source>No video or audio files were found in that folder.</source>
         <translation>該資料夾中找不到任何影片或音訊檔案。</translation>
+    </message>
+    <message>
+        <source>That folder could not be read.</source>
+        <translation>該資料夾無法讀取。</translation>
     </message>
     <message>
         <source>Transcribing file %1 of %2</source>
@@ -8104,10 +8396,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>該字幕資料夾已不存在。</translation>
     </message>
     <message>
-        <source>That video folder could not be read.</source>
-        <translation>該影片資料夾無法讀取。</translation>
-    </message>
-    <message>
         <source>Matched %1 of %2 video files.</source>
         <translation>已配對 %2 個影片檔中的 %1 個。</translation>
     </message>
@@ -8118,6 +8406,10 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>No subtitle file could be matched to any video file in those folders.</source>
         <translation>在這些資料夾中，沒有字幕檔案能與任何影片檔案配對。</translation>
+    </message>
+    <message>
+        <source>That video folder could not be read.</source>
+        <translation>該影片資料夾無法讀取。</translation>
     </message>
     <message>
         <source>Retiming file %1 of %2</source>
@@ -8138,12 +8430,54 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>完成</translation>
     </message>
     <message>
+        <source>Retimed with %1</source>
+        <translation>已使用 %1 重新計時</translation>
+    </message>
+    <message>
+        <source>Original backed up as %1</source>
+        <translation>原始檔案備份為 %1</translation>
+    </message>
+    <message>
         <source>Cancelled</source>
         <translation>已取消</translation>
     </message>
     <message>
-        <source>No trustworthy sync for %1; original kept unchanged</source>
-        <translation>%1 沒有可信賴的同步結果；原始檔案保持不變</translation>
+        <source>no trustworthy sync; original kept unchanged</source>
+        <translation>沒有可信任的同步；保留原始檔案不變</translation>
+    </message>
+    <message>
+        <source>Retiming failed for %1: %2</source>
+        <translation>%1 重新計時失敗：%2</translation>
+    </message>
+</context><context>
+    <name>SubtitleRetimer</name>
+    <message>
+        <source>Ignoring %1 non-dialogue lines during alignment.</source>
+        <translation>對齊期間忽略 %1 行非對話內容。</translation>
+    </message>
+    <message>
+        <source>alass is not installed; skipping alass attempts.</source>
+        <translation>未安裝 alass；跳過 alass 嘗試。</translation>
+    </message>
+    <message>
+        <source>%1 result rejected: %2</source>
+        <translation>%1 結果被拒絕：%2</translation>
+    </message>
+    <message>
+        <source>no engine produced a trustworthy sync; original left untouched</source>
+        <translation>沒有引擎產生可信任的同步；保留原始檔案不變</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (offset %2).</source>
+        <translation>已使用 %1 重新計時（偏移 %2）。</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (%2 blocks, shifts %3..%4).</source>
+        <translation>已使用 %1 重新計時（%2 個區塊，移位 %3..%4）。</translation>
+    </message>
+    <message>
+        <source>Retimed with %1.</source>
+        <translation>已使用 %1 重新計時。</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8728,14 +9062,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>依任一欄位篩選…</translation>
     </message>
     <message>
-        <source>Add to Known Words</source>
-        <translation>加入已知單字</translation>
-    </message>
-    <message>
-        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
-        <translation>將醒目提示的列標記為已知 · 待處理。確認會儲存；取消會捨棄。</translation>
-    </message>
-    <message>
         <source>Word (mined)</source>
         <translation>單字（已採集）</translation>
     </message>
@@ -8774,6 +9100,30 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
     <message>
         <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S 包含／排除 · Ctrl+A 包含可見項目 · Ctrl+D 排除可見項目 · Ctrl+Enter 確認</translation>
+    </message>
+    <message>
+        <source>+ Previous line</source>
+        <translation>+ 上一行</translation>
+    </message>
+    <message>
+        <source>+ Next line</source>
+        <translation>+ 下一行</translation>
+    </message>
+    <message>
+        <source>Reset lines</source>
+        <translation>重設行</translation>
+    </message>
+    <message>
+        <source>Merge the previous subtitle line into this word's sentence and media clip. Disabled when there is no earlier line or the combined clip would exceed %1 seconds.</source>
+        <translation>將上一句字幕合併到這個單字的例句與媒體片段中。沒有上一行，或合併後的片段超過 %1 秒時無法使用。</translation>
+    </message>
+    <message>
+        <source>Merge the next subtitle line into this word's sentence and media clip. Disabled when there is no later line or the combined clip would exceed %1 seconds.</source>
+        <translation>將下一句字幕合併到這個單字的例句與媒體片段中。沒有下一行，或合併後的片段超過 %1 秒時無法使用。</translation>
+    </message>
+    <message>
+        <source>Restore this word's original single-line sentence and clip window.</source>
+        <translation>還原這個單字原本的單行例句與片段範圍。</translation>
     </message>
     <message>
         <source>Sentences</source>
@@ -8832,6 +9182,22 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
         <translation>包含醒目提示項目（%1）</translation>
     </message>
     <message>
+        <source>Add to Known Words</source>
+        <translation>加入已知單字</translation>
+    </message>
+    <message>
+        <source>Remove from Known Words</source>
+        <translation>從已知單字移除</translation>
+    </message>
+    <message>
+        <source>Take the Known · pending mark back off the highlighted rows and return them to this review.</source>
+        <translation>移除已突出顯示行上的「已知·待處理」標記，並將它們返回到此複審。</translation>
+    </message>
+    <message>
+        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
+        <translation>將醒目提示的列標記為已知 · 待處理。確認會儲存；取消會捨棄。</translation>
+    </message>
+    <message>
         <source>Word %1 of %2 · %3 included · %4 shown of %5</source>
         <translation>單字 %1／%2 · 已包含 %3 個 · 顯示 %4／%5 個</translation>
     </message>
@@ -8876,6 +9242,10 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
     <message>
         <source>Auto JA subs</source>
         <translation>自動日文字幕</translation>
+    </message>
+    <message>
+        <source>Auto JA subs (dub audio)</source>
+        <translation>自動 JA 字幕（配音音軌）</translation>
     </message>
     <message>
         <source>Checking</source>
@@ -9122,7 +9492,7 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner Agentic — Unexpected Error</source>
+        <source>Anki Miner — Unexpected Error</source>
         <translation type="unfinished" />
     </message>
     <message>

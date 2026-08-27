@@ -162,6 +162,17 @@ class TestLocalVersion:
         updater = YtdlpUpdater(config)
         assert updater.local_version() == "2024.02.01"
 
+    def test_detaches_stdin(self, config, home, monkeypatch):
+        captured: dict = {}
+
+        def _run(*a, **k):
+            captured.update(k)
+            return subprocess.CompletedProcess(a, 0, "2024.02.01\n", "")
+
+        monkeypatch.setattr(ytdlp_updater.subprocess, "run", _run)
+        YtdlpUpdater(config).local_version()
+        assert captured["stdin"] is subprocess.DEVNULL
+
     def test_missing_binary_returns_none(self, config, home, monkeypatch):
         def _raise(*a, **k):
             raise FileNotFoundError()
@@ -244,6 +255,15 @@ class TestLatestVersionAndAsset:
             raise OSError("boom")
 
         monkeypatch.setattr(ytdlp_updater.urllib.request, "urlopen", _raise)
+        updater = YtdlpUpdater(config)
+        assert updater.latest_version_and_asset() == (None, None)
+
+    def test_oversized_api_response_returns_none_none(self, config, home, monkeypatch):
+        """A releases-API body over the cap is a clean (None, None), not a buffered parse."""
+        monkeypatch.setattr(ytdlp_updater.sys, "platform", "linux")
+        payload = json.dumps(_releases_json()).encode("utf-8")
+        monkeypatch.setattr(ytdlp_updater, "_MAX_API_JSON_BYTES", len(payload) - 1)
+        monkeypatch.setattr(ytdlp_updater.urllib.request, "urlopen", _fake_urlopen_json(_releases_json()))
         updater = YtdlpUpdater(config)
         assert updater.latest_version_and_asset() == (None, None)
 
@@ -390,7 +410,7 @@ class TestCheckAndUpdate:
     def test_successful_install_clears_capability_caches(self, config, home, monkeypatch):
         import hashlib
 
-        from anki_miner.services import youtube_fetcher
+        from anki_miner.services import ytdlp_invocation
 
         monkeypatch.setattr(ytdlp_updater.sys, "platform", "linux")
         data = b"x" * (2 * 1024 * 1024)
@@ -414,22 +434,22 @@ class TestCheckAndUpdate:
         def fake_help(command, **kwargs):  # noqa: ARG001
             return subprocess.CompletedProcess(command, 0, next(help_outputs), "")
 
-        monkeypatch.setattr(youtube_fetcher.subprocess, "run", fake_help)
+        monkeypatch.setattr(ytdlp_invocation.subprocess, "run", fake_help)
         path = str(home / "bin" / "yt-dlp")
-        youtube_fetcher._ytdlp_supports_js_runtimes.cache_clear()
-        youtube_fetcher._ytdlp_supports_remote_components.cache_clear()
+        ytdlp_invocation.ytdlp_supports_js_runtimes.cache_clear()
+        ytdlp_invocation.ytdlp_supports_remote_components.cache_clear()
         try:
-            assert youtube_fetcher._ytdlp_supports_js_runtimes(path) is False
-            assert youtube_fetcher._ytdlp_supports_remote_components(path) is False
+            assert ytdlp_invocation.ytdlp_supports_js_runtimes(path) is False
+            assert ytdlp_invocation.ytdlp_supports_remote_components(path) is False
 
             installed = YtdlpUpdater(config)._download_and_install(_asset_url(), "2024.03.10")
 
             assert installed == home / "bin" / "yt-dlp"
-            assert youtube_fetcher._ytdlp_supports_js_runtimes(path) is True
-            assert youtube_fetcher._ytdlp_supports_remote_components(path) is True
+            assert ytdlp_invocation.ytdlp_supports_js_runtimes(path) is True
+            assert ytdlp_invocation.ytdlp_supports_remote_components(path) is True
         finally:
-            youtube_fetcher._ytdlp_supports_js_runtimes.cache_clear()
-            youtube_fetcher._ytdlp_supports_remote_components.cache_clear()
+            ytdlp_invocation.ytdlp_supports_js_runtimes.cache_clear()
+            ytdlp_invocation.ytdlp_supports_remote_components.cache_clear()
 
     def test_installed_when_no_local_version(self, config, home, monkeypatch):
         # Fresh install: local_version None -> proceed to install.
@@ -581,6 +601,32 @@ class TestDownloadAndInstall:
         with pytest.raises(ValueError, match="non-release or mismatched"):
             updater._download_and_install(_asset_url("yt-dlp"), "2024.03.10")
         assert not (updater.download_dir() / "yt-dlp").exists()
+
+    def test_download_ceiling_rejects_endless_body(self, config, home, monkeypatch):
+        """An endless/runaway body must be aborted at the size ceiling, not fill the disk."""
+        monkeypatch.setattr(ytdlp_updater.sys, "platform", "linux")
+        monkeypatch.setattr(ytdlp_updater, "_MAX_DOWNLOAD_BYTES", ytdlp_updater._CHUNK_BYTES * 3)
+
+        class _EndlessResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+            def read(self, size=-1):
+                # Never returns empty: simulates a body with no end.
+                return b"x" * (size if size and size > 0 else 1024)
+
+            def geturl(self):
+                return _REDIRECT_HOST_URL
+
+        monkeypatch.setattr(ytdlp_updater.urllib.request, "urlopen", lambda *a, **k: _EndlessResponse())
+        updater = YtdlpUpdater(config)
+        with pytest.raises(ValueError, match="exceeds"):
+            updater._download_and_install(_asset_url(), "2024.03.10")
+        assert not (updater.download_dir() / "yt-dlp").exists()
+        assert list(updater.download_dir().glob("*.tmp")) == []
 
     def test_partial_download_cleanup_on_error(self, config, home, monkeypatch):
         monkeypatch.setattr(ytdlp_updater.sys, "platform", "linux")

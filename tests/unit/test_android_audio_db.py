@@ -5,7 +5,9 @@ from pathlib import Path
 
 import pytest
 
+from anki_miner.config import paths as config_paths
 from anki_miner.exceptions import SetupError
+from anki_miner.services.audio_packs import importer as audio_pack_importer
 from anki_miner.services.audio_packs import storage
 from anki_miner.services.audio_packs.fetcher import LocalAudioPackFetcher
 from anki_miner.services.audio_packs.importer import import_android_audio_db
@@ -144,5 +146,105 @@ def test_blob_serving_opens_the_source_db_once_and_skips_rowless_entries(tmp_pat
 
     assert fetched is not None
     assert fetched.read_bytes() == b"ID3-hit"
-    # One connection for the entry lookup, one for the blob walk. Not one per row.
-    assert len(opens) == 2
+    # Entry lookup and blob walk share the fetcher's one persistent connection
+    # to the source db (PB3) — not a fresh open per row, nor even per phase.
+    assert len(opens) == 1
+
+
+def test_oversized_android_blob_is_skipped(tmp_path: Path, monkeypatch):
+    """A row whose blob exceeds MAX_AUDIO_BYTES is skipped in favor of the
+    next candidate — the same size guard the HTTP fetchers apply, so a
+    corrupt/mismatched multi-hundred-MB android_db row can't spike memory."""
+    from anki_miner.services.audio_packs import fetcher as fetcher_mod
+
+    monkeypatch.setattr(fetcher_mod, "MAX_AUDIO_BYTES", 16)  # small cap keeps the fixture tiny
+
+    source = _make_android_db(tmp_path / "android.db")
+    conn = sqlite3.connect(source)
+    try:
+        # Two candidate rows for the same word: the first-ranked blob is
+        # oversized, the second is a normal small hit.
+        conn.execute(
+            "INSERT INTO entries VALUES (2, ?, ?, ?, NULL, ?, ?)", ("猫", "ねこ", "nhk16", "ネコ", "audio/big.mp3")
+        )
+        conn.execute(
+            "INSERT INTO entries VALUES (3, ?, ?, ?, NULL, ?, ?)", ("猫", "ねこ", "nhk16", "ネコ", "audio/hit.mp3")
+        )
+        conn.execute("INSERT INTO android VALUES (2, ?, ?, ?)", ("audio/big.mp3", "nhk16", b"x" * 32))
+        conn.execute("INSERT INTO android VALUES (3, ?, ?, ?)", ("audio/hit.mp3", "nhk16", b"ID3-hit"))
+        conn.commit()
+    finally:
+        conn.close()
+
+    packs_root = tmp_path / "packs"
+    import_android_audio_db(source, packs_root)
+    registry = AudioPackRegistry(packs_root)
+    registry.load()
+    installed = registry.packs["android"]
+
+    fetcher = LocalAudioPackFetcher(
+        db_path=installed.db_path,
+        pack_dir=installed.pack_dir,
+        pack_id=installed.pack_id,
+        cache_dir=tmp_path / "cache",
+        blob_db_path=installed.source_db,
+    )
+    fetched = fetcher.fetch("猫", "ねこ")
+
+    assert fetched is not None
+    assert fetched.read_bytes() == b"ID3-hit"
+
+
+def test_overwrite_reimport_purges_stale_pack_cache(tmp_path: Path, monkeypatch):
+    home = tmp_path / "home"
+    monkeypatch.setattr(config_paths, "ANKI_MINER_HOME", home)
+    source = _make_android_db(tmp_path / "android.db")
+    packs_root = home / "audio_packs"
+    result = import_android_audio_db(source, packs_root)
+
+    cache = home / "audio_cache" / "local_packs"
+    stale = LocalAudioPackFetcher(
+        db_path=packs_root / result.pack_id / "index.sqlite",
+        pack_dir=packs_root / result.pack_id,
+        pack_id=result.pack_id,
+        cache_dir=cache,
+        blob_db_path=source,
+    ).fetch("食べる", "たべる")
+    assert stale is not None
+
+    source2 = _make_android_db(tmp_path / "android2.db", audio=b"NEW-ID3-audio")
+
+    import_android_audio_db(source2, packs_root, pack_id=result.pack_id, overwrite=True)
+
+    assert not stale.exists()
+
+
+def test_failed_overwrite_reimport_preserves_pack_cache(tmp_path: Path, monkeypatch):
+    home = tmp_path / "home"
+    monkeypatch.setattr(config_paths, "ANKI_MINER_HOME", home)
+    source = _make_android_db(tmp_path / "android.db")
+    packs_root = home / "audio_packs"
+    result = import_android_audio_db(source, packs_root)
+
+    cache = home / "audio_cache" / "local_packs"
+    cached = LocalAudioPackFetcher(
+        db_path=packs_root / result.pack_id / "index.sqlite",
+        pack_dir=packs_root / result.pack_id,
+        pack_id=result.pack_id,
+        cache_dir=cache,
+        blob_db_path=source,
+    ).fetch("食べる", "たべる")
+    assert cached is not None
+
+    source2 = _make_android_db(tmp_path / "android2.db", audio=b"NEW-ID3-audio")
+
+    def fail_promote(*_args, **_kwargs):
+        raise OSError("promotion failed")
+
+    monkeypatch.setattr(audio_pack_importer, "promote_staged_dir", fail_promote)
+
+    with pytest.raises(OSError, match="promotion failed"):
+        import_android_audio_db(source2, packs_root, pack_id=result.pack_id, overwrite=True)
+
+    assert cached.exists()
+    assert cached.read_bytes() == b"ID3-test-audio"

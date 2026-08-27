@@ -51,6 +51,7 @@ from anki_miner.gui.resources.styles import SPACING
 from anki_miner.gui.utils import session_state
 from anki_miner.gui.utils.fonts import japanese_cell_font, make_scaled_font
 from anki_miner.gui.utils.keyboard_shortcuts import disown_default_buttons, primary_action_shortcut
+from anki_miner.gui.utils.phrase_wrap import phrase_wrap_ja
 from anki_miner.gui.utils.qt_helpers import (
     COPY_ROLE,
     CellRole,
@@ -61,7 +62,7 @@ from anki_miner.gui.utils.qt_helpers import (
     update_table_item,
 )
 from anki_miner.gui.utils.run_off_thread import join_tracked_workers, run_off_thread
-from anki_miner.gui.widgets.audio_clip_editor import AudioClipEditor
+from anki_miner.gui.widgets.audio_clip_editor import MAX_CLIP_SECONDS, AudioClipEditor
 from anki_miner.gui.widgets.base import ScreenIssue, ScreenIssueHost
 from anki_miner.gui.widgets.base.eliding_label import ElidingLabel
 from anki_miner.gui.widgets.base.sizing import metric_row_height
@@ -70,6 +71,7 @@ from anki_miner.gui.widgets.page_image_view import PageImageView, load_page_qima
 from anki_miner.gui.workers.base_worker import SingleCallWorker
 from anki_miner.models import TokenizedWord
 from anki_miner.services.dictionary.preview_html import PREVIEW_CSS, to_preview_html
+from anki_miner.services.word_filter import MergedLineWindow, find_cue_index, merge_cue_window
 from anki_miner.utils.i18n import tr_format
 
 logger = logging.getLogger(__name__)
@@ -143,7 +145,7 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         *,
         commit_known_callback: Callable[[set[str]], int] | None = None,
         media_context: CurationMediaContext | None = None,
-        lookup_fn: Callable[[str], list[tuple[str, str]]] | None = None,
+        lookup_fn: Callable[..., list[tuple[str, str]]] | None = None,
     ):
         super().__init__(parent)
         self._words = words
@@ -155,6 +157,12 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         # This reverses the immediate write documented against Issue #42.
         self._commit_known_callback = commit_known_callback
         self._pending_known_forms: set[str] = set()
+        # Check state each row carried before it was staged known, keyed by the
+        # ORIGINAL word index (col-0 UserRole) so it survives a re-sort.
+        # Unstaging restores what the user had rather than assuming Checked: a
+        # row they deliberately excluded and then marked known must not come
+        # back included.
+        self._known_prior_check: dict[int, Qt.CheckState] = {}
         # Stale-guard for the commit: cancel() silences a worker only if it wins
         # the race against an already-queued result signal, so every callback
         # also checks its generation. Bumped by force_reject and by teardown.
@@ -200,6 +208,11 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         # The word the audio clip strip is currently showing, so an edit lands
         # on the right index no matter how the table has been sorted.
         self._clip_index: int | None = None
+        # Per-word subtitle-line expansion (prev_count, next_count), keyed by
+        # original word index exactly like _chosen/_clip_overrides (Issue
+        # #120). Stamped onto the selection as TokenizedWord.line_expansion;
+        # the processor materializes the merged sentence/timings.
+        self._line_expansions: dict[int, tuple[int, int]] = {}
         # Context for the candidate list while a row is focused: the focused
         # word's index + its candidate variants. Guards programmatic
         # repopulation from being mistaken for a user pick.
@@ -207,12 +220,20 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         self._candidate_list_words: list[TokenizedWord] = []
         self._populating_candidates = False
 
-        # Lookup result cache keyed by term (empty results are cached too).
-        # The fetch itself runs off the GUI thread: at most one request is in
-        # flight, the newest queued request replaces any older one, and every
-        # callback is checked against _lookup_gen so a fast scroll can never
-        # paint an entry the user has already scrolled past.
-        self._lookup_cache: dict[str, list[tuple[str, str]]] = {}
+        # Lookup result cache keyed by (term, scope_lemma) (empty results are
+        # cached too). scope_lemma (see _scope_lemma) is part of the key, not
+        # just an input: two curator rows can share a mined_form but differ in
+        # lemma (kana front ゆう from 言う vs from 結う — upstream dedups by
+        # lemma, word_filter.py, so both survive as distinct rows), and a
+        # term-only key would serve one row's lemma-scoped entry to the
+        # other — the exact wrong-homograph pane bug Rule A' exists to fix.
+        # The miss-only fallback-term retry is always unscoped, so it caches
+        # under (fallback_term, None). The fetch itself runs off the GUI
+        # thread: at most one request is in flight, the newest queued request
+        # replaces any older one, and every callback is checked against
+        # _lookup_gen so a fast scroll can never paint an entry the user has
+        # already scrolled past.
+        self._lookup_cache: dict[tuple[str, str | None], list[tuple[str, str]]] = {}
         self._lookup_gen = 0
         self._lookup_inflight = False
         self._pending_lookup: tuple[str, str | None] | None = None
@@ -241,20 +262,38 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         self._layout_state_saved = False
         self._side_key = ""
         self._side_stretch: list[int] = []
-        self._setup_ui()
-        self._populate_table()
-        self._refresh_summary()
-        # Connected FIRST, deliberately: MiningTabBase connects its curation
-        # resolver to the same signal afterwards, and Qt runs direct connections
-        # in connection order, so the mpv core / page decode / dictionary workers
-        # are always released before the tab reads the selection and schedules
-        # this window for deletion. Do not reorder these two connections.
-        self.finished.connect(self._stop_player)
-        add_min_max_buttons(self)
-        self._configure_as_owned_window()
-        # Last, because both calls above go through setWindowFlag, which resets
-        # a window's geometry on some platforms.
-        self._restore_layout_state()
+        # A raise anywhere below leaves the caller with `dialog = None` and no
+        # way to release the player it already built: there is no dialog to
+        # close, so `finished` never fires, and the half-built window stays
+        # parented to the tab with a live mpv core decoding inside it. The
+        # release is idempotent, so the normal path pays nothing.
+        try:
+            self._setup_ui()
+            self._populate_table()
+            self._refresh_summary()
+            # Connected FIRST, deliberately: MiningTabBase connects its curation
+            # resolver to the same signal afterwards, and Qt runs direct connections
+            # in connection order, so the mpv core / page decode / dictionary workers
+            # are always released before the tab reads the selection and schedules
+            # this window for deletion. Do not reorder these two connections.
+            self.finished.connect(self._stop_player)
+            add_min_max_buttons(self)
+            self._configure_as_owned_window()
+            # Last, because both calls above go through setWindowFlag, which resets
+            # a window's geometry on some platforms.
+            self._restore_layout_state()
+        except BaseException:
+            # getattr twice: the player may not exist yet (the raise came before
+            # the pane was built, or there is no player pane at all), and a test
+            # stub may not carry release. Never let this cleanup replace the
+            # exception the caller has to see.
+            release = getattr(getattr(self, "player_widget", None), "release", None)
+            if release is not None:
+                try:
+                    release()
+                except Exception:
+                    logger.warning("player_widget.release() failed during __init__ cleanup", exc_info=True)
+            raise
 
     def _configure_as_owned_window(self) -> None:
         """Present the curator as a non-modal window owned by its tab (D33).
@@ -417,14 +456,32 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         self.include_highlighted_button.clicked.connect(self._include_highlighted)
         controls_layout.addWidget(self.include_highlighted_button)
 
-        # Stage rows for the local known/ignore list. Acts on the highlighted
-        # rows, or the current row when nothing is highlighted — deliberately NOT
-        # all visible rows, to avoid ignoring the whole list by accident.
-        self.add_known_button = ModernButton(self.tr("Add to Known Words"), variant="secondary")
+        # Stage rows for the local known/ignore list, or take the mark back off
+        # them. Acts on the highlighted rows, or the current row when nothing is
+        # highlighted — deliberately NOT all visible rows, to avoid ignoring the
+        # whole list by accident.
+        #
+        # This is the one verb in the row that changes meaning with the
+        # selection, and it has to: an undo the user cannot see is not an undo.
+        # _refresh_known_button re-derives the label and tooltip on every
+        # selection change, so the button always names the click it is about to
+        # perform instead of leaving the user to infer it.
+        self.add_known_button = ModernButton(variant="secondary")
         self.add_known_button.clicked.connect(self._on_add_to_known)
-        self.add_known_button.setToolTip(
-            self.tr("Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.")
-        )
+        # The width is pinned to the wider of the two faces, measured through the
+        # rendered button. This row IS the dialog's width floor (see the search
+        # field above), so a label that flips must not reflow the toolbar under
+        # the user's cursor halfway through a review.
+        widest = 0
+        for label in self._known_button_labels():
+            self.add_known_button.setText(label)
+            widest = max(widest, self.add_known_button.sizeHint().width())
+        self.add_known_button.setMinimumWidth(widest)
+        # The table does not exist yet — this row is built before
+        # _build_left_pane — so the real label comes from the _refresh_summary in
+        # the constructor tail. Seed the add face rather than leaving whichever
+        # one the measuring loop set last.
+        self.add_known_button.setText(self._known_button_labels()[0])
         # Nowhere to commit means the verb would silently stage marks that can
         # never be written, so it is a dead control rather than a lie.
         self.add_known_button.setEnabled(self._commit_known_callback is not None)
@@ -812,6 +869,33 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         is small enough that a disclosure only cost a click and hid it.
         """
         self.player_widget = self._create_player_widget()
+        # Last-resort release: `finished -> _stop_player` covers every path the
+        # user can take, but not a dialog deleted without ever finishing (a tab
+        # destroyed outside the shutdown flow) nor an `__init__` that raises
+        # after this line. Either leaves a live mpv core whose event thread
+        # keeps firing observe_property callbacks into a dead widget.
+        #
+        # SAFETY CONSTRAINT — the handler must stay Qt-free. By the time
+        # `destroyed` is emitted, ~QWidget has ALREADY deleted the children, so
+        # a Qt call on the player here is a call on a deleted C++ object. It is
+        # safe only because `release()`/`_teardown_player` touches no Qt on this
+        # path: the GL render context was already freed by the
+        # `aboutToBeDestroyed` net in mpv_video_widget (so `detach()` early-
+        # returns instead of calling makeCurrent), and `terminate_mpv_player` is
+        # pure python-mpv. Keep it that way; do not grow this into a teardown.
+        #
+        # The closure captures the WIDGET's own bound method, never `self` — a
+        # lambda holding the dialog would keep the object it is meant to be
+        # cleaning up after alive. `release()` is idempotent, so a normal
+        # `finished` release makes this a free no-op.
+        #
+        # getattr for the same reason the stretch factor above uses it: tests
+        # substitute a bare QWidget for the player. It also keeps the handler
+        # total — an exception raised out of a `destroyed` slot reaches the app
+        # excepthook mid-destruction, which is strictly worse than the leak.
+        release = getattr(self.player_widget, "release", None)
+        if release is not None:
+            self.destroyed.connect(lambda *_: release())
         self.clip_editor = AudioClipEditor()
         self.clip_editor.clip_changed.connect(self._on_clip_changed)
         self.clip_editor.clip_reset.connect(self._on_clip_reset)
@@ -828,12 +912,57 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         # Nothing focused yet; the first row-focus seeds it.
         self.clip_editor.clear_word()
 
-        container = QWidget()
+        # Named because the Space play/pause shortcut hangs off THIS container,
+        # not off self.player_widget: the clip strip and the expansion buttons
+        # below are the player's siblings, so a shortcut scoped to the player
+        # never reached them and a focused button ate Space instead (#120).
+        self.player_pane = QWidget()
+        container = self.player_pane
         vbox = QVBoxLayout(container)
         vbox.setContentsMargins(0, 0, 0, 0)
         vbox.setSpacing(SPACING.xs)
         vbox.addWidget(self.player_widget, 1)
         vbox.addWidget(self.clip_editor)
+        # Prev/next subtitle-line expansion (Issue #120). Inside this pane on
+        # purpose: a new top-level pane would change _side_key and orphan every
+        # saved splitter layout. Entry-less contexts (manga, reading) never
+        # build the row.
+        if self._media_context is not None and self._media_context.subtitle_entries:
+            expand_row = QHBoxLayout()
+            expand_row.setContentsMargins(0, 0, 0, 0)
+            expand_row.setSpacing(SPACING.xs)
+            self.expand_prev_button = ModernButton(self.tr("+ Previous line"), variant="ghost")
+            self.expand_next_button = ModernButton(self.tr("+ Next line"), variant="ghost")
+            self.expand_reset_button = ModernButton(self.tr("Reset lines"), variant="ghost")
+            self.expand_prev_button.setToolTip(
+                tr_format(
+                    self.tr(
+                        "Merge the previous subtitle line into this word's sentence and media clip. "
+                        "Disabled when there is no earlier line or the combined clip would exceed %1 seconds."
+                    ),
+                    int(MAX_CLIP_SECONDS),
+                )
+            )
+            self.expand_next_button.setToolTip(
+                tr_format(
+                    self.tr(
+                        "Merge the next subtitle line into this word's sentence and media clip. "
+                        "Disabled when there is no later line or the combined clip would exceed %1 seconds."
+                    ),
+                    int(MAX_CLIP_SECONDS),
+                )
+            )
+            self.expand_reset_button.setToolTip(
+                self.tr("Restore this word's original single-line sentence and clip window.")
+            )
+            self.expand_prev_button.clicked.connect(lambda: self._on_expand_line(-1))
+            self.expand_next_button.clicked.connect(lambda: self._on_expand_line(1))
+            self.expand_reset_button.clicked.connect(self._on_expand_reset)
+            for button in (self.expand_prev_button, self.expand_next_button, self.expand_reset_button):
+                button.setEnabled(False)
+                expand_row.addWidget(button)
+            expand_row.addStretch(1)
+            vbox.addLayout(expand_row)
         return container
 
     # ------------------------------------------------------------------
@@ -849,9 +978,14 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
             self.clip_editor.clear_word()
             return
         assert self._media_context is not None  # the strip exists only with one
+        start, end = word.start_time, word.end_time
+        window = self._expanded_window(word, idx)
+        if window is not None:
+            # Line expansion active: the strip edits the merged window.
+            start, end = window.start, window.end
         self.clip_editor.set_word(
-            word.start_time,
-            word.end_time,
+            start,
+            end,
             self._media_context.audio_padding,
             self._clip_overrides.get(idx),
         )
@@ -879,6 +1013,123 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
     def _on_clip_stop_requested(self) -> None:
         if self._show_player and hasattr(self, "player_widget"):
             self.player_widget.pause()  # cancels the range, which resets the button
+
+    # ------------------------------------------------------------------
+    # Prev/next subtitle-line expansion (Issue #120)
+    # ------------------------------------------------------------------
+
+    def _expansion_entries(self, chosen: TokenizedWord) -> tuple[list[tuple[float, float, str]], float] | None:
+        """``(cue entries, offset)`` for the chosen variant's episode, or None.
+
+        Season curation: a variant from another episode resolves through
+        ``_media_ctx_cache``; a miss (the context swap is still in flight)
+        disables the buttons until ``_apply_media_context`` lands and
+        refreshes them.
+        """
+        ctx = self._media_context
+        if ctx is None:
+            return None
+        video = chosen.video_file or ctx.video_file
+        active = ctx if video is None or ctx.video_file == video else self._media_ctx_cache.get(video)
+        if active is None or not active.subtitle_entries:
+            return None
+        return active.subtitle_entries, active.offset
+
+    def _expanded_window(self, chosen: TokenizedWord, idx: int | None) -> MergedLineWindow | None:
+        """``idx``'s active expansion as a VIDEO-timeline window, or None when
+        inactive or unresolvable (no entries yet, cue unmatched)."""
+        if idx is None:
+            return None
+        expansion = self._line_expansions.get(idx, (0, 0))
+        if expansion == (0, 0):
+            return None
+        resolved = self._expansion_entries(chosen)
+        if resolved is None:
+            return None
+        entries, offset = resolved
+        cue = find_cue_index(entries, chosen.start_time, chosen.sentence, offset=offset)
+        if cue is None:
+            return None
+        window = merge_cue_window(entries, cue, *expansion)
+        # Entries are raw-timeline (the context parser zeroes the offset);
+        # word timings are raw+offset, with the same max(0, ...) clamp.
+        return MergedLineWindow(
+            start=max(0.0, window.start + offset),
+            end=max(0.0, window.end + offset),
+            text=window.text,
+            prefix_len=window.prefix_len,
+        )
+
+    def _on_expand_line(self, direction: int) -> None:
+        word, idx = self._pending_word, self._pending_index
+        if word is None or idx is None:
+            return
+        chosen = self._chosen.get(idx, word)
+        prev_count, next_count = self._line_expansions.get(idx, (0, 0))
+        if direction < 0:
+            prev_count += 1
+        else:
+            next_count += 1
+        self._line_expansions[idx] = (prev_count, next_count)
+        self._apply_expansion(chosen, idx, snap=direction < 0)
+
+    def _on_expand_reset(self) -> None:
+        word, idx = self._pending_word, self._pending_index
+        if word is None or idx is None:
+            return
+        self._line_expansions.pop(idx, None)
+        self._apply_expansion(self._chosen.get(idx, word), idx, snap=True)
+
+    def _apply_expansion(self, chosen: TokenizedWord, idx: int, *, snap: bool) -> None:
+        """Shared add/reset tail: drop the stale clip override (the
+        sentence-pick precedent — it was measured against the old window),
+        reseed the strip, repaint the sentence cell, refresh button states,
+        and optionally snap the preview to the (new) start."""
+        self._clip_overrides.pop(idx, None)
+        self._seed_clip_editor(chosen, idx)
+        window = self._expanded_window(chosen, idx)
+        display = chosen if window is None else dataclasses.replace(chosen, sentence=window.text)
+        self._apply_pick_to_row(idx, display)
+        self._refresh_expansion_buttons()
+        if snap:
+            start = window.start if window is not None else chosen.start_time
+            video = chosen.video_file
+            # Defer: clicked handlers run mid-event — see _on_candidate_chosen.
+            QTimer.singleShot(0, lambda: self._preview_scene(start, video))
+
+    def _refresh_expansion_buttons(self) -> None:
+        """Recompute the three expansion buttons' enabled states.
+
+        A direction disables when no cue exists that way or when the would-be
+        merged window plus audio padding would exceed the clip strip's
+        MAX_CLIP_SECONDS — the single guardrail against merging across a long
+        cue gap. Enforced only here, at stamp time: the processor materializes
+        the stamped counts verbatim, so what the preview promised is what the
+        card gets.
+        """
+        if not hasattr(self, "expand_prev_button"):
+            return
+        word, idx = self._pending_word, self._pending_index
+        prev_ok = next_ok = reset_ok = False
+        if word is not None and idx is not None and self._media_context is not None:
+            reset_ok = self._line_expansions.get(idx, (0, 0)) != (0, 0)
+            chosen = self._chosen.get(idx, word)
+            resolved = self._expansion_entries(chosen)
+            if resolved is not None:
+                entries, offset = resolved
+                cue = find_cue_index(entries, chosen.start_time, chosen.sentence, offset=offset)
+                if cue is not None:
+                    prev_count, next_count = self._line_expansions.get(idx, (0, 0))
+                    padding = self._media_context.audio_padding
+                    if cue - (prev_count + 1) >= 0:
+                        window = merge_cue_window(entries, cue, prev_count + 1, next_count)
+                        prev_ok = (window.end - window.start) + 2 * padding <= MAX_CLIP_SECONDS
+                    if cue + next_count + 1 < len(entries):
+                        window = merge_cue_window(entries, cue, prev_count, next_count + 1)
+                        next_ok = (window.end - window.start) + 2 * padding <= MAX_CLIP_SECONDS
+        self.expand_prev_button.setEnabled(prev_ok)
+        self.expand_next_button.setEnabled(next_ok)
+        self.expand_reset_button.setEnabled(reset_ok)
 
     def _build_sentence_pane(self) -> QWidget:
         """Build the "Sentences" picker pane (label + candidate list).
@@ -943,11 +1194,18 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         """Install a widget-scoped Space play/pause shortcut on ``widget``.
 
         ``WidgetWithChildrenShortcut`` so it only fires when ``widget`` (or one of
-        its children) has focus — never the Search box. Installed on every pane the
-        user clicks into to preview a scene (the table plus the right-pane player,
-        sentence picker, and dictionary), so Space keeps reaching the player after
-        focus leaves the table. A window-scoped shortcut can't be used: it would
-        swallow spaces typed in the Search box (Issue #55).
+        its children) has focus — never the Search box. Installed on the table and
+        on each preview pane the user clicks into (the player PANE, the sentence
+        picker, and the dictionary), so Space keeps reaching the player after focus
+        leaves the table. A window-scoped shortcut can't be used: it would swallow
+        spaces typed in the Search box (Issue #55).
+
+        For the player it must be the pane container, never ``self.player_widget``:
+        the clip strip and the prev/next line buttons are the player's siblings, and
+        a ``QPushButton`` that holds focus activates on Space unless a shortcut in
+        scope claims the key first (#120). Never install on both — two matching
+        WidgetWithChildren shortcuts in one ancestry chain fire
+        ``activatedAmbiguously`` and nothing happens at all.
         """
         shortcut = QShortcut(QKeySequence(Qt.Key.Key_Space), widget)
         shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
@@ -961,8 +1219,11 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         # table the moment a sentence/scene is clicked, so the table alone isn't
         # enough.
         self._install_play_pause_shortcut(self.table)
-        if self._show_player and hasattr(self, "player_widget"):
-            self._install_play_pause_shortcut(self.player_widget)
+        if self._show_player and hasattr(self, "player_pane"):
+            # The PANE, not self.player_widget. Installing on both would put two
+            # WidgetWithChildren Space shortcuts in one ancestry chain, which Qt
+            # resolves as activatedAmbiguously — neither fires and Space dies.
+            self._install_play_pause_shortcut(self.player_pane)
         if self._has_candidates and hasattr(self, "sentence_list"):
             self._install_play_pause_shortcut(self.sentence_list)
         if self._show_dict and hasattr(self, "definition_view"):
@@ -1265,8 +1526,10 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         # raw+offset from the mining parse; ctx.offset only aligns the subtitle
         # overlay — see the set_source call in _create_player_widget. This handler
         # already runs from the debounce timer (outside any active event handler),
-        # so the seek can be issued directly — see _on_candidate_chosen.
-        self._preview_scene(chosen.start_time, chosen.video_file)
+        # so the seek can be issued directly — see _on_candidate_chosen. An
+        # active line expansion previews its merged window's start instead.
+        window = self._expanded_window(chosen, idx)
+        self._preview_scene(window.start if window is not None else chosen.start_time, chosen.video_file)
 
         # Audio clip strip: the CHOSEN variant's window, for the same reason the
         # dictionary follows the pick — the strip edits the clip this row will
@@ -1277,6 +1540,9 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         # POS (nouns) the pick moves mined_form, so a word-keyed pane showed the
         # first occurrence's entry after the user picked another (Issue #108).
         self._refresh_definition(chosen)
+
+        # Line-expansion buttons follow the focused word.
+        self._refresh_expansion_buttons()
 
     def _refresh_definition(self, word: TokenizedWord) -> None:
         """Point the definition pane at ``word``'s card front.
@@ -1309,10 +1575,17 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         * a generation stamp on every request, so a result that arrives after
           the user has moved on is cached but never painted.
 
-        ``fallback_term`` is the miss-only lemma retry: unidic's canonical lemma
-        collapses kanji variants (殺る → 遣る), so keying the pane on it showed
-        the wrong homograph. Both terms are fetched inside the one background
-        job, keeping the retry off the GUI thread as well.
+        ``fallback_term`` (the token's lemma) does double duty. First, it
+        SCOPES the primary ``term`` lookup (Rule A′): when it differs from
+        ``term``, it is threaded to ``lookup_fn`` as the lemma so a kana front
+        (mined_form ゆう, lemma 言う) keeps its own lexeme's entry instead of
+        every same-reading homograph (有/夕/結う) — matching the card's own
+        ``get_definitions_batch(lemma_context=...)`` scope, so the pane beside
+        the card agrees with it. Second, it is the MISS-only retry: unidic's
+        canonical lemma collapses kanji variants (殺る → 遣る), so on a ``term``
+        miss it is looked up as its own (unscoped) term. Both terms are
+        fetched inside the one background job, keeping both off the GUI
+        thread.
         """
         if self._closing or not self._show_dict:
             return
@@ -1334,20 +1607,33 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
 
         self._dispatch_lookup(term, fallback_term, self._lookup_gen)
 
+    @staticmethod
+    def _scope_lemma(term: str, fallback_term: str | None) -> str | None:
+        """The Rule A′ scope for ``term``'s own lookup: ``fallback_term`` (the
+        token's lemma) when it differs from ``term``, else ``None`` — the
+        non-empty convention every lemma-threading call site in this codebase
+        shares, so a word whose mined_form already IS its lemma calls
+        ``lookup_fn`` arity-1 exactly as before. Also the ``_lookup_cache``
+        key discriminant (see its declaration in ``__init__``).
+        """
+        return fallback_term if fallback_term and fallback_term != term else None
+
     def _cached_entries(self, term: str, fallback_term: str | None) -> list[tuple[str, str]] | None:
         """Entries resolvable from the cache alone, or ``None`` if a fetch is needed.
 
         An empty list is a real answer (a cached miss), which is why the
         "unresolved" signal is ``None`` rather than falsiness.
         """
-        if term not in self._lookup_cache:
+        key = (term, self._scope_lemma(term, fallback_term))
+        if key not in self._lookup_cache:
             return None
-        entries = self._lookup_cache[term]
+        entries = self._lookup_cache[key]
         if entries or not fallback_term or fallback_term == term:
             return entries
-        if fallback_term not in self._lookup_cache:
+        fallback_key = (fallback_term, None)
+        if fallback_key not in self._lookup_cache:
             return None
-        return self._lookup_cache[fallback_term]
+        return self._lookup_cache[fallback_key]
 
     def _dispatch_lookup(self, term: str, fallback_term: str | None, gen: int) -> None:
         """Run the (possibly two-term) query on a worker thread."""
@@ -1355,10 +1641,12 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         assert lookup_fn is not None  # guarded by self._show_dict
         self._lookup_inflight = True
 
-        def work() -> dict[str, list[tuple[str, str]]]:
-            fetched = {term: lookup_fn(term)}
-            if not fetched[term] and fallback_term and fallback_term != term:
-                fetched[fallback_term] = lookup_fn(fallback_term)
+        def work() -> dict[tuple[str, str | None], list[tuple[str, str]]]:
+            scope_lemma = self._scope_lemma(term, fallback_term)
+            key = (term, scope_lemma)
+            fetched = {key: lookup_fn(term, scope_lemma) if scope_lemma else lookup_fn(term)}
+            if not fetched[key] and fallback_term and fallback_term != term:
+                fetched[(fallback_term, None)] = lookup_fn(fallback_term)
             return fetched
 
         run_off_thread(
@@ -1376,12 +1664,16 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         fetched: object,
     ) -> None:
         """GUI-thread landing point for a completed lookup."""
+        # _closing is the teardown gate: reject before mutating state; gen staleness alone must still clear/drain below.
+        is_gen_current = gen == self._lookup_gen
+        if self._closing:
+            return
         self._lookup_inflight = False
         # Cache even a superseded result: it was a correct answer for its term,
         # and scrolling back to that row must not re-query.
         if isinstance(fetched, dict):
             self._lookup_cache.update(fetched)
-        if gen == self._lookup_gen:
+        if is_gen_current:
             self._render_definitions(term, self._cached_entries(term, fallback_term) or [])
         self._drain_pending_lookup()
 
@@ -1438,8 +1730,12 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
                 text = cand.sentence
                 if multi_episode and cand.video_file is not None:
                     text = f"[{cand.video_file.stem}] {cand.sentence}"
-                list_item = QListWidgetItem(text)
+                # Display text carries BudouX word joiners so the row wraps at
+                # phrase boundaries; COPY_ROLE and the tooltip keep the pristine
+                # string so Ctrl+C never lifts an invisible character.
+                list_item = QListWidgetItem(phrase_wrap_ja(text))
                 list_item.setToolTip(text)
+                list_item.setData(COPY_ROLE, text)
                 list_item.setFont(japanese_cell_font())
                 self.sentence_list.addItem(list_item)
                 if self._same_pick(cand, chosen):
@@ -1486,8 +1782,10 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         # A clip window was measured against the OLD line's timings, so the pick
         # invalidates it: dropping the override and reseeding from the new
         # variant's default is the only reading that cannot mine a window
-        # belonging to a different scene.
+        # belonging to a different scene. A line expansion was counted against
+        # the old cue for the same reason, so it dies with the pick too.
         self._clip_overrides.pop(idx, None)
+        self._line_expansions.pop(idx, None)
         self._seed_clip_editor(chosen, idx)
 
         # Everything that describes the occurrence follows the pick, not just the
@@ -1496,6 +1794,7 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         # definition beside it (Issue #108).
         self._apply_pick_to_row(idx, chosen)
         self._refresh_definition(chosen)
+        self._refresh_expansion_buttons()
 
         # Preview the chosen scene. Defer the seek to the next event-loop tick:
         # this handler runs synchronously inside the list's currentRowChanged
@@ -1575,6 +1874,8 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         ``_ensure_player_source`` returning False means an off-thread context
         resolve is in flight and will re-fire this preview itself.
         """
+        if self._closing:
+            return
         if self._show_player and hasattr(self, "player_widget") and self._ensure_player_source(video_file):
             self.player_widget.seek_seconds(start_time)
             self.player_widget.pause()
@@ -1642,6 +1943,8 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
             audio_track_override=ctx.audio_track_override,
         )
         self._displayed_media_video = ctx.video_file
+        # The landed context may make the focused word's neighbors resolvable.
+        self._refresh_expansion_buttons()
 
     def _chosen_episode_displayed(self) -> bool:
         """Whether the player shows the focused word's episode.
@@ -1915,33 +2218,49 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         return []
 
     def _on_add_to_known(self) -> None:
-        """Stage the target rows for the local known/ignore list (D34-B).
+        """Stage the target rows for the local known/ignore list, or unstage them (D34-B).
 
-        Writes NOTHING. The rows are marked "Known · pending", greyed and
-        excluded from this run; :meth:`accept` commits the stage, and every
-        other exit throws it away with the rest of the review. The previous
-        behaviour wrote immediately, so a Cancel that abandoned the run still
-        excluded those words from every future one.
+        Writes NOTHING in either direction. Staged rows are marked
+        "Known · pending", greyed and excluded from this run; :meth:`accept`
+        commits the stage, and every other exit throws it away with the rest of
+        the review. The previous behaviour wrote immediately, so a Cancel that
+        abandoned the run still excluded those words from every future one.
+
+        The direction is decided by the target rows, not by a mode. Any row
+        still active means "add", and a mixed selection stages the rest — the
+        additive reading of a button whose label says Add. Only when EVERY
+        target row is already staged does the click take the mark back, which is
+        the moment the label flips (:meth:`_refresh_known_button` mirrors this
+        rule; if the two drift the button lies about what it does).
+
+        Undo has to live here because Cancel is not one: it discards the whole
+        review, and MiningTabBase reads a rejected curator as "stop the run".
         """
         if self._commit_known_callback is None or self._known_commit_running:
             return
-        rows = [row for row in self._known_target_rows() if self._row_is_active(row)]
-        if not rows:
-            return
+        targets = self._known_target_rows()
+        active = [row for row in targets if self._row_is_active(row)]
+        if active:
+            self._stage_rows_known(active)
+        elif targets:
+            self._unstage_rows_known(targets)
 
-        forms: set[str] = set()
-        for row in rows:
-            word_item = self.table.item(row, 1)  # "Word (mined)" column
-            if word_item:
-                forms.add(word_item.text())
-        if not forms:
-            return
-
-        self._pending_known_forms |= forms
+    def _stage_rows_known(self, rows: list[int]) -> None:
+        """Mark rows Known · pending and re-derive the stage."""
         self.table.blockSignals(True)
         for row in rows:
             self._mark_row_known(row)
         self.table.blockSignals(False)
+        self._recompute_pending_known()
+        self._refresh_summary()
+
+    def _unstage_rows_known(self, rows: list[int]) -> None:
+        """Take the Known · pending mark back off rows and re-derive the stage."""
+        self.table.blockSignals(True)
+        for row in rows:
+            self._unmark_row_known(row)
+        self.table.blockSignals(False)
+        self._recompute_pending_known()
         self._refresh_summary()
 
     def pending_known_forms(self) -> set[str]:
@@ -2067,6 +2386,9 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
         """Mark a row staged-known: labelled, struck through, grey, unchecked, locked."""
         check_item = self.table.item(row, 0)
         if check_item:
+            # Remembered BEFORE the uncheck, so _unmark_row_known can put back
+            # what the user chose instead of a default.
+            self._known_prior_check[check_item.data(Qt.ItemDataRole.UserRole)] = check_item.checkState()
             check_item.setCheckState(Qt.CheckState.Unchecked)
             # Strip the checkable flag so bulk actions / the S toggle key can't re-include it.
             check_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
@@ -2082,6 +2404,53 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
                 font.setStrikeOut(True)
                 item.setFont(font)
                 item.setForeground(grey)
+
+    def _unmark_row_known(self, row: int) -> None:
+        """Undo :meth:`_mark_row_known` — the row rejoins the review.
+
+        The exact inverse, cell for cell. The checkable flag comes back, so the
+        bulk verbs and the S key can reach the row again; the "Known · pending"
+        label goes, and column 0's ResizeToContents rule shrinks the column back
+        on its own.
+
+        The foreground is CLEARED rather than repainted a colour.
+        ``make_table_item`` never sets one, so an empty ForegroundRole is the
+        state a fresh row is in — and a hard-coded black would survive a theme
+        change into an unreadable cell.
+        """
+        check_item = self.table.item(row, 0)
+        if check_item:
+            check_item.setFlags(
+                Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
+            )
+            check_item.setText("")
+            prior = self._known_prior_check.pop(check_item.data(Qt.ItemDataRole.UserRole), Qt.CheckState.Checked)
+            check_item.setCheckState(prior)
+        for col in range(1, self.table.columnCount()):
+            item = self.table.item(row, col)
+            if item:
+                font = item.font()
+                font.setStrikeOut(False)
+                item.setFont(font)
+                item.setData(Qt.ItemDataRole.ForegroundRole, None)
+
+    def _recompute_pending_known(self) -> None:
+        """Re-derive the stage from the table, which is its single source of truth.
+
+        Stripping the checkable flag is what MAKES a row staged, so the marked
+        rows ARE the stage. Re-reading them is cheaper to keep correct than
+        reference-counting forms, and it means two rows printing the same mined
+        form cannot have one unstage silently clear both.
+        """
+        forms: set[str] = set()
+        for row in range(self.table.rowCount()):
+            check_item = self.table.item(row, 0)
+            if check_item is None or self._is_checkable(check_item):
+                continue
+            word_item = self.table.item(row, 1)  # "Word (mined)" column
+            if word_item:
+                forms.add(word_item.text())
+        self._pending_known_forms = forms
 
     def _refresh_summary(self) -> None:
         """Re-derive everything on screen that describes the current state.
@@ -2106,6 +2475,38 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
             button.setAccessibleName(text)
         # A verb with an empty target is a dead control, not a silent no-op.
         self.include_highlighted_button.setEnabled(highlighted > 0)
+        self._refresh_known_button()
+
+    def _known_button_labels(self) -> tuple[str, str]:
+        """The Known Words verb's two faces: ``(stage, unstage)``.
+
+        One place, because the width pin in :meth:`_build_toolbar_row` measures
+        both and :meth:`_refresh_known_button` picks between them.
+        """
+        return (self.tr("Add to Known Words"), self.tr("Remove from Known Words"))
+
+    def _refresh_known_button(self) -> None:
+        """Name the click this button is about to perform, for the current target.
+
+        Mirrors :meth:`_on_add_to_known`'s rule exactly — any active target row
+        means "add", every target already staged means "remove". The label is
+        the only statement of which of the two a click will do, so the two rules
+        are written to be read together.
+        """
+        add_label, remove_label = self._known_button_labels()
+        targets = self._known_target_rows()
+        removing = bool(targets) and not any(self._row_is_active(row) for row in targets)
+        if removing:
+            self.add_known_button.setText(remove_label)
+            self.add_known_button.setToolTip(
+                self.tr("Take the Known · pending mark back off the highlighted rows and return them to this review.")
+            )
+        else:
+            self.add_known_button.setText(add_label)
+            self.add_known_button.setToolTip(
+                self.tr("Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.")
+            )
+        self.add_known_button.setAccessibleName(self.add_known_button.text())
 
     def _update_word_count(self) -> None:
         """Update the counter line: position, included total, filtered total."""
@@ -2151,7 +2552,12 @@ class WordCurationDialog(ScreenIssueHost, QDialog):
                 if original_index is not None and 0 <= original_index < len(self._words):
                     word = self._chosen.get(original_index, self._words[original_index])
                     override = self._clip_overrides.get(original_index)
-                    if override is not None:
-                        word = dataclasses.replace(word, clip_override=override)
+                    expansion = self._line_expansions.get(original_index, (0, 0))
+                    if override is not None or expansion != (0, 0):
+                        word = dataclasses.replace(
+                            word,
+                            clip_override=override if override is not None else word.clip_override,
+                            line_expansion=expansion,
+                        )
                     selected.append(word)
         return selected

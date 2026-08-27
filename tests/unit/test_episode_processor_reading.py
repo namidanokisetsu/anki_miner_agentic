@@ -513,6 +513,27 @@ def test_occurrence_counts_attached_for_curation(test_config):
     assert seen == {"犬": 5, "猫": 2}
 
 
+def test_reading_curation_warns_on_dropped_line_expansion(test_config, caplog):
+    """A curated word carrying a line_expansion must warn — the reading path
+    has no subtitle timeline to materialize it against (Issue #120 C4)."""
+    import logging
+
+    words = [_word("犬", 0)]
+    counts = collections.Counter({"犬": 1})
+    sp = MagicMock()
+    sp.parse_text_units.side_effect = _parse_returning(words, None, counts)
+    proc = _make_processor(test_config, subtitle_parser=sp)
+
+    def curate(curated_words):
+        return [replace(curated_words[0], line_expansion=(1, 0))]
+
+    with caplog.at_level(logging.WARNING, logger="anki_miner.orchestration.episode_processor"):
+        proc.process_reading(_document([_unit(0)]), curation_callback=curate)
+
+    messages = [r.getMessage() for r in caplog.records]
+    assert any("line expansion" in m for m in messages)
+
+
 def test_image_materialized_once_per_ref(test_config):
     """5. Shared page → one prepare_card_image call; each word gets the picture."""
     ref = ImageRef(Path("/pages/page01.png"))
@@ -575,7 +596,7 @@ def test_cancel_during_image_loop_stops_further_prep(test_config):
     sp.parse_text_units.side_effect = _parse_returning(words, None, counts)
     proc = _make_processor(test_config, subtitle_parser=sp)
 
-    def _prep_then_cancel(ref, images_dir):
+    def _prep_then_cancel(ref, images_dir, *_args):
         proc.cancel()
         return Path("/tmp/reading_x.jpg")
 
@@ -661,7 +682,7 @@ def test_undecodable_page_warns_once_imageless(test_config):
     presenter = MagicMock(name="Presenter")
     proc = _make_processor(test_config, subtitle_parser=sp, anki_service=anki, presenter=presenter)
 
-    def _prep(ref, dest):
+    def _prep(ref, dest, *_args):
         if ref == bad:
             raise UnidentifiedImageError("boom")
         return Path("/tmp/reading_good.jpg")
@@ -688,7 +709,7 @@ def test_damaged_reading_image_skipped_rest_still_usable(test_config):
     presenter = MagicMock(name="Presenter")
     proc = _make_processor(test_config, subtitle_parser=sp, anki_service=anki, presenter=presenter)
 
-    def _prep(ref, _dest):
+    def _prep(ref, _dest, *_args):
         if ref == bad:
             raise NotImplementedError("unsupported compression")
         return Path("/tmp/reading_good.jpg")
@@ -771,7 +792,7 @@ def test_expression_audio_after_images(test_config):
     proc = _make_processor(cfg, subtitle_parser=sp, expression_audio_fetcher=fetcher)
     assert proc._expression_audio_active is True
 
-    def _prep(ref, dest):
+    def _prep(ref, dest, *_args):
         order.append("prep")
         return Path("/tmp/reading_x.jpg")
 
@@ -1130,7 +1151,7 @@ class TestReadingSentenceTts:
         proc = _make_processor(cfg, subtitle_parser=sp, expression_audio_fetcher=expr, sentence_audio_fetcher=tts)
 
         rec = _RecordingProgress()
-        with patch(_IMG, side_effect=lambda ref, dest: order.append("prep") or Path("/tmp/reading_x.jpg")):
+        with patch(_IMG, side_effect=lambda ref, dest, *_args: order.append("prep") or Path("/tmp/reading_x.jpg")):
             proc.process_reading(_document(units), progress_callback=rec)
 
         assert order == ["prep", "prep", "expr", "expr", "tts", "tts"]

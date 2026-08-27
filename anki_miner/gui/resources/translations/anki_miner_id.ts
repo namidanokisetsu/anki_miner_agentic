@@ -24,8 +24,8 @@
         <translation>Mining kartu kosakata bahasa Jepang dari video ke Anki — tangkapan layar, audio, dan definisi, secara otomatis.</translation>
     </message>
     <message>
-        <source>About Anki Miner Agentic</source>
-        <translation type="unfinished" />
+        <source>About Anki Miner</source>
+        <translation type="unfinished">Tentang Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -648,11 +648,11 @@
 </context><context>
     <name>App</name>
     <message>
-        <source>Anki Miner Agentic Is Already Running</source>
+        <source>Anki Miner Is Already Running</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Another copy of Anki Miner Agentic appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
+        <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
         <translation type="unfinished" />
@@ -838,6 +838,10 @@ Skipped (source folder or database not found; use per-row Re-import…):
 
 Dilewati (folder sumber atau database tidak ditemukan; gunakan Impor Ulang… per baris):
 </translation>
+    </message>
+    <message>
+        <source>The selected audio pack is no longer in the chain.</source>
+        <translation>Paket audio yang dipilih tidak lagi ada dalam rantai</translation>
     </message>
     <message>
         <source>No audio packs in the chain.</source>
@@ -2054,6 +2058,14 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>Periksa versi Anki Miner baru dari menu Bantuan, atau aktifkan/nonaktifkan pemeriksaan otomatis saat startup di footer Pengaturan.</translation>
     </message>
     <message>
+        <source>Download videos or audio</source>
+        <translation>Unduh video atau audio</translation>
+    </message>
+    <message>
+        <source>Save videos, audio or subtitles from a URL to a folder using yt-dlp, without mining. Works with any site yt-dlp supports.</source>
+        <translation>Simpan video, audio, atau subtitel dari sebuah URL ke folder menggunakan yt-dlp, tanpa mining. Berfungsi dengan semua situs yang didukung yt-dlp.</translation>
+    </message>
+    <message>
         <source>Restyle mined cards</source>
         <translation>Ubah gaya kartu hasil mining</translation>
     </message>
@@ -2686,6 +2698,10 @@ Tindakan ini akan mengubah {notes} catatan ({fields} bidang) dan menandainya den
     <message>
         <source>No media files were found in that folder.</source>
         <translation>Tidak ada berkas media yang ditemukan di folder tersebut.</translation>
+    </message>
+    <message>
+        <source>That media folder could not be read.</source>
+        <translation>Folder media itu tidak dapat dibaca.</translation>
     </message>
     <message>
         <source>Matched %1 of %2 media files.</source>
@@ -3658,6 +3674,206 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
         <translation>Kamus luring siap: &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
 </context><context>
+    <name>DownloadTab</name>
+    <message>
+        <source>Progress</source>
+        <translation>Kemajuan</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Selesai</translation>
+    </message>
+    <message>
+        <source>Done: </source>
+        <translation>Selesai: </translation>
+    </message>
+    <message>
+        <source>Skipped</source>
+        <translation>Dilewati</translation>
+    </message>
+    <message>
+        <source>Skipped: </source>
+        <translation>Dilewati: </translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Batal</translation>
+    </message>
+    <message>
+        <source>Cancelling…</source>
+        <translation>Membatalkan…</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Dibatalkan</translation>
+    </message>
+    <message>
+        <source>Failed — see log</source>
+        <translation>Gagal — lihat log</translation>
+    </message>
+    <message>
+        <source>Some URLs could not be downloaded.</source>
+        <translation>Beberapa URL tidak dapat diunduh.</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded</source>
+        <translation>Selesai — %1 diunduh</translation>
+    </message>
+    <message>
+        <source>Complete — %1 downloaded, %2 already present</source>
+        <translation>Selesai — %1 diunduh, %2 sudah ada</translation>
+    </message>
+    <message>
+        <source>Nothing downloaded — all %1 already present in the download folder.</source>
+        <translation>Tidak ada yang diunduh — semua %1 sudah ada di folder unduhan.</translation>
+    </message>
+    <message>
+        <source>Select Download Folder</source>
+        <translation>Pilih Folder Unduhan</translation>
+    </message>
+    <message>
+        <source>Media download</source>
+        <translation>Unduhan media</translation>
+    </message>
+    <message>
+        <source>URLs</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>yt-dlp not found. Install or update it in Settings → YouTube to enable downloads.</source>
+        <translation>yt-dlp tidak ditemukan. Pasang atau perbarui di Pengaturan → YouTube untuk mengaktifkan unduhan.</translation>
+    </message>
+    <message>
+        <source>Download videos or audio from any site yt-dlp supports, without mining.</source>
+        <translation>Unduh video atau audio dari situs mana pun yang didukung yt-dlp, tanpa mining.</translation>
+    </message>
+    <message>
+        <source>One URL per line</source>
+        <translation>Satu URL per baris</translation>
+    </message>
+    <message>
+        <source>Options</source>
+        <translation>Opsi</translation>
+    </message>
+    <message>
+        <source>Quality:</source>
+        <translation>Kualitas:</translation>
+    </message>
+    <message>
+        <source>Best available</source>
+        <translation>Terbaik yang tersedia</translation>
+    </message>
+    <message>
+        <source>Up to 1080p</source>
+        <translation>Hingga 1080p</translation>
+    </message>
+    <message>
+        <source>Up to 720p</source>
+        <translation>Hingga 720p</translation>
+    </message>
+    <message>
+        <source>Audio only (MP3)</source>
+        <translation>Hanya audio (MP3)</translation>
+    </message>
+    <message>
+        <source>Audio only (M4A)</source>
+        <translation>Hanya audio (M4A)</translation>
+    </message>
+    <message>
+        <source>Custom format:</source>
+        <translation>Format khusus:</translation>
+    </message>
+    <message>
+        <source>Optional yt-dlp format string</source>
+        <translation>String format yt-dlp (opsional)</translation>
+    </message>
+    <message>
+        <source>When set, the quality preset above is ignored.</source>
+        <translation>Jika diisi, prasetel kualitas di atas diabaikan.</translation>
+    </message>
+    <message>
+        <source>Download subtitles</source>
+        <translation>Unduh subtitel</translation>
+    </message>
+    <message>
+        <source>Save subtitles next to the media file. Prefers manual subtitles, falls back to automatic.</source>
+        <translation>Simpan subtitel di samping berkas media. Mengutamakan subtitel manual, jika tidak ada memakai yang otomatis.</translation>
+    </message>
+    <message>
+        <source>Languages:</source>
+        <translation>Bahasa:</translation>
+    </message>
+    <message>
+        <source>Comma-separated language codes, e.g. ja,en</source>
+        <translation>Kode bahasa dipisahkan koma, mis. ja,en</translation>
+    </message>
+    <message>
+        <source>Embed thumbnail</source>
+        <translation>Sematkan thumbnail</translation>
+    </message>
+    <message>
+        <source>Embed title and metadata</source>
+        <translation>Sematkan judul dan metadata</translation>
+    </message>
+    <message>
+        <source>Output</source>
+        <translation>Keluaran</translation>
+    </message>
+    <message>
+        <source>Output:</source>
+        <translation>Keluaran:</translation>
+    </message>
+    <message>
+        <source>Choose Folder…</source>
+        <translation>Pilih Folder…</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Setel Ulang</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Unduh</translation>
+    </message>
+    <message>
+        <source>Download folder is not writable.</source>
+        <translation>Folder unduhan tidak dapat ditulisi.</translation>
+    </message>
+    <message>
+        <source>Check permissions for %1.</source>
+        <translation>Periksa izin untuk %1.</translation>
+    </message>
+    <message>
+        <source>Some lines are not valid URLs.</source>
+        <translation>Beberapa baris bukan URL yang valid.</translation>
+    </message>
+    <message>
+        <source>Paste at least one URL to download.</source>
+        <translation>Tempelkan setidaknya satu URL untuk diunduh.</translation>
+    </message>
+    <message>
+        <source>Downloading %1 of %2</source>
+        <translation>Mengunduh %1 dari %2</translation>
+    </message>
+</context><context>
+    <name>DownloadWorker</name>
+    <message>
+        <source>%1: %2%</source>
+        <translation>%1: %2%</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Selesai</translation>
+    </message>
+    <message>
+        <source>Already downloaded</source>
+        <translation>Sudah diunduh</translation>
+    </message>
+    <message>
+        <source>Cancelled</source>
+        <translation>Dibatalkan</translation>
+    </message>
+</context><context>
     <name>EnhancedDialog</name>
     <message>
         <source>Close</source>
@@ -3878,10 +4094,6 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
         <translation>Kesalahan: %1</translation>
     </message>
     <message>
-        <source>Unexpected error: %1</source>
-        <translation>Kesalahan tak terduga: %1</translation>
-    </message>
-    <message>
         <source>No words selected for card creation</source>
         <translation>Tidak ada kata yang dipilih untuk pembuatan kartu</translation>
     </message>
@@ -3904,6 +4116,10 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
         <translation>
             <numerusform>Mengekstrak media untuk %n kata</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Unexpected error: %1</source>
+        <translation>Kesalahan tak terduga: %1</translation>
     </message>
     <message numerus="yes">
         <source>Run failed after creating %n card(s); they remain in Anki and can be undone.</source>
@@ -5258,6 +5474,10 @@ Lanjutkan?</translation>
         <translation>Filter Dek</translation>
     </message>
     <message>
+        <source>Download</source>
+        <translation>Unduhan</translation>
+    </message>
+    <message>
         <source>Single</source>
         <translation>Tunggal</translation>
     </message>
@@ -5272,6 +5492,16 @@ Lanjutkan?</translation>
     <message>
         <source>Failed to create desktop shortcut.</source>
         <translation>Gagal membuat pintasan desktop.</translation>
+    </message>
+</context><context>
+    <name>MediaDownloader</name>
+    <message>
+        <source>Downloading</source>
+        <translation>Mengunduh</translation>
+    </message>
+    <message>
+        <source>Processing</source>
+        <translation>Memproses</translation>
     </message>
 </context><context>
     <name>MediaExtractorService</name>
@@ -6618,6 +6848,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>Tempel teks terlebih dahulu.</translation>
     </message>
     <message>
+        <source>This card image has no Picture field to land in. Map one in Settings → Anki, or clear the image to mine without one.</source>
+        <translation>Gambar kartu ini tidak memiliki bidang Gambar untuk meletakkannya. Tetapkan satu di Setelan → Anki, atau hapus gambar untuk mining tanpa bidang.</translation>
+    </message>
+    <message>
         <source>That image cannot be read. Pick another, or clear the field to mine without one.</source>
         <translation>Gambar itu tidak dapat dibaca. Pilih gambar lain, atau kosongkan bidang untuk mining tanpa gambar.</translation>
     </message>
@@ -6818,6 +7052,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>Apa saja sumber daya ini?</translation>
     </message>
     <message>
+        <source>%1 — %2</source>
+        <translation>%1 — %2</translation>
+    </message>
+    <message>
         <source>Download recommended resources</source>
         <translation>Unduh sumber daya yang direkomendasikan</translation>
     </message>
@@ -6826,12 +7064,20 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>Memeriksa kamus luring...</translation>
     </message>
     <message>
-        <source>Could not check the offline dictionary: </source>
-        <translation>Tidak dapat memeriksa kamus luring: </translation>
+        <source>Could not check the installed resources: </source>
+        <translation>Tidak dapat memeriksa sumber daya yang terpasang: </translation>
     </message>
     <message>
         <source>Dictionary ready: %1</source>
         <translation>Kamus siap: %1</translation>
+    </message>
+    <message>
+        <source>%1 ready: %2</source>
+        <translation>%1 siap: %2</translation>
+    </message>
+    <message>
+        <source>%1: not set up (optional)</source>
+        <translation>%1: belum disiapkan (opsional)</translation>
     </message>
     <message>
         <source>Download cancelled. Some resources were installed before cancellation.</source>
@@ -7000,6 +7246,40 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>Failed to delete notes. Check that Anki is running.</source>
         <translation>Gagal menghapus catatan. Periksa bahwa Anki berjalan.</translation>
+    </message>
+</context><context>
+    <name>RetimeReference</name>
+    <message>
+        <source>Chosen subtitle track %1 is unusable; using audio instead.</source>
+        <translation>Trek subtitel %1 yang dipilih tidak dapat digunakan; menggunakan audio sebagai gantinya.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: not a dialogue track.</source>
+        <translation>Melewati trek subtitel %1: bukan trek dialog.</translation>
+    </message>
+    <message>
+        <source>No usable embedded subtitle track; aligning against audio.</source>
+        <translation>Tidak ada trek subtitel tertanam yang dapat digunakan; menyelaraskan terhadap audio.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: only %2 dialogue lines.</source>
+        <translation>Melewati trek subtitel %1: hanya %2 baris dialog.</translation>
+    </message>
+    <message>
+        <source>Skipping subtitle track %1: covers only %2 of the episode.</source>
+        <translation>Melewati trek subtitel %1: hanya mencakup %2 dari episode.</translation>
+    </message>
+    <message>
+        <source>Aligning against embedded subtitle track %1 (%2, %3 lines).</source>
+        <translation>Menyelaraskan terhadap trek subtitel tertanam %1 (%2, %3 baris).</translation>
+    </message>
+    <message>
+        <source>No Japanese-tagged audio track found; using the first audio track — on a dual-audio release this may be a dub.</source>
+        <translation>Tidak ada trek audio berlabel Jepang yang ditemukan; menggunakan trek audio pertama — pada rilis audio ganda ini mungkin dub.</translation>
+    </message>
+    <message>
+        <source>Aligning against audio (%1).</source>
+        <translation>Menyelaraskan terhadap audio (%1).</translation>
     </message>
 </context><context>
     <name>RetimeReferenceDialog</name>
@@ -7370,6 +7650,18 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
     <message>
         <source>Download the recommended frequency list, pitch accent data, and dictionary now?</source>
         <translation>Unduh daftar frekuensi, data aksen nada, dan kamus yang direkomendasikan sekarang?</translation>
+    </message>
+    <message>
+        <source>Dictionary</source>
+        <translation>Kamus</translation>
+    </message>
+    <message>
+        <source>Frequency</source>
+        <translation>Frekuensi</translation>
+    </message>
+    <message>
+        <source>Pitch accent</source>
+        <translation>Aksen nada</translation>
     </message>
     <message>
         <source>Anki Miner Setup</source>
@@ -7782,12 +8074,12 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Folder tersebut sudah tidak ada.</translation>
     </message>
     <message>
-        <source>That folder could not be read.</source>
-        <translation>Folder tersebut tidak dapat dibaca.</translation>
-    </message>
-    <message>
         <source>No video or audio files were found in that folder.</source>
         <translation>Tidak ada berkas video atau audio yang ditemukan di folder tersebut.</translation>
+    </message>
+    <message>
+        <source>That folder could not be read.</source>
+        <translation>Folder tersebut tidak dapat dibaca.</translation>
     </message>
     <message>
         <source>Transcribing file %1 of %2</source>
@@ -8104,10 +8396,6 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Folder subtitel tersebut sudah tidak ada.</translation>
     </message>
     <message>
-        <source>That video folder could not be read.</source>
-        <translation>Folder video tersebut tidak dapat dibaca.</translation>
-    </message>
-    <message>
         <source>Matched %1 of %2 video files.</source>
         <translation>Mencocokkan %1 dari %2 berkas video.</translation>
     </message>
@@ -8118,6 +8406,10 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
     <message>
         <source>No subtitle file could be matched to any video file in those folders.</source>
         <translation>Tidak ada berkas subtitel yang dapat dicocokkan dengan berkas video mana pun di folder tersebut.</translation>
+    </message>
+    <message>
+        <source>That video folder could not be read.</source>
+        <translation>Folder video tersebut tidak dapat dibaca.</translation>
     </message>
     <message>
         <source>Retiming file %1 of %2</source>
@@ -8138,12 +8430,54 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Selesai</translation>
     </message>
     <message>
+        <source>Retimed with %1</source>
+        <translation>Waktu diselaraskan dengan %1</translation>
+    </message>
+    <message>
+        <source>Original backed up as %1</source>
+        <translation>Asli dicadangkan sebagai %1</translation>
+    </message>
+    <message>
         <source>Cancelled</source>
         <translation>Dibatalkan</translation>
     </message>
     <message>
-        <source>No trustworthy sync for %1; original kept unchanged</source>
-        <translation>Tidak ada hasil penyelarasan yang dapat dipercaya untuk %1; berkas asli dibiarkan tidak berubah</translation>
+        <source>no trustworthy sync; original kept unchanged</source>
+        <translation>tidak ada sinkronisasi yang dapat dipercaya; asli tetap tidak berubah</translation>
+    </message>
+    <message>
+        <source>Retiming failed for %1: %2</source>
+        <translation>Penyelarasan waktu gagal untuk %1: %2</translation>
+    </message>
+</context><context>
+    <name>SubtitleRetimer</name>
+    <message>
+        <source>Ignoring %1 non-dialogue lines during alignment.</source>
+        <translation>Mengabaikan %1 baris non-dialog selama penyelarasan.</translation>
+    </message>
+    <message>
+        <source>alass is not installed; skipping alass attempts.</source>
+        <translation>alass tidak terpasang; melewati upaya alass.</translation>
+    </message>
+    <message>
+        <source>%1 result rejected: %2</source>
+        <translation>Hasil %1 ditolak: %2</translation>
+    </message>
+    <message>
+        <source>no engine produced a trustworthy sync; original left untouched</source>
+        <translation>tidak ada mesin yang menghasilkan sinkronisasi yang dapat dipercaya; asli dibiarkan tidak disentuh</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (offset %2).</source>
+        <translation>Waktu diselaraskan dengan %1 (offset %2).</translation>
+    </message>
+    <message>
+        <source>Retimed with %1 (%2 blocks, shifts %3..%4).</source>
+        <translation>Waktu diselaraskan dengan %1 (%2 blok, shift %3..%4).</translation>
+    </message>
+    <message>
+        <source>Retimed with %1.</source>
+        <translation>Waktu diselaraskan dengan %1.</translation>
     </message>
 </context><context>
     <name>SubtitleTracksDialog</name>
@@ -8728,14 +9062,6 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Filter berdasarkan bidang apa pun...</translation>
     </message>
     <message>
-        <source>Add to Known Words</source>
-        <translation>Tambahkan ke Kata yang Dikenal</translation>
-    </message>
-    <message>
-        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
-        <translation>Tandai baris yang disorot sebagai Dikenal · tertunda. Konfirmasi menyimpannya; Batal membuangnya.</translation>
-    </message>
-    <message>
         <source>Word (mined)</source>
         <translation>Kata (di-mining)</translation>
     </message>
@@ -8774,6 +9100,30 @@ Pemilih “Kalimat” menyediakan satu opsi per baris subtitel, jadi biasanya da
     <message>
         <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation>S sertakan/kecualikan · Ctrl+A sertakan yang terlihat · Ctrl+D kecualikan yang terlihat · Ctrl+Enter konfirmasi</translation>
+    </message>
+    <message>
+        <source>+ Previous line</source>
+        <translation>+ Baris sebelumnya</translation>
+    </message>
+    <message>
+        <source>+ Next line</source>
+        <translation>+ Baris berikutnya</translation>
+    </message>
+    <message>
+        <source>Reset lines</source>
+        <translation>Setel ulang baris</translation>
+    </message>
+    <message>
+        <source>Merge the previous subtitle line into this word's sentence and media clip. Disabled when there is no earlier line or the combined clip would exceed %1 seconds.</source>
+        <translation>Gabungkan baris subtitel sebelumnya ke kalimat dan klip media kata ini. Nonaktif jika tidak ada baris sebelumnya atau klip gabungan akan melebihi %1 detik.</translation>
+    </message>
+    <message>
+        <source>Merge the next subtitle line into this word's sentence and media clip. Disabled when there is no later line or the combined clip would exceed %1 seconds.</source>
+        <translation>Gabungkan baris subtitel berikutnya ke kalimat dan klip media kata ini. Nonaktif jika tidak ada baris berikutnya atau klip gabungan akan melebihi %1 detik.</translation>
+    </message>
+    <message>
+        <source>Restore this word's original single-line sentence and clip window.</source>
+        <translation>Kembalikan kalimat satu baris dan rentang klip asli kata ini.</translation>
     </message>
     <message>
         <source>Sentences</source>
@@ -8832,6 +9182,22 @@ Pemilih “Kalimat” menyediakan satu opsi per baris subtitel, jadi biasanya da
         <translation>Sertakan yang disorot (%1)</translation>
     </message>
     <message>
+        <source>Add to Known Words</source>
+        <translation>Tambahkan ke Kata yang Dikenal</translation>
+    </message>
+    <message>
+        <source>Remove from Known Words</source>
+        <translation>Hapus dari Kata yang Dikenal</translation>
+    </message>
+    <message>
+        <source>Take the Known · pending mark back off the highlighted rows and return them to this review.</source>
+        <translation>Lepas tanda Dikenal · tertunda dari baris yang disorot dan kembalikan ke ulasan ini.</translation>
+    </message>
+    <message>
+        <source>Mark highlighted rows Known · pending. Confirm saves them; Cancel discards them.</source>
+        <translation>Tandai baris yang disorot sebagai Dikenal · tertunda. Konfirmasi menyimpannya; Batal membuangnya.</translation>
+    </message>
+    <message>
         <source>Word %1 of %2 · %3 included · %4 shown of %5</source>
         <translation>Kata %1 dari %2 · %3 disertakan · %4 ditampilkan dari %5</translation>
     </message>
@@ -8876,6 +9242,10 @@ Pemilih “Kalimat” menyediakan satu opsi per baris subtitel, jadi biasanya da
     <message>
         <source>Auto JA subs</source>
         <translation>Subtitel JA otomatis</translation>
+    </message>
+    <message>
+        <source>Auto JA subs (dub audio)</source>
+        <translation>Subtitel JA otomatis (audio sulih suara)</translation>
     </message>
     <message>
         <source>Checking</source>
@@ -9122,7 +9492,7 @@ Pemilih “Kalimat” menyediakan satu opsi per baris subtitel, jadi biasanya da
 </context><context>
     <name>app</name>
     <message>
-        <source>Anki Miner Agentic — Unexpected Error</source>
+        <source>Anki Miner — Unexpected Error</source>
         <translation type="unfinished" />
     </message>
     <message>

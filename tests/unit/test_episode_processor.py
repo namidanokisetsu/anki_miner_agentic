@@ -156,6 +156,112 @@ class TestBuildLemmaContext:
         assert _build_lemma_context([a, b]) == {"ゆう": "言う"}
 
 
+class TestLemmaContextCallShape:
+    """Seam-1 (A-5): the legacy call shape at the ``get_definitions_batch`` /
+    ``get_glossaries_batch`` call sites. An empty ``lemma_context`` must call
+    both services WITHOUT the ``lemma_context`` kwarg at all (the pre-Rule-A'
+    call shape some callers still rely on); a non-empty one must always pass
+    it.
+
+    A plain ``MagicMock`` would accept any kwarg silently and could not catch
+    either regression, so the double here is a real function with a real
+    signature: one variant has no ``lemma_context`` parameter at all (an
+    unconditional ``lemma_context=...`` raises "unexpected keyword
+    argument"), the other requires it with no default (dropping
+    ``**lemma_kwargs`` entirely raises "missing 1 required keyword-only
+    argument"). Either mutation surfaces as a caught exception that fails the
+    run (`process_episode`'s broad ``except Exception`` turns it into
+    ``result.errors``), not a crash — so the assertions read the result, not
+    a raised exception.
+    """
+
+    @pytest.fixture
+    def mock_services(self):
+        subtitle_parser = MagicMock()
+        word_filter = MagicMock()
+        word_filter.deduplicate_by_sentence.side_effect = lambda words: words
+        media_extractor = MagicMock()
+        definition_service = MagicMock()
+        anki_service = MagicMock()
+        return {
+            "subtitle_parser": subtitle_parser,
+            "word_filter": word_filter,
+            "media_extractor": media_extractor,
+            "definition_service": definition_service,
+            "anki_service": anki_service,
+        }
+
+    def _strict_service(self, *, requires_lemma_context: bool) -> MagicMock:
+        service = MagicMock(name="definition_service")
+        if requires_lemma_context:
+
+            def get_definitions_batch(
+                words, progress_callback=None, fallback_context=None, *, is_cancelled=None, lemma_context
+            ):
+                assert lemma_context
+                return ["1. def"] * len(words)
+
+            def get_glossaries_batch(words, progress_callback=None, *, is_cancelled=None, lemma_context):
+                assert lemma_context
+                return ["1. gloss"] * len(words)
+
+        else:
+
+            def get_definitions_batch(words, progress_callback=None, fallback_context=None, *, is_cancelled=None):
+                return ["1. def"] * len(words)
+
+            def get_glossaries_batch(words, progress_callback=None, *, is_cancelled=None):
+                return ["1. gloss"] * len(words)
+
+        service.get_definitions_batch = get_definitions_batch
+        service.get_glossaries_batch = get_glossaries_batch
+        service.has_usable_offline_provider.return_value = True
+        return service
+
+    def _run(self, test_config, mock_services, tmp_path, word, service):
+        # Glossary field mapped so get_glossaries_batch's call shape is
+        # exercised too, not just get_definitions_batch's.
+        cfg = replace(test_config, anki_fields={**test_config.anki_fields, "glossary": "Glossary"})
+        mock_services["definition_service"] = service
+        proc = build_processor(config=cfg, **mock_services, presenter=NullPresenter())
+
+        mock_services["subtitle_parser"].parse_subtitle_file.return_value = [word]
+        mock_services["anki_service"].get_existing_vocabulary.return_value = set()
+        mock_services["word_filter"].filter_unknown.return_value = [word]
+        mock_services["media_extractor"].extract_media_batch.return_value = [(word, _make_media("w"))]
+        mock_services["anki_service"].create_cards_batch.return_value = [1]
+
+        return proc.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
+
+    def test_empty_lemma_context_calls_without_the_kwarg(self, test_config, mock_services, tmp_path):
+        word = _make_word("食べる")  # mined_form == lemma -> empty lemma_context
+        service = self._strict_service(requires_lemma_context=False)
+
+        result = self._run(test_config, mock_services, tmp_path, word, service)
+
+        assert result.errors == []
+        assert result.cards_created == 1
+
+    def test_nonempty_lemma_context_calls_with_the_kwarg(self, test_config, mock_services, tmp_path):
+        word = TokenizedWord(
+            surface="ゆう",
+            lemma="言う",
+            reading="ユウ",
+            sentence="そうゆうことか",
+            start_time=1.0,
+            end_time=2.0,
+            duration=1.0,
+            orth_base="ゆう",
+            pos="動詞",
+        )
+        service = self._strict_service(requires_lemma_context=True)
+
+        result = self._run(test_config, mock_services, tmp_path, word, service)
+
+        assert result.errors == []
+        assert result.cards_created == 1
+
+
 class TestProcessEpisode:
     """Tests for EpisodeProcessor.process_episode method."""
 
@@ -307,7 +413,7 @@ class TestProcessEpisode:
     def test_empty_parse_after_cancel_is_cancelled(self, processor, mock_services, tmp_path):
         cancel_event = threading.Event()
 
-        def _parse_then_cancel(_subtitle_file):
+        def _parse_then_cancel(_subtitle_file, _offset=None):
             cancel_event.set()
             return []
 
@@ -407,7 +513,7 @@ class TestProcessEpisode:
         payload = mock_services["anki_service"].create_cards_batch.call_args.args[0][0]
         assert payload.media == MediaData()
 
-    def test_data_flow_between_phases(self, processor, mock_services, tmp_path, monkeypatch):
+    def test_data_flow_between_phases(self, processor, mock_services, tmp_path):
         """Verify that outputs of one phase are passed as inputs to the next."""
         video = tmp_path / "v.mkv"
         sub = tmp_path / "s.ass"
@@ -415,10 +521,9 @@ class TestProcessEpisode:
         media = _make_media()
 
         # Neutralize the per-field styling seam so this data-flow assertion stays
-        # focused on phase wiring (and avoids real dictionary-registry / SQLite
-        # I/O). The plain "1. to eat" definition carries no miner markup, so
-        # attach_card_style_block leaves it unchanged anyway.
-        monkeypatch.setattr("anki_miner.orchestration.episode_processor.collect_dictionary_css_entries", lambda cfg: [])
+        # focused on phase wiring. The plain "1. to eat" definition carries no
+        # miner markup, so attach_card_style_block leaves it unchanged anyway.
+        mock_services["definition_service"].css_entries.return_value = []
 
         mock_services["subtitle_parser"].parse_subtitle_file.return_value = [word]
         mock_services["anki_service"].get_existing_vocabulary.return_value = set()
@@ -430,7 +535,7 @@ class TestProcessEpisode:
         processor.process_episode(video, sub)
 
         # Verify subtitle_parser gets the subtitle file
-        mock_services["subtitle_parser"].parse_subtitle_file.assert_called_once_with(sub)
+        mock_services["subtitle_parser"].parse_subtitle_file.assert_called_once_with(sub, None)
 
         # Verify word_filter gets all_words and existing vocab
         mock_services["word_filter"].filter_unknown.assert_called_once()
@@ -3051,7 +3156,7 @@ class TestProcessYoutubeUrl:
         sp = mock_services["subtitle_parser"]
         # Curation builds the line index; mirror the plain parse result through
         # the with-index path (no sentence candidates).
-        sp.parse_subtitle_file_with_index.side_effect = lambda f: (sp.parse_subtitle_file.return_value, [])
+        sp.parse_subtitle_file_with_index.side_effect = lambda f, offset=None: (sp.parse_subtitle_file.return_value, [])
         mock_services["subtitle_parser"].parse_subtitle_file.return_value = [word]
         mock_services["anki_service"].get_existing_vocabulary.return_value = set()
         mock_services["word_filter"].filter_unknown.return_value = [word]
@@ -3120,7 +3225,7 @@ class TestProcessYoutubeUrl:
         assert call.kwargs["cancel_event"] is cancel_event
 
         # Mining pipeline ran and produced a card
-        mock_services["subtitle_parser"].parse_subtitle_file.assert_called_once_with(subtitle_file)
+        mock_services["subtitle_parser"].parse_subtitle_file.assert_called_once_with(subtitle_file, None)
         assert result.cards_created == 1
         assert result.total_words_found == 1
 
@@ -3473,7 +3578,7 @@ class TestProcessYoutubeUrlCancelPropagation:
         sp = mock_services["subtitle_parser"]
         # Curation builds the line index; mirror the plain parse result through
         # the with-index path (no sentence candidates).
-        sp.parse_subtitle_file_with_index.side_effect = lambda f: (sp.parse_subtitle_file.return_value, [])
+        sp.parse_subtitle_file_with_index.side_effect = lambda f, offset=None: (sp.parse_subtitle_file.return_value, [])
         mock_services["subtitle_parser"].parse_subtitle_file.return_value = [word]
         mock_services["anki_service"].get_existing_vocabulary.return_value = set()
         mock_services["word_filter"].filter_unknown.return_value = [word]
@@ -3513,7 +3618,7 @@ class TestProcessYoutubeUrlCancelPropagation:
 
         word = _make_word("食べる")
 
-        def _parse_then_cancel(sub_file):
+        def _parse_then_cancel(sub_file, _offset=None):
             cancel_event.set()  # user pressed Stop All mid-parse
             return [word]
 
@@ -3635,7 +3740,7 @@ class TestProcessYoutubeUrlCancelPropagation:
 
         word = _make_word("食べる")
 
-        def _parse_then_cancel(sub_file):
+        def _parse_then_cancel(sub_file, _offset=None):
             run1_event.set()
             return [word]
 
@@ -3773,7 +3878,11 @@ class TestIPlusOneFilter:
 
         processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
 
-        mock_services["subtitle_parser"].parse_subtitle_file_with_index.assert_called_once_with(tmp_path / "s.ass")
+        # The offset is a per-call argument now; every non-batch caller passes
+        # None and the parser falls back to its own config value.
+        mock_services["subtitle_parser"].parse_subtitle_file_with_index.assert_called_once_with(
+            tmp_path / "s.ass", None
+        )
         mock_services["subtitle_parser"].parse_subtitle_file.assert_not_called()
 
     def test_calls_legacy_parse_when_flag_off(self, test_config, mock_services, tmp_path):
@@ -3792,7 +3901,7 @@ class TestIPlusOneFilter:
 
         processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
 
-        mock_services["subtitle_parser"].parse_subtitle_file.assert_called_once_with(tmp_path / "s.ass")
+        mock_services["subtitle_parser"].parse_subtitle_file.assert_called_once_with(tmp_path / "s.ass", None)
         mock_services["subtitle_parser"].parse_subtitle_file_with_index.assert_not_called()
 
     def test_skips_dedup_when_flag_on(self, test_config, mock_services, tmp_path):
@@ -3970,22 +4079,22 @@ class TestGlossaryFetch:
             "anki_service": anki_service,
         }
 
-    def test_glossary_fetched_when_field_mapped(self, test_config, mock_services, tmp_path, monkeypatch):
+    def test_glossary_fetched_when_field_mapped(self, test_config, mock_services, tmp_path):
         cfg = replace(test_config, anki_fields={**test_config.anki_fields, "glossary": "Glossary"})
         processor = build_processor(config=cfg, **mock_services)
         video, sub = self._seed_happy_path(mock_services, tmp_path)
 
         glossary_html = '<div class="yomitan-glossary"><ol data-count="1"><li data-dictionary="X">X def</li></ol></div>'
         mock_services["definition_service"].get_glossaries_batch.return_value = [glossary_html]
-
-        # Avoid real dictionary-registry / SQLite I/O at the per-field <style> seam.
-        collect = MagicMock(return_value=[("x-id", "X", '.yomitan-glossary [data-dictionary="X"]{color:red}')])
-        monkeypatch.setattr("anki_miner.orchestration.episode_processor.collect_dictionary_css_entries", collect)
+        mock_services["definition_service"].css_entries.return_value = [
+            ("x-id", "X", '.yomitan-glossary [data-dictionary="X"]{color:red}')
+        ]
 
         processor.process_episode(video, sub)
 
         mock_services["definition_service"].get_glossaries_batch.assert_called_once()
-        collect.assert_called_once()  # entries collected once per episode, not per card
+        # entries read once per episode, not per card
+        mock_services["definition_service"].css_entries.assert_called_once()
         call_args = mock_services["anki_service"].create_cards_batch.call_args
         card_data = call_args[0][0]
         assert len(card_data) == 1
@@ -4004,7 +4113,7 @@ class TestGlossaryFetch:
         # no block — attach_card_style_block leaves it byte-identical.
         assert payload.definition == "1. to eat"
 
-    def test_style_block_tree_shaken_per_card(self, test_config, mock_services, tmp_path, monkeypatch):
+    def test_style_block_tree_shaken_per_card(self, test_config, mock_services, tmp_path):
         # Issue #93: the <style> head is witness-selected PER CARD — a card whose
         # glossary carries an image embeds the images group, a plain stamped-dict
         # card gets a smaller block — while dictionary CSS is collected once.
@@ -4027,13 +4136,12 @@ class TestGlossaryFetch:
             '<li data-dictionary="X" data-has-styles=""><img class="gloss-image" src="p.svg"></li></ol></div>'
         )
         mock_services["definition_service"].get_glossaries_batch.return_value = [plain, with_image]
-
-        collect = MagicMock(return_value=[])
-        monkeypatch.setattr("anki_miner.orchestration.episode_processor.collect_dictionary_css_entries", collect)
+        mock_services["definition_service"].css_entries.return_value = []
 
         processor.process_episode(video, sub)
 
-        collect.assert_called_once()  # dict CSS still collected once per episode
+        # dict CSS still read once per episode
+        mock_services["definition_service"].css_entries.assert_called_once()
         card_data = mock_services["anki_service"].create_cards_batch.call_args[0][0]
         assert len(card_data) == 2
         head_plain = card_data[0].extra_fields["glossary"].split("<style>")[1]
@@ -4042,7 +4150,7 @@ class TestGlossaryFetch:
         assert "gloss-image" in head_image  # …but embedded where witnessed
         assert len(head_plain) < len(head_image)
 
-    def test_glossary_miss_does_not_retry_unsafe_lemma(self, test_config, mock_services, tmp_path, monkeypatch):
+    def test_glossary_miss_does_not_retry_unsafe_lemma(self, test_config, mock_services, tmp_path):
         cfg = replace(test_config, anki_fields={**test_config.anki_fields, "glossary": "Glossary"})
         processor = build_processor(config=cfg, **mock_services)
 
@@ -4059,7 +4167,7 @@ class TestGlossaryFetch:
         mock_services["anki_service"].create_cards_batch.return_value = [1]
 
         mock_services["definition_service"].get_glossaries_batch.return_value = [None]
-        monkeypatch.setattr("anki_miner.orchestration.episode_processor.collect_dictionary_css_entries", lambda cfg: [])
+        mock_services["definition_service"].css_entries.return_value = []
 
         processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
 
@@ -4069,7 +4177,7 @@ class TestGlossaryFetch:
         payload = mock_services["anki_service"].create_cards_batch.call_args[0][0][0]
         assert "glossary" not in (payload.extra_fields or {})
 
-    def test_glossary_miss_retries_same_stem_lemma(self, test_config, mock_services, tmp_path, monkeypatch):
+    def test_glossary_miss_retries_same_stem_lemma(self, test_config, mock_services, tmp_path):
         cfg = replace(test_config, anki_fields={**test_config.anki_fields, "glossary": "Glossary"})
         processor = build_processor(config=cfg, **mock_services)
 
@@ -4086,7 +4194,7 @@ class TestGlossaryFetch:
 
         lemma_glossary = '<div class="yomitan-glossary"><ol><li>search</li></ol></div>'
         mock_services["definition_service"].get_glossaries_batch.side_effect = [[None], [lemma_glossary]]
-        monkeypatch.setattr("anki_miner.orchestration.episode_processor.collect_dictionary_css_entries", lambda cfg: [])
+        mock_services["definition_service"].css_entries.return_value = []
 
         processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
 
@@ -4097,28 +4205,26 @@ class TestGlossaryFetch:
         ]
         assert all(glossary_call.kwargs["is_cancelled"]() is False for glossary_call in glossary_calls)
 
-    def test_glossary_miss_no_retry_for_non_variant(self, test_config, mock_services, tmp_path, monkeypatch):
+    def test_glossary_miss_no_retry_for_non_variant(self, test_config, mock_services, tmp_path):
         """A miss on a word whose mined_form == lemma retries nothing — there is
         no second spelling to try."""
         cfg = replace(test_config, anki_fields={**test_config.anki_fields, "glossary": "Glossary"})
         processor = build_processor(config=cfg, **mock_services)
         video, sub = self._seed_happy_path(mock_services, tmp_path)
         mock_services["definition_service"].get_glossaries_batch.return_value = [None]
-        monkeypatch.setattr("anki_miner.orchestration.episode_processor.collect_dictionary_css_entries", lambda cfg: [])
+        mock_services["definition_service"].css_entries.return_value = []
 
         processor.process_episode(video, sub)
 
         mock_services["definition_service"].get_glossaries_batch.assert_called_once()
 
-    def test_glossary_skipped_when_field_unmapped(self, test_config, mock_services, tmp_path, monkeypatch):
+    def test_glossary_skipped_when_field_unmapped(self, test_config, mock_services, tmp_path):
         # Default test_config has anki_fields["glossary"] == "" but definition
         # mapped, so the style block is still built (it rides the definition
-        # field). Mock the CSS collection to avoid real registry / SQLite I/O.
+        # field).
         processor = build_processor(config=test_config, **mock_services)
         video, sub = self._seed_happy_path(mock_services, tmp_path)
-
-        collect = MagicMock(return_value=[])
-        monkeypatch.setattr("anki_miner.orchestration.episode_processor.collect_dictionary_css_entries", collect)
+        mock_services["definition_service"].css_entries.return_value = []
 
         processor.process_episode(video, sub)
 
@@ -4130,9 +4236,7 @@ class TestGlossaryFetch:
         if payload.extra_fields is not None:
             assert "glossary" not in payload.extra_fields
 
-    def test_style_block_trails_definition_when_glossary_unmapped(
-        self, test_config, mock_services, tmp_path, monkeypatch
-    ):
+    def test_style_block_trails_definition_when_glossary_unmapped(self, test_config, mock_services, tmp_path):
         # Default config maps definition but not glossary: the DEFINITION field
         # must carry its own TRAILING <style> block (base glossary.css + scoped
         # dict CSS) so default-config cards are self-contained — exactly once,
@@ -4145,12 +4249,14 @@ class TestGlossaryFetch:
             '<div class="yomitan-glossary"><ol data-count="1"><li data-dictionary="X">1. to eat</li></ol></div>'
         )
         mock_services["definition_service"].get_definitions_batch.return_value = [definition_html]
-        collect = MagicMock(return_value=[("x-id", "X", '.yomitan-glossary [data-dictionary="X"]{color:red}')])
-        monkeypatch.setattr("anki_miner.orchestration.episode_processor.collect_dictionary_css_entries", collect)
+        mock_services["definition_service"].css_entries.return_value = [
+            ("x-id", "X", '.yomitan-glossary [data-dictionary="X"]{color:red}')
+        ]
 
         processor.process_episode(video, sub)
 
-        collect.assert_called_once()  # collected once per episode, not per card
+        # entries read once per episode, not per card
+        mock_services["definition_service"].css_entries.assert_called_once()
         card_data = mock_services["anki_service"].create_cards_batch.call_args[0][0]
         assert len(card_data) == 1
         definition = card_data[0].definition
@@ -4160,7 +4266,7 @@ class TestGlossaryFetch:
         assert "ol[data-count]" in definition  # base sheet embedded
         assert '[data-dictionary="X"]{color:red}' in definition  # scoped dict CSS embedded
 
-    def test_both_mapped_fields_each_self_contained(self, test_config, mock_services, tmp_path, monkeypatch):
+    def test_both_mapped_fields_each_self_contained(self, test_config, mock_services, tmp_path):
         # Kiku-class regression (per-field delivery): with BOTH definition and
         # glossary mapped, EACH field carries its own trailing block — JS note
         # types render fields in isolation, so a block in one field never styles
@@ -4178,13 +4284,10 @@ class TestGlossaryFetch:
         )
         mock_services["definition_service"].get_definitions_batch.return_value = [definition_html]
         mock_services["definition_service"].get_glossaries_batch.return_value = [glossary_html]
-        entries = [
+        mock_services["definition_service"].css_entries.return_value = [
             ("x-id", "X", '.yomitan-glossary [data-dictionary="X"]{color:red}'),
             ("y-id", "Y", '.yomitan-glossary [data-dictionary="Y"]{color:blue}'),
         ]
-        monkeypatch.setattr(
-            "anki_miner.orchestration.episode_processor.collect_dictionary_css_entries", lambda cfg: entries
-        )
 
         processor.process_episode(video, sub)
 
@@ -4430,6 +4533,31 @@ class TestPreflightCardTarget:
         with pytest.raises(AnkiConnectionError):
             processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
 
+        mock_services["subtitle_parser"].parse_subtitle_file.assert_not_called()
+
+    def test_preflight_card_target_os_error_yields_structured_failure(self, processor, mock_services, tmp_path):
+        """Task 15 / SM7: a non-AnkiMinerException from verify_card_target (OSError)
+        must not escape process_episode raw — it converts to a structured
+        ProcessingResult failure, unlike SetupError/AnkiConnectionError above,
+        which are pinned to keep propagating raw."""
+        mock_services["anki_service"].verify_card_target.side_effect = OSError("disk full")
+
+        result = processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
+
+        assert result.success is False
+        assert result.cards_created == 0
+        assert any("disk full" in e for e in result.errors)
+        mock_services["subtitle_parser"].parse_subtitle_file.assert_not_called()
+
+    def test_allocate_temp_folder_os_error_yields_structured_failure(self, processor, mock_services, tmp_path):
+        """Task 15 / SM7: mkdtemp failure inside _allocate_run_temp_folder also
+        converts to a structured ProcessingResult instead of a raw escape."""
+        with patch.object(processor, "_allocate_run_temp_folder", side_effect=OSError("no space left on device")):
+            result = processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
+
+        assert result.success is False
+        assert result.cards_created == 0
+        assert any("no space left on device" in e for e in result.errors)
         mock_services["subtitle_parser"].parse_subtitle_file.assert_not_called()
 
     def test_preflight_called_before_subtitle_parsing(self, test_config, mock_services, tmp_path):
@@ -4694,6 +4822,18 @@ class TestDictionaryResourceFacade:
 
     def test_offline_lookup_fn_is_definition_service_offline_lookup(self, processor):
         assert processor.offline_lookup_fn is processor.definition_service.lookup_all_offline
+
+    def test_release_dictionary_resources_closes_audio_fetcher(self, test_config):
+        """PB3: the persistent audio-pack handle must drop before Settings ->
+        Audio panel's pack-removal rmtree runs, same as the dict sqlite handles."""
+        fetcher = MagicMock()
+        proc = build_processor(
+            config=test_config,
+            presenter=NullPresenter(),
+            expression_audio_fetcher=fetcher,
+        )
+        proc.release_dictionary_resources()
+        fetcher.close.assert_called_once_with()
 
 
 class TestProcessorClose:
@@ -5264,7 +5404,7 @@ class TestOfflineDefinitionPreFilter:
 
     def _prime(self, mock_services, words):
         mock_services["subtitle_parser"].parse_subtitle_file.return_value = words
-        mock_services["subtitle_parser"].parse_subtitle_file_with_index.side_effect = lambda f: (
+        mock_services["subtitle_parser"].parse_subtitle_file_with_index.side_effect = lambda f, offset=None: (
             mock_services["subtitle_parser"].parse_subtitle_file.return_value,
             [],
         )
@@ -5419,7 +5559,7 @@ class TestWithinRunDuplicateCollapse:
 
     def _prime(self, mock_services, words):
         mock_services["subtitle_parser"].parse_subtitle_file.return_value = words
-        mock_services["subtitle_parser"].parse_subtitle_file_with_index.side_effect = lambda f: (
+        mock_services["subtitle_parser"].parse_subtitle_file_with_index.side_effect = lambda f, offset=None: (
             mock_services["subtitle_parser"].parse_subtitle_file.return_value,
             [],
         )
@@ -5640,6 +5780,21 @@ class TestSharedLookupOwnership:
         proc.release_dictionary_resources()
         proc.definition_service.close.assert_not_called()
         freq.close.assert_not_called()
+
+    def test_release_dictionary_resources_closes_audio_fetcher_even_when_shared(self, test_config):
+        """The audio fetcher is processor-owned even over a shared lookup bundle
+        (SharedLookupServices holds no audio fetcher) — release_dictionary_resources
+        must close it regardless of ownership, so pack-removal rmtree still works."""
+        fetcher = MagicMock()
+        proc = build_processor(
+            config=test_config,
+            presenter=NullPresenter(),
+            expression_audio_fetcher=fetcher,
+            owns_lookup_services=False,
+        )
+        proc.release_dictionary_resources()
+        fetcher.close.assert_called_once_with()
+        proc.definition_service.close.assert_not_called()
 
     def test_default_ownership_still_closes(self, test_config):
         freq = MagicMock()
@@ -5865,6 +6020,75 @@ class TestAnkiWriteProvenance:
         assert mock_services["anki_service"].anki_write_state is AnkiWriteState.NO_NOTE_WRITE
 
 
+class TestDefinitionServiceRunCacheClear:
+    """``_run_pipeline`` is the single per-item funnel (see
+    ``TestAnkiWriteProvenance``) — ``DefinitionService.clear_run_cache()``
+    rides that same funnel's ``finally`` so a processor built over a shared,
+    multi-item ``DefinitionService`` (``SharedLookupServices``) never
+    accumulates cache across items, whatever way each item ended."""
+
+    @pytest.fixture
+    def mock_services(self):
+        subtitle_parser = MagicMock()
+        word_filter = MagicMock()
+        word_filter.deduplicate_by_sentence.side_effect = lambda words: words
+        media_extractor = MagicMock()
+        definition_service = MagicMock()
+        anki_service = MagicMock()
+        anki_service.last_created_note_ids = []
+        return {
+            "subtitle_parser": subtitle_parser,
+            "word_filter": word_filter,
+            "media_extractor": media_extractor,
+            "definition_service": definition_service,
+            "anki_service": anki_service,
+        }
+
+    @pytest.fixture
+    def processor(self, test_config, mock_services):
+        return build_processor(config=test_config, **mock_services, presenter=NullPresenter())
+
+    def _wire_full_run(self, mock_services):
+        words = [_make_word("食べる")]
+        mock_services["subtitle_parser"].parse_subtitle_file.return_value = words
+        mock_services["anki_service"].get_existing_vocabulary.return_value = set()
+        mock_services["word_filter"].filter_unknown.return_value = words
+        mock_services["media_extractor"].extract_media_batch.return_value = [(words[0], _make_media())]
+        mock_services["definition_service"].get_definitions_batch.return_value = ["1. to eat"]
+        mock_services["anki_service"].create_cards_batch.return_value = [1]
+
+    def test_cleared_after_a_successful_run(self, processor, mock_services, tmp_path):
+        self._wire_full_run(mock_services)
+        processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
+        mock_services["definition_service"].clear_run_cache.assert_called_once_with()
+
+    def test_cleared_after_an_early_phase_return(self, processor, mock_services, tmp_path):
+        mock_services["subtitle_parser"].parse_subtitle_file.return_value = []
+        processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
+        mock_services["definition_service"].clear_run_cache.assert_called_once_with()
+
+    def test_cleared_after_a_cancelled_run(self, processor, mock_services, tmp_path):
+        mock_services["subtitle_parser"].parse_subtitle_file.return_value = [_make_word("食べる")]
+        cancel_event = threading.Event()
+        cancel_event.set()
+        processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass", cancel_event=cancel_event)
+        mock_services["definition_service"].clear_run_cache.assert_called_once_with()
+
+    def test_cleared_after_an_unexpected_exception(self, processor, mock_services, tmp_path):
+        mock_services["subtitle_parser"].parse_subtitle_file.side_effect = RuntimeError("parse crash")
+        processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
+        mock_services["definition_service"].clear_run_cache.assert_called_once_with()
+
+    def test_not_cleared_on_a_preflight_failure_nothing_was_probed_yet(self, processor, mock_services, tmp_path):
+        """A SetupError from preflight propagates raw before ``_run_pipeline``'s
+        body/finally ever run — no probe happened this item, so there is
+        nothing to clear."""
+        mock_services["anki_service"].verify_card_target.side_effect = SetupError("note type is missing a field")
+        with pytest.raises(SetupError):
+            processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
+        mock_services["definition_service"].clear_run_cache.assert_not_called()
+
+
 class TestCurationQuietMarker:
     """A callback carrying suppress_curation_messages=True (season pre-pass
     capture) silences _run_curation's two info lines; an unmarked callback
@@ -5918,3 +6142,179 @@ class TestCurationQuietMarker:
     def test_unmarked_callback_keeps_mining_info(self, test_config, mock_services, tmp_path):
         infos = self._run(test_config, mock_services, tmp_path, lambda words: list(words))
         assert any("selected word" in msg for msg in infos)
+
+
+class TestCurationLineExpansion:
+    """Issue #120: curator line expansions materialize between curation and phase 3."""
+
+    @pytest.fixture
+    def mock_services(self):
+        subtitle_parser = MagicMock()
+        word_filter = MagicMock()
+        word_filter.deduplicate_by_sentence.side_effect = lambda w: w
+        media_extractor = MagicMock()
+        definition_service = MagicMock()
+        anki_service = MagicMock()
+        return {
+            "subtitle_parser": subtitle_parser,
+            "word_filter": word_filter,
+            "media_extractor": media_extractor,
+            "definition_service": definition_service,
+            "anki_service": anki_service,
+        }
+
+    def _wire(self, mock_services, words, media):
+        sp = mock_services["subtitle_parser"]
+        # Curation builds the line index; mirror the plain parse result through
+        # the with-index path (no sentence candidates).
+        sp.parse_subtitle_file_with_index.side_effect = lambda f, offset=None: (sp.parse_subtitle_file.return_value, [])
+        sp.parse_subtitle_file.return_value = list(words)
+        mock_services["anki_service"].get_existing_vocabulary.return_value = set()
+        mock_services["word_filter"].filter_unknown.return_value = list(words)
+        mock_services["media_extractor"].extract_media_batch.return_value = [(words[0], media)]
+        mock_services["definition_service"].get_definitions_batch.side_effect = lambda ws, *a, **kw: ["1. def"] * len(
+            ws
+        )
+        mock_services["anki_service"].create_cards_batch.return_value = [1]
+
+    def test_curation_expansion_materialized_before_extraction(self, test_config, mock_services, tmp_path):
+        """A curated word carrying line_expansion is rebuilt via expand_word_lines
+        against parse_raw_entries, and phase 3 extracts the rebuilt word."""
+        word = _make_word("食べる")
+        self._wire(mock_services, [word], _make_media())
+        intent = replace(word, line_expansion=(1, 0))
+        merged = replace(word, sentence="前の行 食べるのテスト", start_time=0.0)
+        entries = [(0.0, 1.0, "前の行"), (1.0, 3.0, "食べるのテスト")]
+        mock_services["subtitle_parser"].parse_raw_entries.return_value = entries
+        mock_services["word_filter"].expand_word_lines.return_value = merged
+        proc = build_processor(config=test_config, presenter=NullPresenter(), **mock_services)
+
+        proc.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass", curation_callback=lambda ws: [intent])
+
+        mock_services["word_filter"].expand_word_lines.assert_called_once_with(intent, entries)
+        extracted = mock_services["media_extractor"].extract_media_batch.call_args[0][1]
+        assert extracted == [merged]
+
+    def test_untouched_words_bypass_expand(self, test_config, mock_services, tmp_path):
+        """Only nonzero-expansion words go through expand_word_lines; the rest
+        pass through identity, preserving list order."""
+        word_a = _make_word("食べる", start_time=1.0)
+        word_b = _make_word("走る", start_time=5.0)
+        self._wire(mock_services, [word_a, word_b], _make_media())
+        intent = replace(word_a, line_expansion=(0, 1))
+        merged = replace(word_a, sentence="merged", line_expansion=(0, 0))
+        mock_services["word_filter"].expand_word_lines.return_value = merged
+        proc = build_processor(config=test_config, presenter=NullPresenter(), **mock_services)
+
+        proc.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass", curation_callback=lambda ws: [intent, word_b])
+
+        mock_services["word_filter"].expand_word_lines.assert_called_once()
+        extracted = mock_services["media_extractor"].extract_media_batch.call_args[0][1]
+        assert extracted == [merged, word_b]
+
+    def test_no_expansion_skips_extra_raw_entry_parse(self, test_config, mock_services, tmp_path):
+        """The all-zero fast path never re-parses: parse_raw_entries stays at the
+        single phase-1 logging call and expand_word_lines is untouched."""
+        word = _make_word("食べる")
+        self._wire(mock_services, [word], _make_media())
+        proc = build_processor(config=test_config, presenter=NullPresenter(), **mock_services)
+
+        proc.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass", curation_callback=lambda ws: list(ws))
+
+        mock_services["word_filter"].expand_word_lines.assert_not_called()
+        assert mock_services["subtitle_parser"].parse_raw_entries.call_count == 1
+
+
+class TestPerCallSubtitleOffset:
+    """``process_episode(subtitle_offset=...)`` overrides the config for one call.
+
+    A batch run drives ONE processor over queue items that each carry their own
+    offset, so the offset must reach every time-carrying parser entry point per
+    call instead of being baked into the processor's config.
+    """
+
+    @pytest.fixture
+    def mock_services(self):
+        subtitle_parser = MagicMock()
+        word_filter = MagicMock()
+        word_filter.deduplicate_by_sentence.side_effect = lambda w: w
+        media_extractor = MagicMock()
+        definition_service = MagicMock()
+        anki_service = MagicMock()
+        return {
+            "subtitle_parser": subtitle_parser,
+            "word_filter": word_filter,
+            "media_extractor": media_extractor,
+            "definition_service": definition_service,
+            "anki_service": anki_service,
+        }
+
+    def _wire(self, mock_services, word):
+        sp = mock_services["subtitle_parser"]
+        sp.parse_subtitle_file.return_value = [word]
+        sp.parse_subtitle_file_with_index.side_effect = lambda f, offset=None: ([word], [])
+        sp.parse_raw_entries.return_value = [(1.0, 3.0, "文")]
+        mock_services["anki_service"].get_existing_vocabulary.return_value = set()
+        mock_services["word_filter"].filter_unknown.return_value = [word]
+        mock_services["media_extractor"].extract_media_batch.return_value = [(word, _make_media())]
+        mock_services["definition_service"].get_definitions_batch.return_value = ["1. def"]
+        mock_services["anki_service"].create_cards_batch.return_value = [1]
+
+    def test_offset_reaches_plain_parse_and_raw_entries(self, test_config, mock_services, tmp_path):
+        """The i+1-off path: parse_subtitle_file and the phase-1 raw-entry parse
+        both take this call's offset."""
+        word = _make_word("食べる")
+        self._wire(mock_services, word)
+        proc = build_processor(config=test_config, presenter=NullPresenter(), **mock_services)
+
+        proc.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass", subtitle_offset=1.5)
+
+        sp = mock_services["subtitle_parser"]
+        assert sp.parse_subtitle_file.call_args[0][1] == 1.5
+        assert sp.parse_raw_entries.call_args[0][1] == 1.5
+
+    def test_offset_reaches_with_index_parse(self, test_config, mock_services, tmp_path):
+        """The i+1 phase-1 path (the one batch runs actually take) takes it too."""
+        config = replace(test_config, use_i_plus_one_filter=True)
+        word = _make_word("食べる")
+        self._wire(mock_services, word)
+        mock_services["word_filter"].filter_i_plus_one.return_value = [word]
+        proc = build_processor(config=config, presenter=NullPresenter(), **mock_services)
+
+        proc.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass", subtitle_offset=1.5)
+
+        sp = mock_services["subtitle_parser"]
+        assert sp.parse_subtitle_file_with_index.call_args[0][1] == 1.5
+        sp.parse_subtitle_file.assert_not_called()
+
+    def test_offset_reaches_line_expansion_reparse(self, test_config, mock_services, tmp_path):
+        """The curator's expansion re-parse must land on the same timeline as
+        the words it merges (Issue #120), so it takes the same offset."""
+        word = _make_word("食べる")
+        self._wire(mock_services, word)
+        intent = replace(word, line_expansion=(1, 0))
+        mock_services["word_filter"].expand_word_lines.return_value = word
+        proc = build_processor(config=test_config, presenter=NullPresenter(), **mock_services)
+
+        proc.process_episode(
+            tmp_path / "v.mkv",
+            tmp_path / "s.ass",
+            curation_callback=lambda ws: [intent],
+            subtitle_offset=1.5,
+        )
+
+        offsets = {c.args[1] for c in mock_services["subtitle_parser"].parse_raw_entries.call_args_list}
+        assert offsets == {1.5}
+
+    def test_omitted_offset_passes_none_and_keeps_config_behaviour(self, test_config, mock_services, tmp_path):
+        """Every non-batch caller passes nothing: the parser then falls back to
+        its own config value, byte-identical to the pre-change behaviour."""
+        word = _make_word("食べる")
+        self._wire(mock_services, word)
+        proc = build_processor(config=test_config, presenter=NullPresenter(), **mock_services)
+
+        proc.process_episode(tmp_path / "v.mkv", tmp_path / "s.ass")
+
+        sp = mock_services["subtitle_parser"]
+        assert sp.parse_subtitle_file.call_args[0][1] is None
+        assert sp.parse_raw_entries.call_args[0][1] is None

@@ -462,7 +462,12 @@ class _FakeMiningChild:
 
 
 class _FakeYouTubeChild(_FakeMiningChild):
-    """YouTube-shaped child: shutdown() joins AND nulls its own worker."""
+    """YouTube-shaped child: shutdown() joins AND nulls its own worker.
+
+    The 30_000 join is an arbitrary sentinel, NOT the real tab's bound (which is
+    the close-grace budget): it only has to differ from the controller's 2000 so
+    a test can tell "joined by its own shutdown" from "re-joined by the sweep".
+    """
 
     def shutdown(self) -> None:
         self.shutdown_called = True
@@ -519,8 +524,8 @@ class TestCloseEventVideoContainer:
 
         event = _trigger_close(main_window)
 
-        # Joined exactly once, by the child's own shutdown (30s bound), then
-        # nulled — iter_close_workers skipped it (2000 would mean re-join).
+        # Joined exactly once, by the child's own shutdown (its sentinel bound),
+        # then nulled — iter_close_workers skipped it (2000 would mean re-join).
         assert tab.youtube_tab.shutdown_called
         assert yt_worker.cancel_called
         assert yt_worker.wait_called_with == 30_000
@@ -835,6 +840,37 @@ class TestCloseEventReleasesDictResources:
 
         assert release_calls == [True], "release must run when the deferred close completes"
         assert quit_calls == [True]
+
+
+class TestCloseEventResourceDownloadWindow:
+    """closeEvent must close a visible resource-download window (H3): default
+    WA_QuitOnClose plus no closeEvent handling kept the app alive after the
+    main window closed. background_tasks.shutdown already cancels+joins the
+    adopted worker, so closing the window here needs no cancellation of its own.
+    """
+
+    def test_open_download_window_is_closed(self, main_window):
+        window = MagicMock()
+        main_window._resource_download_session = SimpleNamespace(window=window)
+
+        event = _trigger_close(main_window)
+
+        window.close.assert_called_once()
+        event.accept.assert_called_once()
+
+    def test_no_session_does_not_error(self, main_window):
+        main_window._resource_download_session = None
+
+        event = _trigger_close(main_window)
+
+        event.accept.assert_called_once()
+
+    def test_session_with_no_window_does_not_error(self, main_window):
+        main_window._resource_download_session = SimpleNamespace(window=None)
+
+        event = _trigger_close(main_window)
+
+        event.accept.assert_called_once()
 
 
 class TestCloseEventFlushesSettingsAutosave:
