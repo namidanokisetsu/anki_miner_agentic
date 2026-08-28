@@ -1,13 +1,15 @@
 """Desktop shortcut creation service.
 
 Cross-platform shortcut creation for Anki Miner GUI. Supports Linux (.desktop
-file), Windows (.lnk), and macOS (informational only). Replaces the previous
-CLI-driven `create-shortcut` command with a pure service the GUI can call.
+file), Windows (.lnk), and macOS (.app launcher). Replaces the previous CLI-driven
+`create-shortcut` command with a pure service the GUI can call.
 """
 
 import contextlib
 import logging
 import os
+import plistlib
+import shlex
 import shutil
 import subprocess
 import sys
@@ -24,6 +26,7 @@ APP_NAME = "Anki Miner Agentic"
 APP_ID = "anki-miner"
 APP_COMMENT = "Japanese vocabulary mining from media"
 ICON_FILENAME = "anki_miner.svg"
+MACOS_ICON_FILENAME = "anki_miner.icns"
 
 # These helpers run synchronously on the GUI thread; bound them so a hung
 # PowerShell / update-desktop-database can't freeze the whole app.
@@ -70,6 +73,8 @@ class ShortcutService:
         """Check whether a shortcut already exists for the current platform."""
         if sys.platform == "linux":
             return (Path.home() / ".local" / "share" / "applications" / f"{APP_ID}.desktop").exists()
+        if sys.platform == "darwin":
+            return (Path.home() / "Applications" / f"{APP_NAME}.app").is_dir()
         if sys.platform == "win32":
             ps_script = ShortcutService._windows_shortcut_path_script() + (
                 "Write-Output (Test-Path -LiteralPath $shortcutPath)"
@@ -153,10 +158,7 @@ class ShortcutService:
                 include_start_menu=include_start_menu,
             )
         elif sys.platform == "darwin":
-            result.success = True
-            result.messages.append(
-                f"Automatic shortcut creation is not supported on macOS. To launch {APP_NAME}, run:\n  {exe_path}"
-            )
+            cls._create_macos_shortcut(exe_path, result)
         else:
             result.error = f"Unsupported platform: {sys.platform}"
 
@@ -207,6 +209,53 @@ StartupWMClass=anki_miner
 
         result.success = True
         result.messages.append(f"'{APP_NAME}' should now appear in your application menu.")
+
+    @staticmethod
+    def _create_macos_shortcut(exe_path: Path, result: ShortcutResult) -> None:
+        app_dir = Path.home() / "Applications" / f"{APP_NAME}.app"
+        contents_dir = app_dir / "Contents"
+        macos_dir = contents_dir / "MacOS"
+        resources_dir = contents_dir / "Resources"
+        if app_dir.exists() and not app_dir.is_dir():
+            result.error = f"Cannot create the application launcher because this path is a file: {app_dir}"
+            return
+        macos_dir.mkdir(parents=True, exist_ok=True)
+        resources_dir.mkdir(parents=True, exist_ok=True)
+
+        launcher = macos_dir / APP_ID
+        launcher.write_text(
+            "#!/bin/sh\nunset PYTHONPATH\nexec " + shlex.quote(str(exe_path)) + ' "$@"\n',
+            encoding="utf-8",
+        )
+        launcher.chmod(0o755)
+
+        icon_source = _get_icon_source() / MACOS_ICON_FILENAME
+        icon_name: str | None = None
+        if icon_source.is_file():
+            icon_dest = resources_dir / MACOS_ICON_FILENAME
+            shutil.copy2(icon_source, icon_dest)
+            result.paths_created.append(icon_dest)
+            icon_name = MACOS_ICON_FILENAME
+
+        info = {
+            "CFBundleDisplayName": APP_NAME,
+            "CFBundleExecutable": APP_ID,
+            "CFBundleIdentifier": "io.github.namidanokisetsu.anki-miner-agentic",
+            "CFBundleName": APP_NAME,
+            "CFBundlePackageType": "APPL",
+            "CFBundleVersion": "1",
+            "LSApplicationCategoryType": "public.app-category.education",
+            "NSHighResolutionCapable": True,
+        }
+        if icon_name is not None:
+            info["CFBundleIconFile"] = icon_name
+        with (contents_dir / "Info.plist").open("wb") as plist_file:
+            plistlib.dump(info, plist_file, sort_keys=True)
+
+        result.success = True
+        result.paths_created.extend([launcher, app_dir])
+        result.messages.append(f"Application launcher created: {app_dir}")
+        result.messages.append("Open it from Applications or drag it to the Dock.")
 
     @staticmethod
     def _ps_quote(value: str) -> str:

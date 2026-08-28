@@ -17,6 +17,18 @@ from .store import AgentStore
 _CANDIDATE_PAGE_SIZE = 100
 
 
+def _review_projection(candidate: dict[str, Any]) -> dict[str, Any]:
+    """Return only the untrusted text and signals needed for semantic review."""
+    projected: dict[str, Any] = {"candidate_id": candidate["candidate_id"]}
+    for key in ("target", "definition_options", "allowed_enrichments", "flags"):
+        if key in candidate:
+            projected[key] = candidate[key]
+    sentence = candidate.get("sentence")
+    if isinstance(sentence, dict) and "text" in sentence:
+        projected["sentence"] = {"text": sentence["text"]}
+    return projected
+
+
 class AgentMiningApplication:
     def __init__(
         self,
@@ -155,10 +167,11 @@ class AgentMiningApplication:
         expected_run_id = content_id("run", {"batch_revision": batch["batch_revision"]})
 
         def response_for(items: list[dict[str, Any]]) -> dict[str, Any]:
-            candidate_ids = [item["candidate_id"] for item in items]
+            review_items = [_review_projection(item) for item in items]
+            candidate_ids = [item["candidate_id"] for item in review_items]
             return base | {
                 "run_id": expected_run_id,
-                "shortlist": items,
+                "shortlist": review_items,
                 "review_batch": {
                     "candidate_ids": candidate_ids,
                     "count": len(candidate_ids),

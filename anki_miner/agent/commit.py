@@ -375,6 +375,7 @@ class MiningCommitService:
 
     def _receipt(self, run_id: str, job: dict[str, Any], enrichments: dict[str, dict[str, Any]]) -> dict[str, Any]:
         selected = job["selection"]["selected"]
+        rejected = job["selection"].get("rejected", [])
         coverage = {
             key: sum(1 for candidate_id in selected if enrichments.get(candidate_id, {}).get(key))
             for key in ("chosen_definition", "sentence_translation")
@@ -382,8 +383,18 @@ class MiningCommitService:
         }
         configured_tags = list(getattr(self.writer, "configured_tags", []))
         applied_tags = list(dict.fromkeys([*configured_tags, *job.get("tags", [])]))
+        compact_job = {key: value for key, value in job.items() if key != "selection"}
+        compact_job["outputs"] = [
+            {
+                "candidate_id": output["candidate_id"],
+                "outcome": output["outcome"],
+                "note_id": output.get("note_id"),
+                **({"error": output["error"]} if output.get("error") is not None else {}),
+            }
+            for output in job.get("outputs", [])
+        ]
         return {
-            **job,
+            **compact_job,
             "run_id": run_id,
             "destination": {
                 "deck": self.config.write_target.deck,
@@ -391,9 +402,9 @@ class MiningCommitService:
             },
             "enrichment_coverage": coverage,
             "review_counts": {
-                "reviewed": len(selected) + len(job["selection"].get("rejected", [])),
+                "reviewed": len(selected) + len(rejected),
                 "selected": len(selected),
-                "rejected": len(job["selection"].get("rejected", [])),
+                "rejected": len(rejected),
             },
             "tags": applied_tags,
             "shortfall": max(0, self.store.run_status(run_id)["max_cards"] - len(selected)),

@@ -17,7 +17,7 @@ Anki Miner Agentic owns synchronization, filtering, lookup data, media, note con
 
 ## Required workflow
 
-1. Call `prepare_mining_run(inputs, max_cards)`. It synchronizes the learner profile and returns one durable shortlist of up to `max_cards` candidates.
+1. Call `prepare_mining_run(inputs, max_cards)`. It synchronizes the learner profile and returns one durable, review-only shortlist of up to `max_cards` candidates.
 2. Review every returned candidate under `review_contract`. Zero selections and shortfalls are successful; there is no quota.
 3. Build one `reviews` array using each candidate ID unchanged. Each item is `select` or `reject`, names one allowed reason code, and may include a short rationale.
 4. A selected review must name the matching prepared `definition_option_id` and supply every key in `required_enrichments`. A rejected review must set `definition_option_id` to `null` and omit `enrichments`.
@@ -38,4 +38,5 @@ Anki Miner Agentic owns synchronization, filtering, lookup data, media, note con
 - `pitch_available=false` means no safe match for that expression and reading; it does not prove the pitch source is missing.
 - Never override eligibility, invent IDs, edit the SQLite store, expose raw Anki data, or retry changed reviews against an already committed run.
 - An unchanged `commit_mining_run` retry returns or resumes the same durable job. For stale media/subtitles, prepare a new run.
-- Delegation is optional, not a review requirement. When Hermes truly needs it for context size, dispatch one non-overlapping batch whose workers each apply the complete returned contract. The consolidated completion is delivered automatically: never poll delegation files, processes, or status in a loop. Merge once, verify exact candidate-ID coverage, and commit once.
+- Prefer one reviewer. Delegation is optional, not a review requirement; use it only when the compact shortlist still exceeds the reviewer's practical context. If Hermes truly needs it, dispatch one non-overlapping batch whose workers each apply the complete returned contract. The consolidated completion is delivered automatically: never poll delegation files, processes, or status in a loop. Merge once, verify exact candidate-ID coverage, and commit once.
+- The CLI already accepts file-backed reviews with `commit-run --request FILE`. When using it from an agent runtime, remove an injected `PYTHONPATH`, write the receipt with `--output FILE`, and combine it with `--summary` so only counts and actionable failures reach the transcript.

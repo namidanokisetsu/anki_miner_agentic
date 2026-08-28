@@ -1,5 +1,6 @@
 """Tests for ShortcutService."""
 
+import plistlib
 import subprocess
 import sys
 from pathlib import Path
@@ -71,6 +72,13 @@ class TestShortcutExists:
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         with patch("sys.platform", "freebsd"):
             assert ShortcutService.shortcut_exists() is False
+
+    def test_returns_true_when_macos_application_exists(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        (tmp_path / "Applications" / f"{APP_NAME}.app").mkdir(parents=True)
+
+        with patch("sys.platform", "darwin"):
+            assert ShortcutService.shortcut_exists() is True
 
 
 class TestFindExecutable:
@@ -190,17 +198,29 @@ class TestCreateShortcut:
         assert 'Exec="/opt/100%%cool/AnkiMiner"' in content
         assert "100%cool" not in content
 
-    def test_macos_returns_unsupported_message(self, tmp_path):
-        fake_exe = tmp_path / "anki_miner_gui"
+    def test_macos_creates_application_launcher(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        fake_exe = tmp_path / "project with spaces" / ".venv" / "bin" / "anki_miner_gui"
+        fake_exe.parent.mkdir(parents=True)
         fake_exe.touch()
         with (
             patch.object(ShortcutService, "resolve_executable", return_value=fake_exe),
             patch("sys.platform", "darwin"),
         ):
             result = ShortcutService.create_shortcut()
-        # macOS path is informational (no shortcut created) but should not error
+
+        app_dir = tmp_path / "Applications" / f"{APP_NAME}.app"
+        launcher = app_dir / "Contents" / "MacOS" / APP_ID
         assert result.success is True
-        assert any("macOS" in m for m in result.messages)
+        assert app_dir in result.paths_created
+        assert launcher.stat().st_mode & 0o111
+        assert "unset PYTHONPATH" in launcher.read_text()
+        assert f"exec '{fake_exe}'" in launcher.read_text()
+        with (app_dir / "Contents" / "Info.plist").open("rb") as plist_file:
+            info = plistlib.load(plist_file)
+        assert info["CFBundleExecutable"] == APP_ID
+        assert info["CFBundleDisplayName"] == APP_NAME
+        assert (app_dir / "Contents" / "Resources" / "anki_miner.icns").is_file()
 
     def test_windows_uses_redirected_desktop_in_one_powershell_process(self, tmp_path, monkeypatch):
         monkeypatch.setattr(Path, "home", lambda: tmp_path)

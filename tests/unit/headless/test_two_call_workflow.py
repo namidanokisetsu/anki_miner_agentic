@@ -114,6 +114,8 @@ def test_two_call_commit_groups_and_preserves_exact_order_and_receipts(tmp_path)
         "candidate_m",
     ]
     assert receipt["outputs"][0]["note_id"] == 901
+    assert "selection" not in receipt
+    assert all("media" not in item and "review_state" not in item for item in receipt["outputs"])
     assert receipt["tags"][0] == "anki_miner_agentic"
     assert receipt["tags"][1].startswith("anki_miner_agentic::job::")
     assert receipt["job_tag_query"] == f'tag:"{receipt["tags"][1]}"'
@@ -264,6 +266,36 @@ def test_prepare_run_syncs_and_consumes_storage_pages_internally(tmp_path, monke
         "reject_reasons": ["ambiguous_context", "suspicious_text", "unsupported_sense"],
         "fields": ["candidate_id", "decision", "definition_option_id", "reason_code"],
         "optional_fields": ["rationale", "enrichments"],
+    }
+
+
+def test_prepare_run_projects_only_semantic_review_fields():
+    from anki_miner.agent.application import _review_projection
+
+    projected = _review_projection(
+        {
+            "candidate_id": "candidate-1",
+            "target": {"surface": "食べた", "mined_form": "食べる", "reading": "たべる", "pos": "verb"},
+            "sentence": {"text": "寿司を食べた。", "chars": 8, "unknown_lexemes": 1},
+            "definition_options": [{"option_id": "definition_1", "dictionary": "D", "text": "to eat"}],
+            "allowed_enrichments": ["chosen_definition", "sentence_translation"],
+            "flags": ["automatic_transcript"],
+            "learner": {"word_exposures": 10},
+            "signals": {"frequency_rank": 100},
+            "pitch": {"position": 1},
+            "episode": {"subtitle_source": "fixture"},
+            "variants": [{"sentence": "別の文"}],
+            "eligibility": {"diagnostics": []},
+        }
+    )
+
+    assert projected == {
+        "candidate_id": "candidate-1",
+        "target": {"surface": "食べた", "mined_form": "食べる", "reading": "たべる", "pos": "verb"},
+        "sentence": {"text": "寿司を食べた。"},
+        "definition_options": [{"option_id": "definition_1", "dictionary": "D", "text": "to eat"}],
+        "allowed_enrichments": ["chosen_definition", "sentence_translation"],
+        "flags": ["automatic_transcript"],
     }
 
 

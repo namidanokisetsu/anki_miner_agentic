@@ -48,6 +48,28 @@ def _json_file(path: str) -> dict[str, Any]:
     return value
 
 
+def _commit_summary(result: dict[str, Any]) -> dict[str, Any]:
+    failures = [
+        {key: item[key] for key in ("candidate_id", "error") if key in item}
+        for item in result.get("outputs", [])
+        if item.get("outcome") == "failed"
+    ]
+    return {
+        key: result[key]
+        for key in (
+            "job_id",
+            "state",
+            "review_counts",
+            "counts",
+            "destination",
+            "enrichment_coverage",
+            "shortfall",
+            "job_tag_query",
+        )
+        if key in result
+    } | {"failures": failures}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="anki-miner-agentic-agent", description="Guarded agent-first Japanese sentence mining"
@@ -74,8 +96,11 @@ def build_parser() -> argparse.ArgumentParser:
     job.add_argument("job_id")
     run_prepare = commands.add_parser("prepare-run")
     run_prepare.add_argument("--request", required=True, help="Run preparation JSON path, or - for stdin")
+    run_prepare.add_argument("--output", type=Path, help="Write the JSON response to a file instead of stdout")
     run_commit = commands.add_parser("commit-run")
     run_commit.add_argument("--request", required=True, help="Run reviews JSON path, or - for stdin")
+    run_commit.add_argument("--output", type=Path, help="Write the complete JSON receipt to a file")
+    run_commit.add_argument("--summary", action="store_true", help="Print only counts and actionable failures")
     return parser
 
 
@@ -136,7 +161,17 @@ def main(argv: list[str] | None = None) -> int:
     try:
         app = build_agent_application(args.config)
         result = _dispatch(args, app)
-        print(json.dumps({"ok": True, "result": result}, ensure_ascii=False, sort_keys=True))
+        payload = {"ok": True, "result": result}
+        output_path = getattr(args, "output", None)
+        if output_path is not None:
+            output_path.write_text(
+                json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        if getattr(args, "summary", False):
+            print(json.dumps({"ok": True, "result": _commit_summary(result)}, ensure_ascii=False, sort_keys=True))
+        elif output_path is None:
+            print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
         if result.get("state") == "partial":
             return 7
         return 0
