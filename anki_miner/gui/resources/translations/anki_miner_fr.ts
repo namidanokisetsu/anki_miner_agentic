@@ -1825,7 +1825,7 @@ Les fichiers d'index sur le disque seront laissés intacts, car il n'a pas été
     </message>
     <message>
         <source>Fill missing pitch, frequency, definition, reading and word-audio fields on already-mined notes.</source>
-        <translation type="unfinished" />
+        <translation>Remplit les champs d'accent de hauteur, de fréquence, de définition, de lecture et d'audio du mot manquants sur les notes déjà extraites.</translation>
     </message>
     <message>
         <source>Speech-to-text (no subtitles needed)</source>
@@ -2191,7 +2191,7 @@ Les fichiers d'index sur le disque seront laissés intacts, car il n'a pas été
     </message>
     <message>
         <source>Word audio</source>
-        <translation type="unfinished" />
+        <translation>Audio du mot</translation>
     </message>
     <message>
         <source>Fills furigana from an existing reading and vice versa; does not generate new readings.</source>
@@ -2199,7 +2199,7 @@ Les fichiers d'index sur le disque seront laissés intacts, car il n'a pas été
     </message>
     <message>
         <source>Fetches pronunciation audio through your configured word-audio sources. Scanning a large deck can take a while the first time.</source>
-        <translation type="unfinished" />
+        <translation>Récupère l'audio de prononciation via vos sources d'audio du mot configurées. L'analyse d'un gros paquet peut prendre du temps la première fois.</translation>
     </message>
     <message>
         <source>Overwrite existing values</source>
@@ -2260,6 +2260,10 @@ Les fichiers d'index sur le disque seront laissés intacts, car il n'a pas été
     <message>
         <source>(formatted content)</source>
         <translation>(contenu mis en forme)</translation>
+    </message>
+    <message>
+        <source>(cleared)</source>
+        <translation>(vidé)</translation>
     </message>
     <message>
         <source>No notes matched — note type "{note_type}" in deck "{deck}". Check Settings → Anki.</source>
@@ -2355,7 +2359,7 @@ Nombre de notes à modifier : {notes} ; nombre de champs concernés : {fields
     </message>
     <message>
         <source>{count} audio file(s) could not be added to Anki; scan again to retry.</source>
-        <translation type="unfinished" />
+        <translation>{count} fichier(s) audio n'ont pas pu être ajoutés à Anki ; relancez l'analyse pour réessayer.</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -3776,6 +3780,10 @@ Les fichiers sur le disque seront laissés intacts, car il n'a pas été possibl
     <message>
         <source>Best available</source>
         <translation>Meilleure disponible</translation>
+    </message>
+    <message>
+        <source>Up to 1440p</source>
+        <translation>Jusqu’à 1440p</translation>
     </message>
     <message>
         <source>Up to 1080p</source>
@@ -8227,8 +8235,8 @@ Vos dictionnaires installés, l'audio, les listes de fréquence et le thème son
         <translation>Terminé — %1 traités, %2 ignorés</translation>
     </message>
     <message>
-        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
-        <translation>Aucun fichier resynchronisé — tous les %1 fichiers ont été ignorés. Activez Écraser pour resynchroniser sur place, ou choisissez un autre dossier de sortie.</translation>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to replace the existing retimed files, or choose a different output folder.</source>
+        <translation>Aucun fichier resynchronisé — tous les %1 fichiers ont été ignorés. Activez Écraser pour remplacer les fichiers resynchronisés existants, ou choisissez un autre dossier de sortie.</translation>
     </message>
     <message>
         <source>Select Output Folder</source>
@@ -8445,10 +8453,6 @@ Vos dictionnaires installés, l'audio, les listes de fréquence et le thème son
 </context><context>
     <name>SubtitleRetimeWorker</name>
     <message>
-        <source>Output equals input; enable Overwrite to retime in place</source>
-        <translation>La sortie est identique à l'entrée ; activez Écraser pour resynchroniser sur place</translation>
-    </message>
-    <message>
         <source>Skipped, exists</source>
         <translation>Ignoré, existe déjà</translation>
     </message>
@@ -8459,10 +8463,6 @@ Vos dictionnaires installés, l'audio, les listes de fréquence et le thème son
     <message>
         <source>Retimed with %1</source>
         <translation>Réajusté avec %1</translation>
-    </message>
-    <message>
-        <source>Original backed up as %1</source>
-        <translation>Original sauvegardé sous %1</translation>
     </message>
     <message>
         <source>Cancelled</source>
