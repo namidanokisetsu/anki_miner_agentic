@@ -91,7 +91,7 @@ YouTube uses `{"type":"youtube","url":"...","allow_automatic":true,"allow_asr":f
 
 `prepare_mining_run` validates the live mapping and synchronizes the learner profile, fingerprints each unique source path, parses each subtitle into one reusable representation, applies deterministic eligibility and ranking, and loads full definition options for up to the requested `max_cards`. It returns one response with `run_id`, the single `max_cards` value, immutable review-batch metadata, a versioned review contract, required enrichments, destination, and `shortlist`. Zero cards and shortfalls are successful outcomes; the response is never silently truncated by another card or payload cap.
 
-Candidate records contain target and sentence context, learner aggregates, quality flags, frequency/pitch signals, and bounded dictionary options. They never contain raw learner fields, review histories, or database paths.
+Shortlist records are compact semantic-review projections: candidate ID, target, complete sentence text, bounded dictionary options, allowed enrichments, and relevant quality flags. Learner aggregates, ranking diagnostics, pitch/frequency data, variants, source metadata, and eligibility internals remain durable without being copied into the agent context.
 
 ## Review and enrichment
 
@@ -129,11 +129,13 @@ anki_miner_agentic::job::<UTC timestamp>_<short job ID>
 
 The timestamp and job tag are persisted at reservation and reused on retry. Duplicate-skipped pre-existing notes are not modified or tagged.
 
-The terminal receipt reports reviewed/rejected counts plus selected, created, duplicate-skipped, and failed counts; enrichment coverage; destination; applied tags; job-tag Browser query; and selected-candidate outcomes/note IDs. An unchanged retry with the same `run_id` and reviews returns or resumes the same job without duplicate creation. Changed reviews for an already reserved run fail; prepare a new run instead.
+The compact terminal receipt reports reviewed/rejected counts plus selected, created, duplicate-skipped, and failed counts; enrichment coverage; destination; applied tags; job-tag Browser query; and selected-candidate outcomes/note IDs/errors. Media hashes and stored review state remain available in durable job storage instead of being repeated in the agent response. An unchanged retry with the same `run_id` and reviews returns or resumes the same job without duplicate creation. Changed reviews for an already reserved run fail; prepare a new run instead.
 
 The equivalent JSON CLI commands are:
 
 ```bash
 anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" prepare-run --request prepare.json
-anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" commit-run --request commit.json
+anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" commit-run --request commit.json --output receipt.json --summary
 ```
+
+`commit-run --request` is the file-backed commit path. `--output` keeps the complete receipt out of the terminal transcript, while `--summary` prints only counts, coverage, destination, failures, and the Browser query. Agent runtimes that inject `PYTHONPATH` should remove it before launching the CLI (`env -u PYTHONPATH …` on macOS/Linux).

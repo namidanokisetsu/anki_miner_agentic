@@ -37,7 +37,7 @@ YouTube:
 `prepare_mining_run` synchronizes the learner profile, validates live mappings, resolves and fingerprints sources, parses and ranks candidates, bounds dictionary options, and returns:
 
 - `run_id` and the request's single `max_cards` value;
-- one `shortlist` containing up to `max_cards` eligible candidates;
+- one compact `shortlist` containing up to `max_cards` eligible candidates, projected to candidate ID, target, sentence text, bounded definition options, allowed enrichments, and relevant quality flags;
 - immutable review-batch IDs/formula and a versioned `review_contract`;
 - `required_enrichments`;
 - destination deck and note type.
@@ -65,7 +65,7 @@ Omit `audio_track` to select Japanese automatically. Use a zero-based audio-only
 
 Review the returned batch without a quota. Every selected candidate must use `clear_supported_target`, name one prepared definition option, and supply every returned `required_enrichments` key. Reject the rest with one allowed reject reason, `definition_option_id: null`, and no `enrichments` key. Validation failure performs no Anki write and never triggers a weaker or unenriched fallback.
 
-`commit_mining_run` reserves a deterministic job before writing, groups selected candidates by source and audio policy, and returns a terminal receipt with review/write counts, enrichment coverage, destination, applied tags, Browser query, and exact selected-candidate outcomes/note IDs. An unchanged retry resumes or returns the same job and reuses its timestamp/tag. Changed reviews for the same run are rejected.
+`commit_mining_run` reserves a deterministic job before writing, groups selected candidates by source and audio policy, and returns a compact terminal receipt with review/write counts, enrichment coverage, destination, applied tags, Browser query, and exact selected-candidate outcomes/note IDs/errors. Media hashes and stored review state remain durable but are not repeated in this response. An unchanged retry resumes or returns the same job and reuses its timestamp/tag. Changed reviews for the same run are rejected.
 
 ## Recovery
 
