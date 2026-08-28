@@ -1784,6 +1784,13 @@ def main():
     if installer_smoke:
         app.setQuitOnLastWindowClosed(False)
     window.show()
+    if sys.platform == "darwin":
+        # A source-install launcher is a small bundle wrapper whose child owns
+        # the Qt window. Launch Services activates the wrapper, not that child,
+        # so without this the real window can open behind the current app and a
+        # Spotlight launch appears to do nothing.
+        window.raise_()
+        window.activateWindow()
 
     if installer_smoke:
         _schedule_installer_smoke(app, window)

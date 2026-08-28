@@ -212,6 +212,17 @@ StartupWMClass=anki_miner
 
     @staticmethod
     def _create_macos_shortcut(exe_path: Path, result: ShortcutResult) -> None:
+        home = Path.home().resolve()
+        protected_roots = (home / "Desktop", home / "Documents", home / "Downloads")
+        resolved_exe = exe_path.resolve()
+        if any(resolved_exe.is_relative_to(root) for root in protected_roots):
+            result.error = (
+                "macOS blocks applications launched from Spotlight from executing a development install "
+                f"inside {resolved_exe.parent}. Move the installation outside Desktop, Documents, and Downloads, "
+                "or use a packaged Anki Miner application."
+            )
+            return
+
         app_dir = Path.home() / "Applications" / f"{APP_NAME}.app"
         contents_dir = app_dir / "Contents"
         macos_dir = contents_dir / "MacOS"
@@ -224,7 +235,16 @@ StartupWMClass=anki_miner
 
         launcher = macos_dir / APP_ID
         launcher.write_text(
-            "#!/bin/sh\nunset PYTHONPATH\nexec " + shlex.quote(str(exe_path)) + ' "$@"\n',
+            "#!/bin/sh\n"
+            "unset PYTHONPATH\n"
+            + shlex.quote(str(exe_path))
+            + ' "$@" &\n'
+            + "child_pid=$!\n"
+            + "trap 'kill -TERM \"$child_pid\" 2>/dev/null' HUP INT TERM\n"
+            + 'wait "$child_pid"\n'
+            + "status=$?\n"
+            + "trap - HUP INT TERM\n"
+            + 'exit "$status"\n',
             encoding="utf-8",
         )
         launcher.chmod(0o755)

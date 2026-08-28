@@ -9,7 +9,7 @@ A fork of [Anki Miner](https://github.com/0xzerolight/anki_miner) that lets an A
 3. The AI accepts or rejects each candidate based on its sentence and dictionary meaning.
 4. The app validates the review, creates media, skips duplicates, writes selected cards, and returns a receipt.
 
-## Install
+## Install from source
 
 You need Python 3.11+, Anki with [AnkiConnect](https://ankiweb.net/shared/info/2055492159), and ffmpeg. Keep Anki open during setup.
 
@@ -22,13 +22,11 @@ python -m pip install -e ".[mcp]"
 anki_miner_agentic_gui
 ```
 
-Use a dedicated virtual environment. This fork and upstream `anki-miner` both use the `anki_miner` Python package, so do not install them together.
+Use a dedicated virtual environment. This fork and upstream `anki-miner` both use the `anki_miner` Python package, so this fork must not be installed into the same environment as `anki-miner`.
 
-## Configure it
+When an agent is working in an existing checkout: **Reuse the active virtual environment; do not reinstall the package.**
 
-Set up dictionaries, frequency and pitch sources, Anki fields, filters, and media in the GUI. The agent inherits those settings.
-
-## Connect an agent
+## Set up an agent
 
 Give your agent access to this checkout, then paste:
 
@@ -41,6 +39,29 @@ Configure Anki Miner Agentic in this checkout. Read agentic-docs/agent-mining.md
 Use MCP for normal conversations with an agent (`prepare_mining_run`, then `commit_mining_run`). The JSON CLI's `prepare-run` and `commit-run` commands expose that same workflow for terminal use, scripts, or clients without MCP. Older low-level CLI commands remain only as a compatibility and recovery surface.
 
 For manual setup, read the [agent mining guide](agentic-docs/agent-mining.md). Exact tool payloads are in the [MCP contract](skills/anki-miner-agent/references/mcp-contract.md).
+
+## Tabs
+
+The desktop tabs and settings follow upstream Anki Miner. See the [upstream README](https://github.com/0xzerolight/anki_miner#readme) for the full GUI guide.
+
+## Configure it
+
+Set up dictionaries, frequency and pitch sources, Anki fields, filters, and media in the GUI. The agent inherits those settings.
+
+## Troubleshooting
+
+| Issue | What to do |
+| --- | --- |
+| Fresh install has no definitions | Run `Tools -> Setup Wizard or Tools -> Download Recommended Resources`, then confirm a dictionary is enabled in Settings. |
+| Add Dictionary stalls or fails | Retry while recording the last visible stage. Report the dictionary ZIP name, source, and size, and keep the Yomitan ZIP intact (do not unzip it). |
+| Where are the logs? | Open `~/.anki_miner/anki_miner.log` on macOS/Linux or `%USERPROFILE%\.anki_miner\anki_miner.log` on Windows. Rotated logs use `.1` through `.5` suffixes. |
+| Spotlight launcher does nothing on macOS | A development install under Desktop, Documents, or Downloads is blocked by macOS privacy controls when launched from Spotlight. Move it outside those folders or use the packaged application. |
+
+`Help → Export Diagnostics…` creates a support archive. Review it before uploading because it contains file paths and file names from your computer. For temporary verbose logging, launch with `ANKI_MINER_LOG_LEVEL=DEBUG`.
+
+## Agentic roadmap
+
+Keep the public agent contract narrow: prepare candidates, review them, then commit a validated selection. Larger agent features should remain isolated from upstream GUI internals so upstream updates stay mergeable.
 
 ## License
 

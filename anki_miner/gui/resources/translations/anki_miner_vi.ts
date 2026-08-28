@@ -1823,7 +1823,7 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     </message>
     <message>
         <source>Fill missing pitch, frequency, definition, reading and word-audio fields on already-mined notes.</source>
-        <translation type="unfinished" />
+        <translation>Điền các trường trọng âm cao độ, tần suất, định nghĩa, cách đọc và âm thanh từ còn trống trên các ghi chú đã khai thác.</translation>
     </message>
     <message>
         <source>Speech-to-text (no subtitles needed)</source>
@@ -2189,7 +2189,7 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     </message>
     <message>
         <source>Word audio</source>
-        <translation type="unfinished" />
+        <translation>Âm thanh từ</translation>
     </message>
     <message>
         <source>Fills furigana from an existing reading and vice versa; does not generate new readings.</source>
@@ -2197,7 +2197,7 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     </message>
     <message>
         <source>Fetches pronunciation audio through your configured word-audio sources. Scanning a large deck can take a while the first time.</source>
-        <translation type="unfinished" />
+        <translation>Lấy âm thanh phát âm qua các nguồn âm thanh từ đã cấu hình. Quét một bộ thẻ lớn có thể mất một lúc trong lần đầu tiên.</translation>
     </message>
     <message>
         <source>Overwrite existing values</source>
@@ -2258,6 +2258,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>(formatted content)</source>
         <translation>(nội dung đã định dạng)</translation>
+    </message>
+    <message>
+        <source>(cleared)</source>
+        <translation>(đã xóa)</translation>
     </message>
     <message>
         <source>No notes matched — note type "{note_type}" in deck "{deck}". Check Settings → Anki.</source>
@@ -2353,7 +2357,7 @@ Thao tác này sẽ sửa đổi {notes} ghi chú ({fields} trường) và gắn
     </message>
     <message>
         <source>{count} audio file(s) could not be added to Anki; scan again to retry.</source>
-        <translation type="unfinished" />
+        <translation>Không thể thêm {count} tệp âm thanh vào Anki; hãy quét lại để thử lại.</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -3774,6 +3778,10 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
     <message>
         <source>Best available</source>
         <translation>Tốt nhất hiện có</translation>
+    </message>
+    <message>
+        <source>Up to 1440p</source>
+        <translation>Tối đa 1440p</translation>
     </message>
     <message>
         <source>Up to 1080p</source>
@@ -8212,8 +8220,8 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Hoàn tất — đã xử lý %1, đã bỏ qua %2</translation>
     </message>
     <message>
-        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
-        <translation>Không có tệp nào được định thời lại — tất cả %1 đã bỏ qua. Bật Ghi đè để định thời lại tại chỗ, hoặc chọn thư mục đầu ra khác.</translation>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to replace the existing retimed files, or choose a different output folder.</source>
+        <translation>Không có tệp nào được định thời lại — tất cả %1 đã bỏ qua. Bật Ghi đè để thay thế các tệp đã định thời lại hiện có, hoặc chọn thư mục đầu ra khác.</translation>
     </message>
     <message>
         <source>Select Output Folder</source>
@@ -8430,10 +8438,6 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
 </context><context>
     <name>SubtitleRetimeWorker</name>
     <message>
-        <source>Output equals input; enable Overwrite to retime in place</source>
-        <translation>Đầu ra trùng với đầu vào; bật Ghi đè để định thời lại tại chỗ</translation>
-    </message>
-    <message>
         <source>Skipped, exists</source>
         <translation>Đã bỏ qua, đã tồn tại</translation>
     </message>
@@ -8444,10 +8448,6 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
     <message>
         <source>Retimed with %1</source>
         <translation>Đã căn chỉnh lại thời gian với %1</translation>
-    </message>
-    <message>
-        <source>Original backed up as %1</source>
-        <translation>Bản gốc được sao lưu dưới dạng %1</translation>
     </message>
     <message>
         <source>Cancelled</source>

@@ -1823,7 +1823,7 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Fill missing pitch, frequency, definition, reading and word-audio fields on already-mined notes.</source>
-        <translation type="unfinished" />
+        <translation>為已挖掘的筆記補齊缺少的高低音調、頻率、釋義、讀音與單字發音欄位。</translation>
     </message>
     <message>
         <source>Speech-to-text (no subtitles needed)</source>
@@ -2189,7 +2189,7 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Word audio</source>
-        <translation type="unfinished" />
+        <translation>單字發音</translation>
     </message>
     <message>
         <source>Fills furigana from an existing reading and vice versa; does not generate new readings.</source>
@@ -2197,7 +2197,7 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Fetches pronunciation audio through your configured word-audio sources. Scanning a large deck can take a while the first time.</source>
-        <translation type="unfinished" />
+        <translation>透過你設定的單字發音來源取得發音音訊。首次掃描大型牌組可能需要一些時間。</translation>
     </message>
     <message>
         <source>Overwrite existing values</source>
@@ -2258,6 +2258,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>(formatted content)</source>
         <translation>（已格式化內容）</translation>
+    </message>
+    <message>
+        <source>(cleared)</source>
+        <translation>（已清空）</translation>
     </message>
     <message>
         <source>No notes matched — note type "{note_type}" in deck "{deck}". Check Settings → Anki.</source>
@@ -2353,7 +2357,7 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
     </message>
     <message>
         <source>{count} audio file(s) could not be added to Anki; scan again to retry.</source>
-        <translation type="unfinished" />
+        <translation>有 {count} 個音訊檔無法加入 Anki；請重新掃描以重試。</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -3774,6 +3778,10 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Best available</source>
         <translation>最佳可用畫質</translation>
+    </message>
+    <message>
+        <source>Up to 1440p</source>
+        <translation>最高 1440p</translation>
     </message>
     <message>
         <source>Up to 1080p</source>
@@ -8212,8 +8220,8 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>完成 — 已處理 %1 個，已略過 %2 個</translation>
     </message>
     <message>
-        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
-        <translation>未重新校時任何檔案 — 全部 %1 個已略過。啟用覆寫以就地重新校時，或選擇其他輸出資料夾。</translation>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to replace the existing retimed files, or choose a different output folder.</source>
+        <translation>未重新校時任何檔案 — 全部 %1 個已略過。啟用覆寫以取代現有的重新校時檔案，或選擇其他輸出資料夾。</translation>
     </message>
     <message>
         <source>Select Output Folder</source>
@@ -8430,10 +8438,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
 </context><context>
     <name>SubtitleRetimeWorker</name>
     <message>
-        <source>Output equals input; enable Overwrite to retime in place</source>
-        <translation>輸出與輸入相同；請啟用覆寫以就地重新校時</translation>
-    </message>
-    <message>
         <source>Skipped, exists</source>
         <translation>已略過，已存在</translation>
     </message>
@@ -8444,10 +8448,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     <message>
         <source>Retimed with %1</source>
         <translation>已使用 %1 重新計時</translation>
-    </message>
-    <message>
-        <source>Original backed up as %1</source>
-        <translation>原始檔案備份為 %1</translation>
     </message>
     <message>
         <source>Cancelled</source>

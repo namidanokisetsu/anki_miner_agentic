@@ -1823,7 +1823,7 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     </message>
     <message>
         <source>Fill missing pitch, frequency, definition, reading and word-audio fields on already-mined notes.</source>
-        <translation type="unfinished" />
+        <translation>Mengisi bidang aksen nada, frekuensi, definisi, cara baca, dan audio kata yang kosong pada catatan yang sudah ditambang.</translation>
     </message>
     <message>
         <source>Speech-to-text (no subtitles needed)</source>
@@ -2189,7 +2189,7 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     </message>
     <message>
         <source>Word audio</source>
-        <translation type="unfinished" />
+        <translation>Audio kata</translation>
     </message>
     <message>
         <source>Fills furigana from an existing reading and vice versa; does not generate new readings.</source>
@@ -2197,7 +2197,7 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     </message>
     <message>
         <source>Fetches pronunciation audio through your configured word-audio sources. Scanning a large deck can take a while the first time.</source>
-        <translation type="unfinished" />
+        <translation>Mengambil audio pelafalan melalui sumber audio kata yang Anda konfigurasikan. Memindai dek besar bisa memakan waktu pada kali pertama.</translation>
     </message>
     <message>
         <source>Overwrite existing values</source>
@@ -2258,6 +2258,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>(formatted content)</source>
         <translation>(konten terformat)</translation>
+    </message>
+    <message>
+        <source>(cleared)</source>
+        <translation>(dikosongkan)</translation>
     </message>
     <message>
         <source>No notes matched — note type "{note_type}" in deck "{deck}". Check Settings → Anki.</source>
@@ -2353,7 +2357,7 @@ Tindakan ini akan mengubah {notes} catatan ({fields} bidang) dan menandainya den
     </message>
     <message>
         <source>{count} audio file(s) could not be added to Anki; scan again to retry.</source>
-        <translation type="unfinished" />
+        <translation>{count} berkas audio tidak dapat ditambahkan ke Anki; pindai lagi untuk mencoba ulang.</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -3774,6 +3778,10 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
     <message>
         <source>Best available</source>
         <translation>Terbaik yang tersedia</translation>
+    </message>
+    <message>
+        <source>Up to 1440p</source>
+        <translation>Hingga 1440p</translation>
     </message>
     <message>
         <source>Up to 1080p</source>
@@ -8212,8 +8220,8 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Selesai — %1 diproses, %2 dilewati</translation>
     </message>
     <message>
-        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
-        <translation>Tidak ada berkas diatur ulang waktunya — semua %1 dilewati. Aktifkan Timpa untuk mengatur ulang waktu di tempat, atau pilih folder keluaran lain.</translation>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to replace the existing retimed files, or choose a different output folder.</source>
+        <translation>Tidak ada berkas diatur ulang waktunya — semua %1 dilewati. Aktifkan Timpa untuk mengganti berkas hasil pengaturan ulang yang sudah ada, atau pilih folder keluaran lain.</translation>
     </message>
     <message>
         <source>Select Output Folder</source>
@@ -8430,10 +8438,6 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
 </context><context>
     <name>SubtitleRetimeWorker</name>
     <message>
-        <source>Output equals input; enable Overwrite to retime in place</source>
-        <translation>Keluaran sama dengan masukan; aktifkan Timpa untuk mengatur ulang waktu di tempat</translation>
-    </message>
-    <message>
         <source>Skipped, exists</source>
         <translation>Dilewati, sudah ada</translation>
     </message>
@@ -8444,10 +8448,6 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
     <message>
         <source>Retimed with %1</source>
         <translation>Waktu diselaraskan dengan %1</translation>
-    </message>
-    <message>
-        <source>Original backed up as %1</source>
-        <translation>Asli dicadangkan sebagai %1</translation>
     </message>
     <message>
         <source>Cancelled</source>

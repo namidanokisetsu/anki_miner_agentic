@@ -2249,6 +2249,10 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
+        <source>(cleared)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>No notes matched — note type "{note_type}" in deck "{deck}". Check Settings → Anki.</source>
         <translation type="unfinished" />
     </message>
@@ -3751,6 +3755,10 @@ Files on disk will be left untouched because the folder could not be proven to b
     </message>
     <message>
         <source>Best available</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Up to 1440p</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -8158,7 +8166,7 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
-        <source>No files retimed — all %1 skipped. Enable Overwrite to retime in place, or choose a different output folder.</source>
+        <source>No files retimed — all %1 skipped. Enable Overwrite to replace the existing retimed files, or choose a different output folder.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -8376,10 +8384,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
 </context><context>
     <name>SubtitleRetimeWorker</name>
     <message>
-        <source>Output equals input; enable Overwrite to retime in place</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Skipped, exists</source>
         <translation type="unfinished" />
     </message>
@@ -8389,10 +8393,6 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
     </message>
     <message>
         <source>Retimed with %1</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Original backed up as %1</source>
         <translation type="unfinished" />
     </message>
     <message>

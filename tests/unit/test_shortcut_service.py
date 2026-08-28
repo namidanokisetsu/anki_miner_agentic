@@ -200,7 +200,7 @@ class TestCreateShortcut:
 
     def test_macos_creates_application_launcher(self, tmp_path, monkeypatch):
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
-        fake_exe = tmp_path / "project with spaces" / ".venv" / "bin" / "anki_miner_gui"
+        fake_exe = tmp_path / "Developer" / "project with spaces" / ".venv" / "bin" / "anki_miner_gui"
         fake_exe.parent.mkdir(parents=True)
         fake_exe.touch()
         with (
@@ -215,12 +215,36 @@ class TestCreateShortcut:
         assert app_dir in result.paths_created
         assert launcher.stat().st_mode & 0o111
         assert "unset PYTHONPATH" in launcher.read_text()
-        assert f"exec '{fake_exe}'" in launcher.read_text()
+        assert f"'{fake_exe}' \"$@\"" in launcher.read_text()
+        assert f"exec '{fake_exe}'" not in launcher.read_text()
+        assert "child_pid=$!" in launcher.read_text()
+        assert 'wait "$child_pid"' in launcher.read_text()
+        assert 'kill -TERM "$child_pid"' in launcher.read_text()
         with (app_dir / "Contents" / "Info.plist").open("rb") as plist_file:
             info = plistlib.load(plist_file)
         assert info["CFBundleExecutable"] == APP_ID
         assert info["CFBundleDisplayName"] == APP_NAME
         assert (app_dir / "Contents" / "Resources" / "anki_miner.icns").is_file()
+
+    @pytest.mark.parametrize("protected_dir", ["Desktop", "Documents", "Downloads"])
+    def test_macos_refuses_launcher_target_inside_privacy_protected_folder(
+        self, tmp_path, monkeypatch, protected_dir
+    ):
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+        fake_exe = tmp_path / protected_dir / "project" / ".venv" / "bin" / "anki_miner_gui"
+        fake_exe.parent.mkdir(parents=True)
+        fake_exe.touch()
+
+        with (
+            patch.object(ShortcutService, "resolve_executable", return_value=fake_exe),
+            patch("sys.platform", "darwin"),
+        ):
+            result = ShortcutService.create_shortcut()
+
+        assert result.success is False
+        assert result.error is not None
+        assert "macOS blocks applications launched from Spotlight" in result.error
+        assert not (tmp_path / "Applications" / f"{APP_NAME}.app").exists()
 
     def test_windows_uses_redirected_desktop_in_one_powershell_process(self, tmp_path, monkeypatch):
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
