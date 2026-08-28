@@ -60,7 +60,6 @@ rename_log.txt
 .ruff_cache/
 docs/
 .claude-runner/
-AGENTS.md
 .agents/
 .codex/
 resources/
