@@ -237,6 +237,7 @@ StartupWMClass=anki_miner
         launcher.write_text(
             "#!/bin/sh\n"
             "unset PYTHONPATH\n"
+            'export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin${PATH:+:$PATH}"\n'
             + shlex.quote(str(exe_path))
             + ' "$@" &\n'
             + "child_pid=$!\n"

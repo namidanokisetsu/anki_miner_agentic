@@ -458,6 +458,38 @@
         <translation>以純假名儲存例句。</translation>
     </message>
     <message>
+        <source>Measure Word Field</source>
+        <translation>量詞欄位</translation>
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation>儲存從字典詞條中解析出的量詞。留空＝略過。</translation>
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation>拼音欄位</translation>
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation>儲存單字的拼音讀音；若已開啟聲調上色，則會帶顏色。留空＝略過。</translation>
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation>繁體字欄位</translation>
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation>當另一種字形變體不同時，儲存該變體的寫法。留空＝略過。</translation>
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation>韓文漢字欄位</translation>
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation>儲存單字中包含的韓文漢字。留空＝略過。</translation>
+    </message>
+    <message>
         <source>Auxiliary Data Fields</source>
         <translation>輔助資料欄位</translation>
     </message>
@@ -696,6 +728,18 @@ Continue anyway?</source>
 </context><context>
     <name>AudioPackImportFlow</name>
     <message>
+        <source>Scanning folder for audio packs…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Scanning %1 …</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>That folder could not be scanned.</source>
         <translation>無法掃描該資料夾。</translation>
     </message>
@@ -740,10 +784,6 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
     <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation>匯入已完成，但無法更新設定。</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>取消</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -1672,6 +1712,14 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Auto-update the bundled yt-dlp downloader, update it on demand, or point at your own binary.</source>
         <translation>自動更新內建的 yt-dlp 下載工具，也可依需求手動更新，或指向您自己的執行檔。</translation>
+    </message>
+    <message>
+        <source>Mine Japanese, Korean or Chinese</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>i+1 sentence mining</source>
@@ -3902,6 +3950,10 @@ Files on disk will be left untouched because the folder could not be proven to b
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
         <translation>單字音訊來源連線／憑證失敗——本次執行已略過音訊，將於下次執行時重試</translation>
     </message>
@@ -4356,6 +4408,22 @@ Files on disk will be left untouched because the folder could not be proven to b
 </context><context>
     <name>FilteringSettingsPanel</name>
     <message>
+        <source>Exclude hangul-only words</source>
+        <translation>排除純諺文單字</translation>
+    </message>
+    <message>
+        <source>Exclude words containing hanja</source>
+        <translation>排除含韓文漢字的單字</translation>
+    </message>
+    <message>
+        <source>Skip words written entirely in hangul. Leaves the deck to words written with hanja.</source>
+        <translation>略過完全以諺文書寫的詞。讓牌組只留下以韓文漢字書寫的詞。</translation>
+    </message>
+    <message>
+        <source>Skip words that contain any hanja character, keeping the deck to plain hangul vocabulary.</source>
+        <translation>略過含有任何韓文漢字的詞，讓牌組保持純諺文詞彙。</translation>
+    </message>
+    <message>
         <source>Word Frequency</source>
         <translation>單字頻率</translation>
     </message>
@@ -4588,6 +4656,26 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>當字幕以假名拼寫單字（例如 うなずく），而該單字的漢字字典形（頷く）已在您的收藏或已知單字清單中時，則略過該單字，而不建立第二張卡片。漢字拼寫絕不會以此方式合併。</translation>
     </message>
     <message>
+        <source>Script Variants</source>
+        <translation>字形變體</translation>
+    </message>
+    <message>
+        <source>Simplified (简体)</source>
+        <translation>簡體</translation>
+    </message>
+    <message>
+        <source>Traditional (繁體)</source>
+        <translation>繁體</translation>
+    </message>
+    <message>
+        <source>Character Set</source>
+        <translation>字元集</translation>
+    </message>
+    <message>
+        <source>Which spelling the card front and the dictionary lookup prefer.</source>
+        <translation>卡片正面與字典查詢優先使用哪一種寫法。</translation>
+    </message>
+    <message>
         <source>i+1 Sentence Filter</source>
         <translation>i+1 句子篩選器</translation>
     </message>
@@ -4658,6 +4746,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Wrap the mined word in &amp;lt;b&amp;gt;...&amp;lt;/b&amp;gt; inside the Sentence and SentenceFurigana fields. Match is the exact MeCab span of the mined morpheme, so duplicated surfaces in a sentence only bold the actually-mined occurrence.</source>
         <translation>在 Sentence 與 SentenceFurigana 欄位中將採集的單字以 &amp;lt;b&amp;gt;...&amp;lt;/b&amp;gt; 包住。比對為採集詞素的精確 MeCab 範圍，因此句子中重複出現的表層形只會將實際採集的那一處加粗。</translation>
+    </message>
+    <message>
+        <source>Colour the reading by tone</source>
+        <translation>依聲調為讀音上色</translation>
+    </message>
+    <message>
+        <source>Wraps each pinyin syllable in a tone class so the card styling can colour it.</source>
+        <translation>為每個拼音音節加上聲調類別，讓卡片樣式可以為其上色。</translation>
     </message>
     <message>
         <source>Exclude Deck</source>
@@ -4844,6 +4940,14 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>使用中的設定檔。切換會替換所有設定；選取「管理設定檔…」即可新增、重新命名或移除。</translation>
     </message>
     <message>
+        <source>Mining language:</source>
+        <translation>採集語言：</translation>
+    </message>
+    <message>
+        <source>Mining language</source>
+        <translation>採集語言</translation>
+    </message>
+    <message>
         <source>Theme:</source>
         <translation>主題：</translation>
     </message>
@@ -4862,6 +4966,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Manage profiles…</source>
         <translation>管理設定檔…</translation>
+    </message>
+    <message>
+        <source>Mining language: %1. Opens the selector in Settings.</source>
+        <translation>採集語言：%1。開啟設定中的選擇器。</translation>
     </message>
 </context><context>
     <name>InlineReceipt</name>
@@ -5016,6 +5124,64 @@ Add %3 word(s) to your known list?</source>
     <message>
         <source>Remove ALL words you added to the local known words list? This cannot be undone. The Anki-synced cache is not affected.</source>
         <translation>要移除你加入本機已知單字清單的所有單字嗎？此操作無法復原。不會影響與 Anki 同步的快取。</translation>
+    </message>
+</context><context>
+    <name>KoModelDownloadWorker</name>
+    <message>
+        <source>Downloading the Korean model…</source>
+        <translation>正在下載韓文模型…</translation>
+    </message>
+    <message>
+        <source>Korean model installed successfully.</source>
+        <translation>韓文模型已成功安裝。</translation>
+    </message>
+</context><context>
+    <name>LanguageSwitch</name>
+    <message>
+        <source>Switch mining language</source>
+        <translation>切換採集語言</translation>
+    </message>
+    <message numerus="yes">
+        <source>Switching to %1 discards %n queued item(s), on screen and in the copy saved for the next launch. Continue?</source>
+        <translation>
+            <numerusform>切換到 %1 將捨棄佇列中的 %n 個項目，畫面上的與為下次啟動儲存的副本都會捨棄。要繼續嗎？</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>First time mining this language</source>
+        <translation>首次採集此語言</translation>
+    </message>
+    <message>
+        <source>You have not mined %1 before.</source>
+        <translation>您尚未採集過 %1。</translation>
+    </message>
+    <message>
+        <source>The known-words scan reads every deck that is not excluded, so words in %1 would count as already known. Exclude them from this language?</source>
+        <translation>已知單字掃描會讀取所有未排除的牌組，因此 %1 中的單字會被視為已知。要在此語言中排除它們嗎？</translation>
+    </message>
+    <message>
+        <source>Exclude these decks</source>
+        <translation>排除這些牌組</translation>
+    </message>
+    <message>
+        <source>Set up resources…</source>
+        <translation>設定資源…</translation>
+    </message>
+    <message>
+        <source>That mining language is not available in this build.</source>
+        <translation>此版本不支援該採集語言。</translation>
+    </message>
+    <message>
+        <source>Settings are busy. Nothing was switched.</source>
+        <translation>設定忙碌中。未進行切換。</translation>
+    </message>
+    <message>
+        <source>Mining is running. Stop it, then switch language.</source>
+        <translation>採集正在執行中。請先停止，再切換語言。</translation>
+    </message>
+    <message>
+        <source>Could not switch to %1: %2. Nothing was switched.</source>
+        <translation>無法切換到 %1：%2。未進行切換。</translation>
     </message>
 </context><context>
     <name>LogWidget</name>
@@ -5694,6 +5860,40 @@ Continue?</source>
         <translation>顯示主視窗</translation>
     </message>
 </context><context>
+    <name>MiningLanguageSettingsPanel</name>
+    <message>
+        <source>Language</source>
+        <translation>語言</translation>
+    </message>
+    <message>
+        <source>Mining Language</source>
+        <translation>採集語言</translation>
+    </message>
+    <message>
+        <source>The language you mine. Separate from the interface language (Settings -&gt; Appearance &amp; Language). Switching swaps dictionaries, filters, deck and card fields to that language's own settings.</source>
+        <translation>要採集的語言。與介面語言（設定 -&gt; 外觀與語言）各自獨立。切換後，字典、篩選器、牌組與卡片欄位都會換成該語言自己的設定。</translation>
+    </message>
+    <message>
+        <source>Download Korean model</source>
+        <translation>下載韓文模型</translation>
+    </message>
+    <message>
+        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
+        <translation>將韓文語言模型下載至 Anki Miner 的資料夾。套裝安裝內含韓文引擎，但不包含其模型。</translation>
+    </message>
+    <message>
+        <source>Korean model</source>
+        <translation>韓文模型</translation>
+    </message>
+    <message>
+        <source>Installed</source>
+        <translation>已安裝</translation>
+    </message>
+    <message>
+        <source>Not installed</source>
+        <translation>未安裝</translation>
+    </message>
+</context><context>
     <name>MiningTabBase</name>
     <message>
         <source>Failed: %1 — %2</source>
@@ -6038,6 +6238,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Mining or card backfill is still using the dictionaries. Stop it and try again.</source>
         <translation>採集或卡片回填仍在使用字典。請停止後再試。</translation>
+    </message>
+    <message>
+        <source>That profile mines another language and the queues still hold work. Nothing was switched.</source>
+        <translation>該設定檔採集的是其他語言，且佇列中仍有待處理的工作。未進行切換。</translation>
     </message>
     <message>
         <source>Could not apply the profile '%1': %2. Your current settings are unchanged.</source>
@@ -6926,6 +7130,24 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>要還原先前的佇列嗎？共 %1 個項目</translation>
     </message>
 </context><context>
+    <name>ResourceChain</name>
+    <message>
+        <source>Audio pack '%1' is for %2; skipped</source>
+        <translation>音訊包「%1」是給 %2 用的；已略過</translation>
+    </message>
+    <message>
+        <source>Dictionary '%1' is for %2; skipped</source>
+        <translation>字典「%1」是給 %2 用的；已略過</translation>
+    </message>
+    <message>
+        <source>Frequency source '%1' is for %2; skipped</source>
+        <translation>頻率來源「%1」是給 %2 用的；已略過</translation>
+    </message>
+    <message>
+        <source>Pitch source '%1' is for %2; skipped</source>
+        <translation>高低音調來源「%1」是給 %2 用的；已略過</translation>
+    </message>
+</context><context>
     <name>ResourceDownloadDialog</name>
     <message>
         <source>Starting download…</source>
@@ -7078,6 +7300,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Download recommended resources</source>
         <translation>下載建議資源</translation>
+    </message>
+    <message>
+        <source>No downloadable resources are recommended for this language — import a Yomitan dictionary in Settings → Dictionaries and a frequency list in Settings → Frequency.</source>
+        <translation>此語言沒有建議下載的資源 — 請透過「設定 → 字典」匯入 Yomitan 字典，並透過「設定 → 頻率」匯入頻率清單。</translation>
     </message>
     <message>
         <source>Checking for an offline dictionary...</source>
@@ -7436,6 +7662,10 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Mining</source>
         <translation>採集</translation>
+    </message>
+    <message>
+        <source>Mining Language</source>
+        <translation>採集語言</translation>
     </message>
     <message>
         <source>Filtering</source>
@@ -7986,16 +8216,24 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation>字幕產生</translation>
     </message>
     <message>
+        <source>Japanese</source>
+        <translation>日文</translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation>韓文</translation>
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation>中文</translation>
+    </message>
+    <message>
         <source>Input</source>
         <translation>輸入</translation>
     </message>
     <message>
         <source>Language:</source>
         <translation>語言：</translation>
-    </message>
-    <message>
-        <source>Japanese</source>
-        <translation>日文</translation>
     </message>
     <message>
         <source>Transcription is not ready. Open Settings → Transcription &amp; Alignment to finish setup.</source>

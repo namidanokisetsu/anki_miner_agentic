@@ -215,6 +215,7 @@ class TestCreateShortcut:
         assert app_dir in result.paths_created
         assert launcher.stat().st_mode & 0o111
         assert "unset PYTHONPATH" in launcher.read_text()
+        assert 'export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin${PATH:+:$PATH}"' in launcher.read_text()
         assert f"'{fake_exe}' \"$@\"" in launcher.read_text()
         assert f"exec '{fake_exe}'" not in launcher.read_text()
         assert "child_pid=$!" in launcher.read_text()

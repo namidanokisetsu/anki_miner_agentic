@@ -95,6 +95,26 @@ asr-vulkan = [
     "faster-whisper>=1.1.0",
     "pywhispercpp>=1.5.0",
 ]
+# Chinese mining engine. jieba (pure Python, sdist-only on PyPI) and pypinyin
+# are hard requirements of the zh code paths; OpenCC ships a native extension, so
+# every consumer degrades to "no script variants" when it is absent (see
+# languages/zh/variants.py) rather than failing to import.
+zh = [
+    "jieba>=0.42.1",
+    "pypinyin>=0.53.0",
+    "opencc>=1.1.9",
+]
+# Korean mining engine. kiwipiepy ships cp39-abi3 wheels for Linux/macOS/
+# Windows, so one wheel covers the whole 3.11-3.13 CI matrix; python-mecab-ko was
+# rejected for having no cp313 wheel (upstream #23/#24). kiwipiepy-model carries
+# the default model Kiwi() loads when no model_path is given.
+ko = [
+    "kiwipiepy>=0.20",
+    "kiwipiepy-model>=0.20",
+]
+# Bundle-all aggregate: the release matrix installs this, pip's default stays
+# JA-lean (same shape as the asr extras).
+languages = ["anki-miner[zh]", "anki-miner[ko]"]
 dev = [
     "pytest>=9.0.3",
     "pytest-cov>=6.0.0",
@@ -245,11 +265,15 @@ module = ["fugashi.*", "pysubs2.*", "ffsubsync.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["faster_whisper.*", "ctranslate2.*", "pywhispercpp.*", "mpv.*"]
+module = ["faster_whisper.*", "ctranslate2.*", "pywhispercpp.*", "mpv.*", "kiwipiepy.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["numpy.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["jieba.*", "pypinyin.*", "opencc.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

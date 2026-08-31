@@ -34,6 +34,7 @@ from anki_miner.config import (
     FreqEntry,
     PitchSourceEntry,
     create_default_config,
+    insert_above_first_enabled_jpod101,
 )
 from anki_miner.config.paths import ANKI_MINER_HOME
 from anki_miner.gui.controllers.anki_probe_controller import AnkiProbeController
@@ -66,6 +67,7 @@ from anki_miner.gui.widgets.panels import (
     FilteringSettingsPanel,
     FrequencySettingsPanel,
     MediaSettingsPanel,
+    MiningLanguageSettingsPanel,
     PitchSettingsPanel,
     UISettingsPanel,
     YouTubeSettingsPanel,
@@ -148,6 +150,11 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
         manage_profiles_requested: Emitted by the footer's "Settings Profiles…"
             button. The window opens the dialog, not this tab: a profile switch
             reloads every panel here from the incoming config.
+        mining_language_requested: Re-emitted from the Filtering panel's mining
+            language selector. The window runs the guard and commits, because a
+            switch clears queues and reloads every panel in this tab.
+        ko_model_download_requested: Emitted when the Filtering panel's "Download
+            Korean model" button is clicked.
     """
 
     #: A label beside its control; a wider window buys gutters, not longer inputs.
@@ -164,6 +171,8 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
     vad_pack_download_requested = pyqtSignal()
     vulkan_model_download_requested = pyqtSignal(str)  # Emits model name
     manage_profiles_requested = pyqtSignal()
+    mining_language_requested = pyqtSignal(str)  # Emits the requested language code
+    ko_model_download_requested = pyqtSignal()
 
     # Fields written OUTSIDE the Settings Save path (theme selector, update
     # banner, first-run flags).  An update_config call that touches ONLY these
@@ -190,8 +199,14 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
     # running session's theme/font unchanged yet persist defaults, silently
     # wiping the user's theme on the next launch.  Preserving them (as
     # _on_import_settings already does) keeps Reset safe and predictable.
+    #
+    # `language` (the MINING language) rides along for the same reason as
+    # `ui_language`, plus one of its own: `language_stash` is machine-specific
+    # and therefore preserved, so resetting `language` out from under it would
+    # leave the stash holding a parked snapshot for the language now active —
+    # the one thing that field's invariant forbids.
     _RESET_PRESERVE_UI: frozenset[str] = frozenset(
-        {"theme", "theme_favorites", "ui_font_scale", "ui_zoom", "ui_language"}
+        {"theme", "theme_favorites", "ui_font_scale", "ui_zoom", "ui_language", "language"}
     )
 
     def __init__(
@@ -352,6 +367,7 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
         self.audio_panel = AudioPackSettingsPanel(self.config.audio_packs_root)
         self.frequency_panel = FrequencySettingsPanel(self.config.freqs_root)
         self.pitch_panel = PitchSettingsPanel(self.config.pitch_root)
+        self.mining_language_panel = MiningLanguageSettingsPanel()
         self.filtering_panel = FilteringSettingsPanel()
         self.youtube_panel = YouTubeSettingsPanel()
         self.subtitles_panel = SubtitlesSettingsPanel(suppress_optional_startup=self._suppress_optional_startup)
@@ -528,7 +544,10 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
             ),
             (
                 self.tr("Mining"),
-                (("filtering", self.tr("Filtering"), self.filtering_panel),),
+                (
+                    ("mining_language", self.tr("Mining Language"), self.mining_language_panel),
+                    ("filtering", self.tr("Filtering"), self.filtering_panel),
+                ),
             ),
             (
                 self.tr("Integrations"),
@@ -713,6 +732,10 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
         self.filtering_panel.rebuild_known_words_requested.connect(self._on_rebuild_known_words)
         self.filtering_panel.manage_known_words_requested.connect(self._on_manage_known_words)
 
+        # Mining Language panel: the guarded switch proposal + the Korean pack.
+        self.mining_language_panel.mining_language_requested.connect(self.mining_language_requested)
+        self.mining_language_panel.ko_model_download_requested.connect(self._on_ko_model_download_clicked)
+
         # UI panel persists immediately on any change (live-preview model).
         self.ui_panel.state_changed.connect(self._on_theme_state_changed)
         self.ui_panel.font_scale_changed.connect(self._on_font_scale_changed)
@@ -794,13 +817,8 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
                     )
                 )
                 return
-            chain = list(scan_chain)
             entries = [AudioSourceEntry(kind="pack", pack_id=pack.pack_id, enabled=True) for pack in packs]
-            insert_at = next(
-                (index for index, entry in enumerate(chain) if entry.kind == "jpod101" and entry.enabled),
-                len(chain),
-            )
-            new_chain = tuple(chain[:insert_at] + entries + chain[insert_at:])
+            new_chain = insert_above_first_enabled_jpod101(scan_chain, entries)
             try:
                 self._persist_audio_chain_change(new_chain)
             except Exception as error:  # noqa: BLE001 - persistence boundary
@@ -913,6 +931,9 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
         """
         from PyQt6.QtWidgets import QComboBox, QDoubleSpinBox, QLineEdit, QListWidget, QSpinBox
 
+        # mining_language_panel is deliberately absent: its combo proposes a
+        # guarded switch which commits its own config, so arming the debounce
+        # would re-save the pre-switch panel state on top of it.
         panels: tuple[QWidget, ...] = (
             self.anki_panel,
             self.media_panel,
@@ -990,6 +1011,15 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
         self.subtitles_panel.set_cuda_pack_status(self.tr("Downloading…"))
         self.cuda_pack_download_requested.emit()
 
+    def _on_ko_model_download_clicked(self) -> None:
+        """Set a pending status and re-emit so the caller can start the download.
+
+        Mirrors :meth:`_on_cuda_pack_download_clicked`: the download itself is
+        owned by the caller (MainWindow / background_tasks).
+        """
+        self.mining_language_panel.set_ko_model_status(self.tr("Downloading…"))
+        self.ko_model_download_requested.emit()
+
     def _on_vad_pack_download_clicked(self) -> None:
         """Set a pending status and re-emit so the caller can start the download.
 
@@ -1020,6 +1050,10 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
     def set_cuda_pack_status(self, text: str) -> None:
         """Forward a GPU-pack download status line to the Subtitles panel."""
         self.subtitles_panel.set_cuda_pack_status(text)
+
+    def set_ko_model_status(self, text: str) -> None:
+        """Forward a Korean model download status line to the Filtering panel."""
+        self.mining_language_panel.set_ko_model_status(text)
 
     def set_vad_pack_status(self, text: str) -> None:
         """Forward a VAD-pack download status line to the Subtitles panel."""
@@ -1136,11 +1170,27 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
             # Update settings — standalone checkbox outside all panels.
             self.check_for_updates_checkbox.setChecked(self.config.check_for_updates)
 
+            # Also outside _save_panels — it writes no field, so its repaint is
+            # here rather than in the contribute fold.
+            self.mining_language_panel.load_from_config(self.config)
+
             # UI panel is outside _save_panels (it persists via its own signals),
             # so it owns its whole repaint here — signal-safe by construction.
             self.ui_panel.load_from_config(self.config)
         finally:
             self._loading = False
+
+    def set_mining_language(self, code: str) -> None:
+        """Point the selector at the language that is actually live.
+
+        Also re-indexes search. The window calls this after adopting the new
+        config, so the language gate has already moved its rows by now, and the
+        index carries a visibility verdict that is otherwise a switch out of
+        date — the incoming language's rows on screen and unsearchable, the
+        outgoing language's gone and still listed.
+        """
+        self.mining_language_panel.set_mining_language(code)
+        self.refresh_setting_search_index()
 
     def open_subtab(self, key: str) -> None:
         """Switch the settings navigator to the destination named by ``key``.
@@ -1178,6 +1228,7 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
             self.audio_panel,
             self.frequency_panel,
             self.pitch_panel,
+            self.mining_language_panel,
             self.filtering_panel,
             self.youtube_panel,
             self.subtitles_panel,
@@ -1217,12 +1268,18 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
         an anchor id self-locating: ``filtering.max_frequency_spinbox`` names
         both the page to open and the control to focus. This tab's own anchors
         get no page — they sit below the navigator and are always on screen.
+
+        Each source names the surface its anchors are laid out on, which is what
+        the index resolves visibility against: the language gate hides rows on
+        the panel, and only a panel-relative check sees that while the tab is
+        still unshown.
         """
         sources = [
             SettingSearchSource(
                 page_key="",
                 breadcrumb=self.tr("Settings"),
                 anchors=super().setting_anchors(),
+                host=self,
             )
         ]
         for host in self.setting_anchor_hosts():
@@ -1232,24 +1289,39 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
                     page_key=key,
                     breadcrumb=self._page_breadcrumbs[key],
                     anchors=host.setting_anchors(),
+                    # Every host is a FormPanel; SettingAnchorHost is the mixin
+                    # in front of the Qt base, so the widget half needs saying.
+                    host=cast("QWidget", host),
                 )
             )
         return tuple(sources)
 
     def setting_search_entries(self) -> tuple[SettingSearchEntry, ...]:
-        """The current search index, in navigator order."""
+        """Every addressable setting, in navigator order.
+
+        The address book, not the result list: :meth:`jump_to_setting` resolves
+        System Health's Fix deep links against it, and those must keep landing
+        whatever the active language hides.
+        """
         return tuple(self._search_entries.values())
 
     def refresh_setting_search_index(self) -> None:
         """Rebuild the search index from the anchors registered right now.
 
-        Called once at the end of construction, when the translators are in
-        place. Call it again after registering or dropping anchors; nothing
-        rebuilds it implicitly, because nothing else knows when the set changed.
+        Called at the end of construction, when the translators are in place,
+        and again whenever the mining language changes — the gate moves rows,
+        and visibility is resolved at index time. Call it too after registering
+        or dropping anchors; nothing rebuilds it implicitly, because nothing
+        else knows when the set changed.
+
+        The two halves are deliberately different sets. Everything stays
+        addressable by id; only what is on screen is offered as a result,
+        because search reveals nothing and a jump to a hidden control scrolls,
+        focuses and flashes something the user cannot see.
         """
         entries = build_entries(self.setting_search_sources())
         self._search_entries = {entry.stable_id: entry for entry in entries}
-        self.search_box.set_entries(entries)
+        self.search_box.set_entries(tuple(entry for entry in entries if entry.visible))
 
     def jump_to_setting(self, stable_id: str) -> None:
         """Open the page holding ``stable_id`` and reveal that exact control.
@@ -2053,6 +2125,8 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
         words after it was already synced requires a full rebuild. The next
         mining run re-syncs from Anki with the current exclusions applied.
         """
+        from anki_miner.gui.utils.service_factory import resolve_known_words_db_path
+
         confirm = QMessageBox.question(
             self,
             self.tr("Rebuild Known Words DB"),
@@ -2068,7 +2142,7 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
             return
 
         try:
-            db = KnownWordDB(self.config.known_words_db_path)
+            db = KnownWordDB(resolve_known_words_db_path(self.config))
         except Exception as error:  # noqa: BLE001 - preserve the existing constructor boundary
             self._on_rebuild_known_words_error(str(error))
             return
@@ -2114,11 +2188,16 @@ class SettingsTab(ScreenIssueHost, SettingAnchorHost, QWidget):
 
     def _on_manage_known_words(self) -> None:
         """Open the Manage Known Words dialog (Issue #42)."""
+        from anki_miner.gui.utils.service_factory import resolve_known_words_db_path
         from anki_miner.gui.widgets.dialogs.known_words_dialog import KnownWordsManagerDialog
+        from anki_miner.languages.registry import config_language, get_profile
 
         try:
-            db = KnownWordDB(self.config.known_words_db_path)
-            KnownWordsManagerDialog(db, self).exec()
+            db = KnownWordDB(resolve_known_words_db_path(self.config))
+            language = config_language(self.config)
+            KnownWordsManagerDialog(
+                db, self, language=language, content_style=get_profile(language).content_style
+            ).exec()
         except Exception as e:  # noqa: BLE001 — surface any DB failure to the user
             self.show_screen_issue(
                 ScreenIssue(

@@ -194,6 +194,30 @@ def _clear_resolver_caches():
         _mod._CACHE.clear()
 
 
+@pytest.fixture(autouse=True)
+def _clear_tagger_provider_cache():
+    """Reset ``languages.tagger_provider._TAGGERS`` around every test.
+
+    Same leaked-global class as ``_clear_resolver_caches`` above, and the
+    process-wide sibling of ``tests/unit/languages/test_tagger_provider.py``'s
+    own ``_clear_tagger_cache``. The provider's cache is never evicted in
+    production, so once ANY test warms ``_TAGGERS["ja"]`` every later test on
+    the same ``--dist loadfile`` worker gets the cached tokenizer and never
+    reaches its own monkeypatched construction — which silently defanged
+    ``tests/unit/test_prewarm_worker.py::test_prewarm_swallows_tagger_failure``
+    (its failing ``get_shared_tagger`` was never called). Clearing here restores
+    that pre-existing coverage without touching the pre-existing test.
+
+    Cheap: the ja branch delegates to ``services.tagger.get_shared_tagger``,
+    whose own singleton keeps fugashi construction amortized across the run.
+    """
+    from anki_miner.languages import tagger_provider
+
+    tagger_provider._TAGGERS.clear()
+    yield
+    tagger_provider._TAGGERS.clear()
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _isolate_anki_home_session(tmp_path_factory):
     """Session-wide SAFETY FLOOR: home/CONFIG_FILE never resolve to the real
@@ -520,6 +544,19 @@ def _reset_theme_state():
     preview_mod = sys.modules.get("anki_miner.gui.widgets.enhanced.theme_preview")
     if preview_mod is not None:
         preview_mod.clear_thumbnail_cache()
+    # The third leak on the same worker, and the one the two resets above miss:
+    # ``Theme.apply_to_app`` installs the compiled sheet on the QApplication,
+    # which outlives every reset here. Its ``*[japanese="..."]`` and ``QWidget``
+    # rules then rewrite the font of any widget a later test builds -- a widget
+    # asserting ``Sans Serif`` reads ``Noto Sans CJK JP`` instead, and only when
+    # scheduling happens to place a theme-applying file first. Same guarded
+    # lookup as above: QtWidgets is read from sys.modules so a non-GUI test pays
+    # no PyQt import.
+    qt_widgets = sys.modules.get("PyQt6.QtWidgets")
+    if qt_widgets is not None:
+        app = qt_widgets.QApplication.instance()
+        if app is not None and app.styleSheet():
+            app.setStyleSheet("")
     yield
 
 

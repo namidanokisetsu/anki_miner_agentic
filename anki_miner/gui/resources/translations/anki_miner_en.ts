@@ -458,6 +458,38 @@
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Measure Word Field</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Auxiliary Data Fields</source>
         <translation type="unfinished" />
     </message>
@@ -696,6 +728,18 @@ Continue anyway?</source>
 </context><context>
     <name>AudioPackImportFlow</name>
     <message>
+        <source>Scanning folder for audio packs…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Scanning %1 …</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>That folder could not be scanned.</source>
         <translation type="unfinished" />
     </message>
@@ -736,10 +780,6 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
     </message>
     <message>
         <source>The import finished, but the settings could not be updated.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Cancel</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -1660,6 +1700,14 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Auto-update the bundled yt-dlp downloader, update it on demand, or point at your own binary.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Mine Japanese, Korean or Chinese</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -3880,6 +3928,10 @@ Files on disk will be left untouched because the folder could not be proven to b
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
         <translation type="unfinished" />
     </message>
@@ -4333,6 +4385,22 @@ Files on disk will be left untouched because the folder could not be proven to b
 </context><context>
     <name>FilteringSettingsPanel</name>
     <message>
+        <source>Exclude hangul-only words</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Exclude words containing hanja</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Skip words written entirely in hangul. Leaves the deck to words written with hanja.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Skip words that contain any hanja character, keeping the deck to plain hangul vocabulary.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Word Frequency</source>
         <translation type="unfinished" />
     </message>
@@ -4565,6 +4633,26 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Script Variants</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Simplified (简体)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Traditional (繁體)</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Character Set</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Which spelling the card front and the dictionary lookup prefer.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>i+1 Sentence Filter</source>
         <translation type="unfinished" />
     </message>
@@ -4634,6 +4722,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     </message>
     <message>
         <source>Wrap the mined word in &amp;lt;b&amp;gt;...&amp;lt;/b&amp;gt; inside the Sentence and SentenceFurigana fields. Match is the exact MeCab span of the mined morpheme, so duplicated surfaces in a sentence only bold the actually-mined occurrence.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Colour the reading by tone</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Wraps each pinyin syllable in a tone class so the card styling can colour it.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -4816,6 +4912,14 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Mining language:</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Mining language</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Theme:</source>
         <translation type="unfinished" />
     </message>
@@ -4833,6 +4937,10 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Manage profiles…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Mining language: %1. Opens the selector in Settings.</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -4982,6 +5090,64 @@ Add %3 word(s) to your known list?</source>
     </message>
     <message>
         <source>Remove ALL words you added to the local known words list? This cannot be undone. The Anki-synced cache is not affected.</source>
+        <translation type="unfinished" />
+    </message>
+</context><context>
+    <name>KoModelDownloadWorker</name>
+    <message>
+        <source>Downloading the Korean model…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Korean model installed successfully.</source>
+        <translation type="unfinished" />
+    </message>
+</context><context>
+    <name>LanguageSwitch</name>
+    <message>
+        <source>Switch mining language</source>
+        <translation type="unfinished" />
+    </message>
+    <message numerus="yes">
+        <source>Switching to %1 discards %n queued item(s), on screen and in the copy saved for the next launch. Continue?</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
+    <message>
+        <source>First time mining this language</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>You have not mined %1 before.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>The known-words scan reads every deck that is not excluded, so words in %1 would count as already known. Exclude them from this language?</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Exclude these decks</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Set up resources…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>That mining language is not available in this build.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Settings are busy. Nothing was switched.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Mining is running. Stop it, then switch language.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Could not switch to %1: %2. Nothing was switched.</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -5657,6 +5823,40 @@ Continue?</source>
         <translation type="unfinished" />
     </message>
 </context><context>
+    <name>MiningLanguageSettingsPanel</name>
+    <message>
+        <source>Language</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Mining Language</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>The language you mine. Separate from the interface language (Settings -&gt; Appearance &amp; Language). Switching swaps dictionaries, filters, deck and card fields to that language's own settings.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Download Korean model</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Korean model</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Installed</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Not installed</source>
+        <translation type="unfinished" />
+    </message>
+</context><context>
     <name>MiningTabBase</name>
     <message>
         <source>Failed: %1 — %2</source>
@@ -5994,6 +6194,10 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Mining or card backfill is still using the dictionaries. Stop it and try again.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>That profile mines another language and the queues still hold work. Nothing was switched.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -6883,6 +7087,24 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
 </context><context>
+    <name>ResourceChain</name>
+    <message>
+        <source>Audio pack '%1' is for %2; skipped</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Dictionary '%1' is for %2; skipped</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Frequency source '%1' is for %2; skipped</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Pitch source '%1' is for %2; skipped</source>
+        <translation type="unfinished" />
+    </message>
+</context><context>
     <name>ResourceDownloadDialog</name>
     <message>
         <source>Starting download…</source>
@@ -7033,6 +7255,10 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Download recommended resources</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No downloadable resources are recommended for this language — import a Yomitan dictionary in Settings → Dictionaries and a frequency list in Settings → Frequency.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -7391,6 +7617,10 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Mining</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Mining Language</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -7932,15 +8162,23 @@ Your installed dictionaries, audio, frequency lists, and theme are kept.</source
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Japanese</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Input</source>
         <translation type="unfinished" />
     </message>
     <message>
         <source>Language:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Japanese</source>
         <translation type="unfinished" />
     </message>
     <message>

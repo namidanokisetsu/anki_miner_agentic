@@ -13,6 +13,8 @@ first.
 import contextlib
 import logging
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, TypedDict, cast
 
 from PyQt6.QtCore import QCoreApplication
 
@@ -21,6 +23,8 @@ from anki_miner.config.paths import ANKI_MINER_HOME
 from anki_miner.interfaces.expression_audio import ExpressionAudioFetcher
 from anki_miner.interfaces.presenter import PresenterProtocol
 from anki_miner.interfaces.sentence_audio import SentenceAudioFetcher
+from anki_miner.languages.profile import LookupStrategy
+from anki_miner.languages.registry import config_language, get_profile
 from anki_miner.orchestration.episode_processor import EpisodeProcessor
 from anki_miner.services.anki_service import AnkiService
 from anki_miner.services.audio_packs.fetcher import LocalAudioPackFetcher
@@ -131,6 +135,55 @@ def _load_dict_registry(
     return registry
 
 
+class _LoadResultKwarg(TypedDict, total=False):
+    """The ``load_result=`` keyword bundle a chain-build call is splatted with."""
+
+    load_result: ServiceLoadResult
+
+
+def _load_result_kwarg(config: AnkiMinerConfig, load_result: ServiceLoadResult | None) -> _LoadResultKwarg:
+    """``{"load_result": sink}``, or nothing at all for a Japanese session.
+
+    The four chain builders take the sink only to report a slot stamped for
+    another mining language — a state a Japanese session cannot reach through
+    the UI, since the chains are language-scoped config and every legacy slot
+    reads "ja". Omitting the keyword is therefore behaviour-neutral for JA and
+    keeps the call byte-identical to the pre-transition one, including for the
+    pre-existing test doubles that mirror a builder's exact signature
+    (``test_service_factory_no_dictionary_warning._FakeRegistry``). Same shape
+    and same reason as ``services/_sqlite_index.language_kwarg``.
+    """
+    if load_result is None or config_language(config) == "ja":
+        return {}
+    return {"load_result": load_result}
+
+
+class _LookupKwarg(TypedDict, total=False):
+    """The ``lookup=`` keyword bundle a ``DefinitionService`` call is splatted with."""
+
+    lookup: LookupStrategy
+
+
+def _lookup_kwarg(config: AnkiMinerConfig) -> _LookupKwarg:
+    """``{"lookup": strategy}``, or nothing at all for the default JA strategy.
+
+    ``DefinitionService``'s ``lookup=None`` default *is* the JA candidate ladder
+    and the JA strategy is a pure delegate to it, so for Japanese the two calls
+    are the same behaviour — and only the shorter one is byte-identical to the
+    pre-transition call. That matters here because pre-existing tests pin the
+    exact JA construction shape (``assert_called_once_with(config,
+    providers=..., registry=...)``), which any extra keyword would break; task
+    1A.4's controller ruling therefore keeps the JA path byte-identical and
+    passes the keyword only for a non-JA profile. Mirrors Stage 0's
+    ``services/_sqlite_index.language_kwarg``.
+
+    Gated on the strategy *object*, not on ``config.language`` — outside
+    ``anki_miner/languages/`` there are no language-code checks.
+    """
+    lookup = get_profile(config_language(config)).lookup
+    return {} if lookup is get_profile("ja").lookup else {"lookup": lookup}
+
+
 def build_definition_service(
     config: AnkiMinerConfig,
     load_result: ServiceLoadResult | None = None,
@@ -159,8 +212,10 @@ def build_definition_service(
     """
     if registry is None:
         registry = _load_dict_registry(config, load_result)
-    providers = registry.build_provider_chain(config)
-    definition_service = DefinitionService(config, providers=providers, registry=registry)
+    providers = registry.build_provider_chain(config, **_load_result_kwarg(config, load_result))
+    # The single DefinitionService construction site, so injecting here covers
+    # create_services, create_shared_lookup_services and the PrewarmWorker.
+    definition_service = DefinitionService(config, providers=providers, registry=registry, **_lookup_kwarg(config))
 
     # Fully-disabled chain: nothing below the indexed gate can fire, so warn
     # here — otherwise mining silently produces definition-less cards.
@@ -233,7 +288,9 @@ def _build_pitch_service(
     registry = PitchSourceRegistry(config.pitch_root)
     try:
         registry.load()
-        loaded_providers = [p for p in registry.build_sources(config) if p.load()]
+        loaded_providers = [
+            p for p in registry.build_sources(config, **_load_result_kwarg(config, load_result)) if p.load()
+        ]
         providers_by_id: dict[str, list] = {}
         for provider in loaded_providers:
             providers_by_id.setdefault(provider.source_id, []).append(provider)
@@ -287,7 +344,7 @@ def _build_frequency_service(
     registry = FrequencySourceRegistry(config.freqs_root)
     try:
         registry.load()
-        providers = [p for p in registry.build_sources(config) if p.load()]
+        providers = [p for p in registry.build_sources(config, **_load_result_kwarg(config, load_result)) if p.load()]
         if not providers:
             # Nothing enabled / on-disk: no providers loaded. Not an error —
             # an enabled chain entry can still point at a missing on-disk index.
@@ -459,6 +516,10 @@ def _build_expression_audio_fetcher(
         A :class:`ChainedExpressionAudioFetcher` wrapping the resolved list.
         The list may be empty (all entries disabled) — the chain returns None.
     """
+    # One profile read for the whole chain: the gtts language code, the word
+    # stem prefix and the custom-source {language} value all come from here, so
+    # no member has to know the language code itself.
+    audio = get_profile(config_language(config)).audio
     audio_cache_root = ANKI_MINER_HOME / "audio_cache"
     jpod_cache = audio_cache_root / "jpod101"
     googletts_cache = audio_cache_root / "googletts"
@@ -469,7 +530,7 @@ def _build_expression_audio_fetcher(
     pack_fetchers_by_id: dict[str, LocalAudioPackFetcher] = {}
     registry = pack_registry if pack_registry is not None else _load_audio_pack_registry(config)
     if registry is not None:
-        for pack_fetcher in registry.build_fetcher_chain(config, pack_cache):
+        for pack_fetcher in registry.build_fetcher_chain(config, pack_cache, **_load_result_kwarg(config, load_result)):
             pack_fetchers_by_id[pack_fetcher.pack_id] = pack_fetcher
 
     fetchers: list[ExpressionAudioFetcher] = []
@@ -488,6 +549,8 @@ def _build_expression_audio_fetcher(
                 GoogleTranslateAudioFetcher(
                     cache_dir=googletts_cache,
                     delay=config.expression_audio_delay,
+                    gtts_lang=audio.gtts_lang,
+                    cache_stem_prefix=audio.cache_stem_prefix,
                 )
             )
         elif entry.kind in ("custom", "custom_json"):
@@ -505,6 +568,7 @@ def _build_expression_audio_fetcher(
                     cache_dir=audio_cache_root / f"custom_{slug}",
                     file_prefix=f"custom_{slug}",
                     delay=config.expression_audio_delay,
+                    language=audio.custom_fetcher_language,
                 )
             )
         elif entry.kind == "pack":
@@ -526,7 +590,7 @@ def _build_expression_audio_fetcher(
                 continue
             fetchers.append(resolved_pack)  # duplicate pack_ids pass through (same object queried twice)
 
-    return ChainedExpressionAudioFetcher(fetchers)
+    return ChainedExpressionAudioFetcher(fetchers, candidates=audio.candidates)
 
 
 def create_expression_audio_fetcher(
@@ -560,13 +624,77 @@ def _build_sentence_audio_fetcher(config: AnkiMinerConfig) -> SentenceAudioFetch
     if not config.reading_tts_enabled:
         return ChainedSentenceAudioFetcher([])
 
+    audio = get_profile(config_language(config)).audio
     cache_dir = ANKI_MINER_HOME / "audio_cache" / "sentence_tts"
     fetchers: list[SentenceAudioFetcher] = []
     if config.reading_tts_google_enabled:
-        fetchers.append(GoogleSentenceTtsFetcher(cache_dir=cache_dir, delay=config.expression_audio_delay))
-    if config.reading_tts_papago_enabled:
-        fetchers.append(PapagoSentenceTtsFetcher(cache_dir=cache_dir, delay=config.expression_audio_delay))
+        fetchers.append(
+            GoogleSentenceTtsFetcher(
+                cache_dir=cache_dir,
+                delay=config.expression_audio_delay,
+                gtts_lang=audio.gtts_lang,
+                cache_stem_prefix=audio.sentence_cache_stem_prefix,
+            )
+        )
+    # Papago speaks Japanese and Korean only, so membership follows the
+    # profile's own speaker rather than the config bool alone. Coercing a
+    # missing speaker to the JA voice would read a Chinese sentence in
+    # Japanese; a language with no Papago voice simply has no Papago leg.
+    if config.reading_tts_papago_enabled and audio.papago_speaker:
+        fetchers.append(
+            PapagoSentenceTtsFetcher(
+                cache_dir=cache_dir,
+                delay=config.expression_audio_delay,
+                cache_stem_prefix=audio.sentence_cache_stem_prefix,
+                speaker=audio.papago_speaker,
+            )
+        )
     return ChainedSentenceAudioFetcher(fetchers)
+
+
+def resolve_known_words_db_path(config: AnkiMinerConfig) -> Path:
+    """The known-words database for the active mining language.
+
+    Japanese keeps ``config.known_words_db_path`` verbatim — same file, same
+    bytes, no migration. Every other language gets a sibling
+    ``<stem>.<lang><suffix>``, so 学生 being known in Japanese never marks it
+    known in Chinese and no WHERE-audit of Card Backfill / Deck Filter is
+    needed: each receives the right database by construction.
+
+    Sole derivation site. Never inline this rule at a call site.
+    """
+    base = config.known_words_db_path
+    if config.language == "ja":
+        return base
+    return base.with_name(f"{base.stem}.{config.language}{base.suffix}")
+
+
+def _create_subtitle_parser(config: AnkiMinerConfig, **lookups: Any) -> SubtitleParserService:
+    """Build the run's parser through the active language's profile factory.
+
+    Without this the composition root hands every language the Japanese parser
+    branch: no ``mined_form_policy`` (card fronts fall back to
+    ``models.word.select_mined_form``) and no ``reading_support`` (the reading
+    field is read off ``feature.kana``, empty on every ``LanguageToken``). Both
+    failures are silent — wrong cards, not an exception.
+
+    Dispatch is gated on the factory *object*, never on ``config.language``, the
+    way ``_lookup_kwarg`` gates on the strategy object. For the ja profile the
+    construction stays the literal ``SubtitleParserService(...)`` call this
+    module has always made: ja's ``_create_parser`` is a bare forward to the
+    same class, so the two branches build the same object, but only the direct
+    call reaches this module's ``SubtitleParserService`` attribute — which
+    ``test_batch_queue_worker.test_one_subtitle_parser_service_for_the_whole_queue``
+    patches to count the parsers a queue run builds. A profile-routed ja build
+    bypasses that patch and the run looks parser-less.
+
+    Every profile returns the same concrete class (the factories inject
+    policies, they do not subclass), which is what the ``cast`` records.
+    """
+    factory = get_profile(config_language(config)).create_parser
+    if factory is get_profile("ja").create_parser:
+        return SubtitleParserService(config, **lookups)
+    return cast(SubtitleParserService, factory(config, **lookups))
 
 
 def create_services(
@@ -679,7 +807,7 @@ def create_services(
         term_common_lookup = definition_service.offline_term_commonness if has_indexed_dict else None
         term_rules_lookup = definition_service.offline_deinflection_terms_exist if has_indexed_dict else None
         name_lookup = wordset_service.excluded_terms if wordset_service is not None else None
-        subtitle_parser = SubtitleParserService(
+        subtitle_parser = _create_subtitle_parser(
             config,
             term_lookup=term_lookup,
             name_lookup=name_lookup,
@@ -691,10 +819,20 @@ def create_services(
     # Share the parser's tagger with the word filter so i+1 swap can
     # rebuild bolded sentence fields without spinning up a second tagger
     # (fugashi.Tagger initialization is non-trivial).
-    word_filter = WordFilterService(config, tagger=subtitle_parser.tagger)
+    word_filter = WordFilterService(
+        config,
+        tagger=subtitle_parser.tagger,
+        mined_form=get_profile(config_language(config)).mined_form,
+        script=get_profile(config_language(config)).script,
+    )
     media_extractor = MediaExtractorService(config)
     if anki_service is None:
-        anki_service = AnkiService(config)
+        # Injected from the profile this factory already resolved, the way
+        # WordFilterService's script is: the composition root is the one site a
+        # stubbed non-ja profile is reachable from (ruling R6 keeps unregistered
+        # codes out of the registry). The other fourteen AnkiService sites take
+        # the constructor's own default, which resolves the same profile.
+        anki_service = AnkiService(config, script=get_profile(config_language(config)).script)
     youtube_fetcher = YouTubeFetcherService(config=config)
     # Scanned once here, then handed to both consumers: the fetcher chain that
     # resolves pack entries, and Services, whose EpisodeProcessor reads it for
@@ -731,7 +869,7 @@ def create_services(
     # users who never touch the feature get no empty file.
     known_word_db: KnownWordDB | None = None
     try:
-        known_word_db = KnownWordDB(config.known_words_db_path)
+        known_word_db = KnownWordDB(resolve_known_words_db_path(config))
         if config.use_known_words_db:
             known_word_db.initialize()
     except MemoryError:
@@ -839,6 +977,10 @@ def create_episode_processor(
         pitch_registry=services.pitch_registry,
         audio_pack_registry=services.audio_pack_registry,
         owns_lookup_services=shared_lookup is None,
+        # Resolved once here so both processors of a shared-lookup run agree on
+        # one profile instance (the registry caches per code, so they would
+        # anyway — passing it keeps the composition root the single resolver).
+        profile=get_profile(config_language(config)),
     )
 
 

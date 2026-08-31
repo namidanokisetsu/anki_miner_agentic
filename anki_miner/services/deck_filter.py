@@ -42,8 +42,8 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from anki_miner.languages.registry import config_language, get_profile
 from anki_miner.models import TokenizedWord
-from anki_miner.services.anki_service import _JAPANESE_RE
 from anki_miner.services.card_backfiller import (
     _chunks,
     _escape_anki_search,
@@ -53,6 +53,7 @@ from anki_miner.services.card_backfiller import (
 from anki_miner.services.frequency.multi_frequency_service import harmonic_rank, min_rank
 from anki_miner.services.morphology import extract_lemma
 from anki_miner.services.subtitle_parser import _differs_by_okurigana_only
+from anki_miner.services.word_filter import enabled_script_options
 from anki_miner.utils.logging_ext import log_summary
 from anki_miner.utils.text_utils import generate_reading, katakana_to_hiragana
 
@@ -326,6 +327,7 @@ def scan_deck_filter(
     seen_expressions: set[str] = set()
     scanned = 0
     tagger = getattr(services, "tagger", None)
+    script = get_profile(config_language(config)).script
 
     for chunk in _chunks(note_ids, _NOTES_CHUNK):
         if is_cancelled and is_cancelled():
@@ -347,7 +349,9 @@ def scan_deck_filter(
             if not expression:
                 drops["no_expression"] += 1
                 continue
-            if not _JAPANESE_RE.search(expression):
+            if not script.contains_target_script(expression):
+                # Persisted plan key read by deck_filter_worker and pinned by
+                # tests/unit/test_deck_filter.py — never renamed.
                 drops["not_japanese"] += 1
                 continue
             if expression in seen_expressions:
@@ -406,13 +410,15 @@ def scan_deck_filter(
         words = word_filter.filter_by_word_lists(words, word_list_service)
         drops["blacklist"] += before - len(words)
 
-    # Script type (hiragana-only / katakana-only forms).
-    if config.exclude_hiragana_only_words or config.exclude_katakana_only_words:
+    # Script type (for ja: hiragana-only / katakana-only forms).
+    script_options = enabled_script_options(get_profile(config_language(config)).script, config)
+    if script_options:
         before = len(words)
         words = word_filter.filter_by_script_type(
             words,
             config.exclude_hiragana_only_words,
             config.exclude_katakana_only_words,
+            enabled_options=script_options,
         )
         drops["script_type"] += before - len(words)
 

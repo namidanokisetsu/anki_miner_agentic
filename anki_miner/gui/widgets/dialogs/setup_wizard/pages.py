@@ -26,6 +26,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QLineEdit,
     QVBoxLayout,
+    QWidget,
     QWizardPage,
 )
 
@@ -878,16 +879,22 @@ class ResourcesPage(_LiveCheckPage):
         link.linkActivated.connect(lambda: _open_url(RESOURCES_HELP_URL))
         layout.addWidget(link)
 
-        # Built from the catalog, never hand-listed: a spec added to
-        # RECOMMENDED_DEFAULT_SET has to appear here without touching this page.
-        from anki_miner.services.resource_catalog import RECOMMENDED_DEFAULT_SET  # noqa: PLC0415
+        # Built from the active language's catalog, never hand-listed: a spec
+        # added to a profile's catalog has to appear here without touching this
+        # page. ja's catalog IS RECOMMENDED_DEFAULT_SET, so the ja wizard is
+        # byte-identical to the pre-multilanguage one.
+        from anki_miner.languages.registry import config_language, get_profile  # noqa: PLC0415
 
         # _sync_download_button reads _download_running, and the toggled
         # connection below deliberately comes AFTER setChecked: a fresh
         # unchecked box emits toggled the first time it is checked, and that
         # slot touches download_button, which this loop runs before.
         self._download_running = False
-        self._specs = list(RECOMMENDED_DEFAULT_SET)
+        # config_language, never the raw field: a stored code whose profile this
+        # build cannot supply — a language whitelisted in config but with its
+        # engine extra absent — is legal on disk, and raising here would make the
+        # whole wizard unconstructible on first run.
+        self._specs = list(get_profile(config_language(wizard.working_config())).catalog)
         self.resource_checks: dict[str, QCheckBox] = {}
         for spec in self._specs:
             noun = _RESOURCE_KIND_NOUNS.get(spec.kind)
@@ -912,6 +919,23 @@ class ResourcesPage(_LiveCheckPage):
         self.status_label.setWordWrap(True)
         layout.addWidget(self.status_label)
 
+        # Derived, never assumed: the button was born enabled, and the only
+        # thing that ever re-derived it was a checkbox toggling. A language
+        # whose catalog is empty has no checkbox to toggle, so it kept an
+        # enabled button over a handler that returns silently at :1070.
+        self._sync_download_button()
+        if not self._specs:
+            # ko's catalog is empty on purpose (languages/ko/catalog.py): no
+            # Korean resource is both redistributable by link and shaped like
+            # an importer here. Saying so beats a dead button, and the sentence
+            # has to name where the resources DO come from.
+            self.status_label.setText(
+                self.tr(
+                    "No downloadable resources are recommended for this language — import a Yomitan "
+                    "dictionary in Settings → Dictionaries and a frequency list in Settings → Frequency."
+                )
+            )
+
         # Kept apart from status_label: one reports how the *download* ended,
         # the other what the app can *do now*. A single label would let a
         # finished download overwrite the readiness verdict that gates Next.
@@ -934,6 +958,12 @@ class ResourcesPage(_LiveCheckPage):
         self.pitch_label.setWordWrap(True)
         layout.addWidget(self.pitch_label)
 
+        # Pitch accent is a Japanese resource family; a language without the
+        # capability has no pitch row in its catalog and no verdict to report.
+        self._language_gate_pairs: list[tuple[QWidget, str]] = []
+        self._language_gate_pairs.append((self.pitch_label, "pitch"))
+        self._apply_language_gate()
+
         # Retained past the run's end: the terminal window offers Retry setup,
         # which calls back into the session. Dropping the reference on finish
         # would collect the session and leave that button inert.
@@ -947,12 +977,32 @@ class ResourcesPage(_LiveCheckPage):
         """Nothing ticked is not a run: an empty spec list reports success for no work."""
         self.download_button.setEnabled(bool(self.selected_specs()) and not self._download_running)
 
+    def _apply_language_gate(self) -> None:
+        """Re-derive the paired rows' visibility from the active language.
+
+        Re-applied on every page entry because the wizard can be re-entered
+        after a language switch. The gate is two-way and owns the whole
+        visibility of a paired widget, so a switch back re-shows the row.
+        """
+        from anki_miner.gui.utils.language_gate import apply_language_gate  # noqa: PLC0415
+        from anki_miner.languages.registry import config_language, get_profile  # noqa: PLC0415
+
+        capabilities = get_profile(config_language(self._wizard.working_config())).capabilities
+        apply_language_gate(self._language_gate_pairs, capabilities)
+
     def initializePage(self) -> None:
         """Ask the disk, every time the page is entered."""
+        self._apply_language_gate()
         self._recheck_resources()
 
     def isComplete(self) -> bool:
-        return self._dictionary_ready
+        # Nothing to download is nothing to block on. The dictionary gate exists
+        # so nobody finishes setup into a guaranteed-empty first mine (D26), and
+        # it holds wherever a dictionary is one button away. Where the catalog is
+        # empty that button does not exist, so the same gate is a wizard with no
+        # exit but Skip Setup — the page still reports what the disk has through
+        # dictionary_label, it just stops standing in the way.
+        return self._dictionary_ready or not self._specs
 
     # --- live dictionary readiness ---
 

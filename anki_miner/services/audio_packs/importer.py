@@ -12,8 +12,10 @@ from typing import Callable
 from anki_miner.config import paths as config_paths
 from anki_miner.exceptions import OperationCancelled, SetupError
 from anki_miner.services._sqlite_index import (
+    language_identity,
     open_readonly,
     prove_owned_slot,
+    read_slot_language,
     resolve_auto_store_id,
     resolve_managed_slot,
     write_ownership_marker,
@@ -100,6 +102,7 @@ def import_android_audio_db(
     progress: Callable[[str], None] | None = None,
     cancel_check: Callable[[], bool] | None = None,
     overwrite: bool = False,
+    language: str = "ja",
 ) -> AudioPackImportResult:
     """Register an external ``android.db`` without copying its multi-gigabyte blobs."""
     db_path = db_path.resolve()
@@ -116,7 +119,7 @@ def import_android_audio_db(
             dest_root,
             derive_pack_id(db_path.stem),
             "audio",
-            {"source_db": str(db_path)},
+            {"source_db": str(db_path), **language_identity(language)},
         )
     if pack_id == "jpod101":
         raise SetupError("Pack id 'jpod101' is reserved for the online JPod101 source")
@@ -149,6 +152,7 @@ def import_android_audio_db(
                 "entry_count": str(entry_count),
                 "audio_count": str(audio_count),
                 "schema_version": str(SCHEMA_VERSION),
+                "language": language,
                 "pack_dir": str(db_path.parent),
                 "source_db": str(db_path),
             },
@@ -183,6 +187,7 @@ def import_audio_pack(
     progress: Callable[[str], None] | None = None,
     cancel_check: Callable[[], bool] | None = None,
     overwrite: bool = False,
+    language: str = "ja",
 ) -> AudioPackImportResult:
     """Import an audio pack directory into ``dest_root/<pack_id>/index.sqlite``.
 
@@ -197,6 +202,8 @@ def import_audio_pack(
                       is aborted and any staging directory is cleaned up.
         overwrite: If True and the destination already exists it is replaced
                    atomically.  If False raises :exc:`SetupError`.
+        language: Mining language stamped into the index meta. Defaults to
+                  ``"ja"``, the pre-transition value for every existing caller.
 
     Returns:
         :class:`AudioPackImportResult` describing the completed import.
@@ -213,7 +220,7 @@ def import_audio_pack(
             dest_root,
             derive_pack_id(pack_dir.name),
             "audio",
-            {"pack_dir": str(pack_dir)},
+            {"pack_dir": str(pack_dir), **language_identity(language)},
         )
     if pack_id == "jpod101":
         # Reserved for the online JPod101 source: its cache files are named
@@ -286,7 +293,7 @@ def import_audio_pack(
         total_entries = bulk_insert(
             db_path,
             _rows_with_cancel(
-                rows,
+                _rows_with_progress(rows, progress, f"Parsing {fmt} pack —"),
                 cancel_check,
             ),
             on_malformed=_record_storage_malformed,
@@ -311,6 +318,7 @@ def import_audio_pack(
                 "format": fmt,
                 "entry_count": str(total_entries),
                 "schema_version": str(SCHEMA_VERSION),
+                "language": language,
                 "pack_dir": str(pack_dir),
             },
         )
@@ -349,6 +357,9 @@ def repair_audio_pack(
     cancel_check: Callable[[], bool] | None = None,
 ) -> AudioPackImportResult:
     """Explicitly repair ``pack_id``, retaining an invalid prior slot as quarantine."""
+    # Read the stamp before the rebuild: repair_managed_slot may quarantine the
+    # slot, and a re-import would otherwise fall back to the "ja" default.
+    language = read_slot_language(dest_root / pack_id)
     result = repair_managed_slot(
         pack_dir,
         dest_root,
@@ -361,6 +372,7 @@ def repair_audio_pack(
             progress=progress,
             cancel_check=cancel_check,
             overwrite=overwrite,
+            language=language,
         ),
     )
     purge_pack_cache(config_paths.ANKI_MINER_HOME / "audio_cache" / "local_packs", pack_id)
@@ -368,6 +380,22 @@ def repair_audio_pack(
 
 
 _CANCEL_BATCH_SIZE = 5000
+
+# An 80k-file pack parses for the better part of an hour on a cold Windows
+# disk; a running count is the user's only sign the import is alive.
+_PROGRESS_EVERY_ROWS = 500
+
+
+def _rows_with_progress(rows, progress: Callable[[str], None] | None, label: str):
+    """Wrap a row iterator to report a running entry count while parsing."""
+    if progress is None:
+        yield from rows
+        return
+
+    for count, row in enumerate(rows, 1):
+        yield row
+        if count % _PROGRESS_EVERY_ROWS == 0:
+            progress(f"{label} {count:,} entries …")
 
 
 def _rows_with_cancel(rows, cancel_check: Callable[[], bool] | None):

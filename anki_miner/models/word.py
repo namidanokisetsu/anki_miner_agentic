@@ -123,13 +123,6 @@ class TokenizedWord:
     # token had no orthBase (synthetic merged compounds, OOV) —
     # mined_form then falls back to lemma.
     orth_base: str = ""
-    # Exact dictionary headword selected by a dictionary-attested compound
-    # merge when it intentionally differs from the source span's spelling
-    # (むちゃ振り -> 無茶振り). Empty for ordinary words. Keeping this explicit
-    # avoids globally trusting UniDic's lemma for nouns, which can cross
-    # homographs (豪腕 -> 剛腕), while allowing the compound matcher to carry its
-    # stronger whole-span attestation through serialization and Agentic commit.
-    mined_form_override: str = ""
     expression_furigana: str = ""  # Furigana for expression, e.g. "食べる[たべる]"
     expression_reading: str = ""  # Plain kana reading of expression, e.g. "たべる"
     lemma_reading: str = ""  # Plain kana reading of the lemma, for audio retry
@@ -203,6 +196,16 @@ class TokenizedWord:
     # WordFilterService.expand_word_lines before phase 3 — the dialog stores
     # intent, the processor rebuilds text/spans/furigana.
     line_expansion: tuple[int, int] = (0, 0)
+    # The parser's resolved card front, set at the emit site. Non-empty means
+    # "already decided" — the profile's MinedFormPolicy answered, and for a
+    # non-ja token select_mined_form's JA POS table would answer wrongly
+    # (a Korean VV falls through to `return surface`). Empty on every
+    # hand-built TokenizedWord, which keeps the property's JA behaviour.
+    mined_form_override: str = ""
+    # Definition HTML fetched in phase 4, stashed for the non-ja render-hook
+    # pass only (EpisodeProcessor._apply_render_hooks). Always "" on every ja
+    # path — ja renders no hooks, so no ja card, filename or field changes.
+    definition_html: str = ""
 
     @property
     def bold_end(self) -> int:
@@ -263,13 +266,12 @@ class TokenizedWord:
         lemma plus a short colloquial vowel-elongation tail (``手ぇ`` → ``手``,
         ``気い`` → ``気``) folds to the lemma when its spelling or UniDic
         pronunciation proves elongation — see ``select_mined_form`` for the guards.
-        A non-empty ``mined_form_override`` is a narrower second carve-out: it
-        is emitted only by the dictionary-attested compound matcher after an
-        exact whole-headword hit, so it does not generalize noun lemma trust.
+        A non-empty ``mined_form_override`` carries the parser's already-resolved
+        language-profile answer. For Japanese compounds, this also preserves an
+        exact dictionary-attested headword such as ``むちゃ振り`` → ``無茶振り``
+        without generally trusting UniDic's noun lemmas.
         """
-        if self.mined_form_override:
-            return self.mined_form_override
-        return select_mined_form(
+        return self.mined_form_override or select_mined_form(
             self.pos,
             self.orth_base,
             self.lemma,

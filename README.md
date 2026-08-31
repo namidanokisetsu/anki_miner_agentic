@@ -31,7 +31,7 @@ When an agent is working in an existing checkout: **Reuse the active virtual env
 Give your agent access to this checkout, then paste:
 
 ```text
-Configure Anki Miner Agentic in this checkout. Read agentic-docs/agent-mining.md and skills/anki-miner-agent/SKILL.md. Reuse the active virtual environment and the GUI settings. Read deck, note-type, and field names from Anki instead of guessing them. Keep `write_target.enabled` false during setup. Validate and sync the learner profile, then register the two-tool MCP server.
+Configure Anki Miner Agentic in this checkout. Read agentic-docs/agent-mining.md and skills/anki-miner-agent/SKILL.md. Reuse the active virtual environment and the GUI settings. Read deck, note-type, and field names from Anki instead of guessing them. Keep write_target.enabled false during setup. Validate and sync the learner profile, then register the two-tool MCP server.
 ```
 
 `~/.anki_miner/agentic-agent.json` stores only learner mappings, the write target and enable switch, learner maturity, audio policy, storage path, and allowlisted enrichment-field mappings. Card count belongs to each request; mining policy and executable paths remain owned by the active GUI profile.

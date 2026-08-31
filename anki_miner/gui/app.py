@@ -2,8 +2,8 @@
 
 Hidden ``ANKI_MINER_SMOKE`` modes:
 
-* ``youtube``, ``asr``, and ``whispercpp`` validate frozen dependencies before
-  Qt starts.
+* ``youtube``, ``asr``, ``whispercpp`` and ``ja``/``ko``/``zh`` validate frozen
+  dependencies before Qt starts.
 * ``installer`` runs full GUI composition while suppressing optional startup
   work, validates installed-runtime invariants, and writes an atomic result
   marker before exiting.
@@ -67,6 +67,7 @@ from anki_miner.gui.widgets.reading_tab import ReadingTab
 from anki_miner.gui.widgets.settings_tab import SettingsTab
 from anki_miner.gui.widgets.subtitles_tab import SubtitlesTab
 from anki_miner.gui.widgets.video_tab import VideoTab
+from anki_miner.languages.registry import config_language, get_profile
 from anki_miner.services.startup_store_recovery import run_startup_store_recovery
 from anki_miner.services.stats_service import StatsService
 from anki_miner.services.validation_service import ValidationService
@@ -253,6 +254,55 @@ def _run_asr_bundled_smoke() -> int:
         print(f"BUNDLED_SMOKE_FAIL: {type(exc).__name__}: {exc}", file=sys.stderr)
         return 1
     print("BUNDLED_SMOKE_PASS: asr faster_whisper+ctranslate2 resolved")
+    return 0
+
+
+#: One line per mining language for the bundled language smoke. Short, real
+#: sentences: the point is that the tokenizer's packaged data files survived
+#: PyInstaller, which only a real segmentation proves.
+_LANGUAGE_SMOKE_LINES: dict[str, str] = {
+    "ja": "今日は良い天気ですね。",
+    "zh": "我今天早上吃了三个苹果。",
+    "ko": "학생이 밥을 먹었어요.",
+}
+
+
+def _run_language_bundled_smoke(code: str) -> int:
+    """Env-var-gated smoke path for a mining language's frozen tokenizer stack.
+
+    Triggered by ANKI_MINER_SMOKE=ja|ko|zh. Builds the profile, prewarms its
+    tokenizer, and parses one line — frozen data-file collection failures
+    (jieba's dict.txt, pypinyin's phrase data, unidic, the kiwi model) manifest
+    only in a bundle, and only a real parse walks them. Not a CLI surface: the
+    flag is hidden, env-var-only, and exits before any Qt init.
+    """
+    from anki_miner.config import AnkiMinerConfig
+    from anki_miner.languages.registry import get_profile
+    from anki_miner.languages.switching import switch_language
+    from anki_miner.languages.tagger_provider import get_tagger
+    from anki_miner.models.reading import ReadingUnit
+
+    try:
+        line = _LANGUAGE_SMOKE_LINES.get(code)
+        if line is None:
+            raise RuntimeError(f"no bundled smoke line for language {code!r}")
+        profile = get_profile(code)
+        config = AnkiMinerConfig() if code == "ja" else switch_language(AnkiMinerConfig(), code)
+        get_tagger(code)
+        parser = profile.create_parser(config)
+        words, _index, _counts = parser.parse_text_units(
+            [ReadingUnit(text=line, index=0, location_label="smoke")], False
+        )
+        if not words:
+            raise RuntimeError(f"{code}: tokenizer produced no words for the smoke line")
+        if profile.reading is not None and not any(w.expression_reading for w in words):
+            raise RuntimeError(f"{code}: reading support produced no reading")
+        # Exercises the lookup strategy's data too (OpenCC's dictionaries for zh).
+        profile.lookup.candidates(words[0].mined_form, words[0].orth_base, None)
+        print(f"BUNDLED_SMOKE_PASS: language {code} tokenized {len(words)} words")
+    except Exception as exc:  # noqa: BLE001 — bucket C: pre-Qt smoke reports terminal failure to stderr.
+        print(f"BUNDLED_SMOKE_FAIL: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -1003,6 +1053,31 @@ def _connect_cuda_pack_download(window: MainWindow, settings_tab: SettingsTab) -
     )
 
 
+def _connect_ko_model_download(window: MainWindow, settings_tab: SettingsTab) -> None:
+    """Wire the Mining Language panel's "Download Korean model" button to the worker.
+
+    The pack root is derived, not configured: it is a managed directory under the
+    app home like ``cuda_libs_root``, but the tokenizer has to find it without a
+    config in scope, so ``ko_model_installer`` owns the one definition and both
+    sides call it.
+    """
+
+    def _tail(request_arg: object, ok: bool, message: str) -> None:
+        settings_tab.mining_language_panel.notify_ko_model_download_finished()
+
+    def _start(request_arg: object, on_status: Callable[[str], None], on_finished: Callable[[bool, str], None]) -> None:
+        from anki_miner.services.ko_model_installer import ko_model_root
+
+        window.background_tasks.start_ko_model_download(ko_model_root(), on_status, on_finished)
+
+    _connect_download(
+        settings_tab.ko_model_download_requested,
+        set_status=settings_tab.set_ko_model_status,
+        start=_start,
+        on_finished_tail=_tail,
+    )
+
+
 def _connect_vad_pack_download(window: MainWindow, settings_tab: SettingsTab) -> None:
     """Wire the Subtitles panel's "Download silence removal" button to the worker.
 
@@ -1145,6 +1220,20 @@ def _rollback_workers_on_startup_fault(fn: Callable[[], None]) -> Callable[[], N
     return wrapped
 
 
+def _bind_stats_language(window: MainWindow, stats_service: StatsService) -> None:
+    """Keep the stats partition in step with the active mining language.
+
+    The service is constructed once and never rebuilt, but the language switch
+    is restart-free -- so the language is re-stamped on every config refresh
+    rather than captured at construction.
+    """
+
+    def _apply(config: AnkiMinerConfig) -> None:
+        stats_service.language = config.language
+
+    window.config_refreshed.connect(_apply)
+
+
 def compose_main_window(
     config: AnkiMinerConfig,
     *,
@@ -1157,7 +1246,8 @@ def compose_main_window(
     # Initialize stats service for analytics. ``.load()`` opens the SQLite
     # file; defer to after window.show() so the empty shell paints first
     # and the user sees feedback while disk I/O finishes.
-    stats_service = StatsService(window.get_config().stats_db_path)
+    stats_service = StatsService(window.get_config().stats_db_path, language=window.get_config().language)
+    _bind_stats_language(window, stats_service)
 
     # Create per-child presenters and progress callbacks to avoid cross-tab signal
     # pollution (Single/Batch wire presenter signals into their own log widgets).
@@ -1244,7 +1334,9 @@ def compose_main_window(
     register_mining_tab(window, reading_tab, reading_presenter, QCoreApplication.translate("MainWindow", "Reading"))
 
     # Analytics tab (non-mining: no presenter, no update_config wiring)
-    analytics_tab = AnalyticsTab(stats_service)
+    analytics_tab = AnalyticsTab(
+        stats_service, content_style=get_profile(config_language(window.get_config())).content_style
+    )
     window.tabs.addTab(analytics_tab, QCoreApplication.translate("MainWindow", "Analytics"))
 
     # Utilities tab (non-mining: no presenter). Nests Generate (SubtitleCreationTab)
@@ -1284,15 +1376,18 @@ def compose_main_window(
     window.background_tasks.ytdlp_update_result.connect(settings_tab.set_ytdlp_status_from_result)
 
     # Resource download buttons (ASR model, alass, CUDA pack, VAD pack, Vulkan
-    # model): each Subtitles-panel "Download …" button hands off to a background
-    # worker and refreshes the panel on finish. All five share the connect
+    # model, Korean model): each "Download …" button hands off to a background
+    # worker and refreshes its panel on finish. All six share the connect
     # skeleton in _connect_download; the per-tool builders carry the differences.
+    # Five sit on the Subtitles panel; the Korean model sits on Filtering, beside
+    # the mining-language selector it unlocks.
     for _connect in (
         _connect_asr_download,
         _connect_alass_download,
         _connect_cuda_pack_download,
         _connect_vad_pack_download,
         _connect_vulkan_download,
+        _connect_ko_model_download,
     ):
         _connect(window, settings_tab)
     # Wire indexed-resource mutation hooks so replacing or deleting a store
@@ -1312,6 +1407,9 @@ def compose_main_window(
     # window owns the dialog, because a switch reloads every panel in this tab
     # from the incoming config. Same handler as the header's combo sentinel.
     settings_tab.manage_profiles_requested.connect(window._open_profile_manager)
+    # The selector only ever PROPOSES a switch: the window runs the guard, shows
+    # any refusal itself and re-points the combo on every terminal path.
+    settings_tab.mining_language_requested.connect(window.request_mining_language)
     window.tabs.addTab(settings_tab, QCoreApplication.translate("MainWindow", "Settings"))
 
     # Non-Settings config refreshes (e.g. JMdict migration finishing in the
@@ -1627,6 +1725,10 @@ def main():
 
     if os.environ.get("ANKI_MINER_SMOKE") == "whispercpp":
         sys.exit(_run_whispercpp_bundled_smoke())
+
+    smoke_language = os.environ.get("ANKI_MINER_SMOKE")
+    if smoke_language in ("ja", "ko", "zh"):
+        sys.exit(_run_language_bundled_smoke(smoke_language))
 
     # Env-var-gated ASR Vulkan device probe. The parent process
     # (_engine.vulkan_device_count) spawns a frozen bundle with this flag set so

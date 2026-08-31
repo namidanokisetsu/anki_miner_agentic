@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+import logging
+from collections.abc import Callable, Iterable
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from PyQt6.QtCore import QPoint, pyqtSignal
 from PyQt6.QtGui import QAction
@@ -20,7 +22,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from anki_miner.config import AudioSourceEntry
+from anki_miner.config import AudioSourceEntry, insert_above_first_enabled_jpod101
 from anki_miner.gui.utils.config_commit import ConfigCommitResult
 from anki_miner.gui.utils.keyboard_shortcuts import disown_default_buttons, primary_action_shortcut
 from anki_miner.gui.utils.qt_helpers import add_min_max_buttons
@@ -41,6 +43,8 @@ from anki_miner.utils.robust_fs import RmtreeOutcome, robust_rmtree
 
 shutil = robust_fs.shutil
 
+logger = logging.getLogger(__name__)
+
 
 def _robust_rmtree(target: Path) -> RmtreeOutcome:
     """Panel-local seam for post-commit cleanup."""
@@ -54,9 +58,13 @@ class _AddSourceDialog(QDialog):
     """
 
     # (kind, English label). Labels go through self.tr at construction.
+    # custom_json first: the placeholder URL is the local-audio-yomichan
+    # server root, which speaks the audioSourceList JSON contract — naming
+    # that server on the direct-audio kind steered users into a source that
+    # silently missed on every word (JSON bodies never validate as audio).
     _KINDS: list[tuple[str, str]] = [
-        ("custom", "Custom URL (local-audio-yomichan / any audio URL)"),
-        ("custom_json", "Custom JSON list (audioSourceList)"),
+        ("custom_json", "Custom JSON list (local-audio-yomichan server)"),
+        ("custom", "Custom URL (a direct audio file URL)"),
     ]
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -213,6 +221,12 @@ class AudioPackSettingsPanel(ChainSettingsPanelBase):
         self._retry_missing_btn = ModernButton(self.tr("Retry missing audio"), variant="secondary")
         self._retry_missing_btn.setToolTip(self.tr("Re-try words JapanesePod101 had no audio for on the next run"))
         self._retry_missing_btn.clicked.connect(self.retry_missing_audio_requested.emit)
+        # _write_chain re-syncs the affordance for this panel's own writers, but
+        # the base class writes _chain directly on a row toggle, a reorder and a
+        # chain-only remove - all of which announce themselves here. Subscribing
+        # is cheaper than routing six base-class writers through a hook, and
+        # setVisible is idempotent, so the double call on our own writes is free.
+        self.chain_changed.connect(self._sync_retry_affordance)
 
         self._restore_btn = ModernButton(self.tr("Restore from Disk"), variant="secondary")
         self._restore_btn.setToolTip(
@@ -374,6 +388,27 @@ class AudioPackSettingsPanel(ChainSettingsPanelBase):
         """Enable/disable the retry button while its off-thread sweep runs."""
         self._retry_missing_btn.setEnabled(enabled)
 
+    def _write_chain(self, entries: Iterable[AudioSourceEntry]) -> None:
+        """The one place this panel's chain is written, so the chrome follows it.
+
+        Every writer goes through here: a caller that assigned ``_chain``
+        directly would leave the retry affordance describing the chain before
+        its edit.
+        """
+        self._chain = list(entries)
+        self._sync_retry_affordance()
+
+    def _sync_retry_affordance(self) -> None:
+        """Offer 'Retry missing audio' only when a chain entry caches misses.
+
+        jpod101 is the one source that writes zero-byte ``.miss`` markers;
+        googletts failures are transient and re-queried, and local packs are
+        re-read every run. With no jpod101 entry the sweep has nothing to
+        unlink, so the button would be a dead affordance naming a Japanese
+        service to a Chinese or Korean miner.
+        """
+        self._retry_missing_btn.setVisible(any(e.kind == "jpod101" and e.enabled for e in self._chain))
+
     def _set_mutation_controls_enabled(self, enabled: bool) -> None:
         self._add_btn.setEnabled(enabled)
         self._restore_btn.setEnabled(enabled)
@@ -383,7 +418,7 @@ class AudioPackSettingsPanel(ChainSettingsPanelBase):
         chain: tuple[AudioSourceEntry, ...],
         registry_meta: dict[str, AudioPackMeta] | None = None,
     ) -> None:
-        self._chain = list(chain)
+        self._write_chain(chain)
         if registry_meta is not None:
             # Caller pre-supplied meta; use it directly, no disk scan needed.
             self._view = _RegistryView(registry_meta.get)
@@ -393,13 +428,22 @@ class AudioPackSettingsPanel(ChainSettingsPanelBase):
         return AudioSourceEntry(kind=entry.kind, pack_id=entry.pack_id, url=entry.url, enabled=enabled)
 
     def add_source_entry(self, entry: AudioSourceEntry) -> None:
-        """Append an online audio source to the chain and persist immediately.
+        """Add an online audio source above jpod101 and persist immediately.
 
         Reads the current enabled/order state off the row widgets first (via
-        ``get_chain``) so an in-progress toggle isn't lost, appends *entry*, then
-        emits ``chain_changed`` which the settings tab persists.
+        ``get_chain``) so an in-progress toggle isn't lost, splices *entry* in
+        above the first enabled jpod101 entry (the chain is first-hit-wins, so
+        a source below jpod101 is never consulted), then emits ``chain_changed``
+        which the settings tab persists.
         """
-        self._chain = [*self.get_chain(), entry]
+        # Host only, never the full URL: the query string is the user's own
+        # source list and has no place in a diagnostics bundle.
+        logger.info(
+            "Online audio source added: kind=%s host=%s",
+            entry.kind,
+            urlsplit(entry.url).netloc if entry.url else "-",
+        )
+        self._write_chain(insert_above_first_enabled_jpod101(self.get_chain(), (entry,)))
         self._rebuild_list()
         self.chain_changed.emit()
 
@@ -507,7 +551,7 @@ class AudioPackSettingsPanel(ChainSettingsPanelBase):
         chain = self.get_chain()
         new_chain = (*chain[:index], *chain[index + 1 :])
         if self._remove_chain_commit is None:
-            self._chain = list(new_chain)
+            self._write_chain(new_chain)
             self.chain_changed.emit()
             result = ConfigCommitResult.committed()
         else:
@@ -516,7 +560,7 @@ class AudioPackSettingsPanel(ChainSettingsPanelBase):
             except Exception as error:
                 result = ConfigCommitResult.pre_save_failure(error)
             if result.persisted:
-                self._chain = list(new_chain)
+                self._write_chain(new_chain)
         if not result.persisted:
             msg = self._error_text(result)
             self.show_screen_issue(

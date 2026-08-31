@@ -41,9 +41,40 @@ ASCENDING = "ascending"
 # _getFrequencyOrder (moreCommonTerms / lessCommonTerms).
 MORE_COMMON_TERMS: dict[str, list[str]] = {
     "ja": ["来る", "言う", "出る", "入る", "方", "男", "女", "今", "何", "時"],
+    # Both script variants are listed in one table: a SUBTLEX-CH port is
+    # simplified and a Sinica-style port is traditional, and a term the source
+    # does not carry never votes (_min_max reports has_value False). One table
+    # therefore serves both without a variant flag on the source.
+    "zh": ["的", "是", "不", "我", "有", "人", "说", "說", "来", "來", "时候", "時候", "什么", "什麼", "知道"],
+    # ko: NIKL 현대 국어 사용 빈도 조사 2 headwords, lemma+다 granularity (the
+    # granularity languages/ko/morphology.py mines). Every term is in the top 31
+    # of that survey once its homograph indices are merged.
+    "ko": ["하다", "있다", "되다", "없다", "같다", "보다", "사람", "우리", "일", "말"],
 }
 LESS_COMMON_TERMS: dict[str, list[str]] = {
     "ja": ["行なう", "論じる", "過す", "行方", "人口", "猫", "犬", "滝", "理", "暁"],
+    "zh": [
+        "忐忑",
+        "熠熠",
+        "缱绻",
+        "繾綣",
+        "龃龉",
+        "齟齬",
+        "蹉跎",
+        "阑珊",
+        "闌珊",
+        "斑驳",
+        "斑駁",
+        "踌躇",
+        "躊躇",
+        "惆怅",
+        "惆悵",
+    ],
+    # ko: rare-but-real headwords, all present in that same survey with counts
+    # of 3-23 against the common table's 9,225-76,984. 물레 and 갈무리 were
+    # dropped from an earlier draft of this list: the survey carries only
+    # 물레방아 and 갈무리하다, so neither term could ever have voted.
+    "ko": ["노새", "자맥질", "여울", "두레박", "삿갓", "옹기", "맷돌", "나룻배", "멍석", "미나리"],
 }
 
 
@@ -68,6 +99,19 @@ def _terms_for(table: dict[str, list[str]], source_language: str) -> list[str]:
     for terms in table.values():
         pooled.extend(terms)
     return pooled
+
+
+def terms_for_language(table: dict[str, list[str]], source_language: str) -> list[str]:
+    """Probe terms belonging to ``source_language`` alone; empty when it has none.
+
+    The strict counterpart of :func:`_terms_for`, and what an *import* must use.
+    Pooling every language's terms — what ``_terms_for`` does for an unknown code,
+    mirroring Yomitan — would let the Japanese list decide a Korean source's
+    direction while ja is the only language with a table. A language with no
+    table therefore votes with nothing at all, and the caller lands on
+    :func:`resolve_is_occurrence`'s undetermined (rank-based) path.
+    """
+    return list(table.get(source_language, []))
 
 
 def _min_max(values: Iterable[int]) -> tuple[bool, int, int]:

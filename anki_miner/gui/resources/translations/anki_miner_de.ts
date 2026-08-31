@@ -459,6 +459,38 @@
         <translation>Speichert den Satz als reines Kana.</translation>
     </message>
     <message>
+        <source>Measure Word Field</source>
+        <translation>Zähleinheitswort-Feld</translation>
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation>Speichert das aus dem Wörterbucheintrag ermittelte Zähleinheitswort. Leer = überspringen.</translation>
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation>Pinyin-Feld</translation>
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation>Speichert die Pinyin-Lesung des Wortes, nach Ton eingefärbt, wenn das aktiviert ist. Leer = überspringen.</translation>
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation>Langzeichen-Feld</translation>
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation>Speichert das Wort in der anderen Schriftvariante, sofern sie abweicht. Leer = überspringen.</translation>
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation>Hanja-Feld</translation>
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation>Speichert die im Wort enthaltenen Hanja-Zeichen. Leer = überspringen.</translation>
+    </message>
+    <message>
         <source>Auxiliary Data Fields</source>
         <translation>Zusätzliche Datenfelder</translation>
     </message>
@@ -697,6 +729,18 @@ Continue anyway?</source>
 </context><context>
     <name>AudioPackImportFlow</name>
     <message>
+        <source>Scanning folder for audio packs…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Abbrechen</translation>
+    </message>
+    <message>
+        <source>Scanning %1 …</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>That folder could not be scanned.</source>
         <translation>Dieser Ordner konnte nicht durchsucht werden.</translation>
     </message>
@@ -741,10 +785,6 @@ Unterstützte Formate: AJT (index.json + media/), NHK16 (entries.json + audio/),
     <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation>Der Import wurde abgeschlossen, aber die Einstellungen konnten nicht aktualisiert werden.</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Abbrechen</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -1674,6 +1714,14 @@ Indexdateien auf der Festplatte werden unverändert gelassen, da nicht nachgewie
     <message>
         <source>Auto-update the bundled yt-dlp downloader, update it on demand, or point at your own binary.</source>
         <translation>Das mitgelieferte yt-dlp automatisch aktualisieren, bei Bedarf aktualisieren oder auf eine eigene Binärdatei verweisen.</translation>
+    </message>
+    <message>
+        <source>Mine Japanese, Korean or Chinese</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>i+1 sentence mining</source>
@@ -3904,6 +3952,10 @@ Dateien auf der Festplatte werden unverändert gelassen, da nicht nachgewiesen w
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
         <translation>Verbindungs-/Zertifikatfehler bei der Wort-Audio-Quelle — Audio in diesem Durchlauf übersprungen, wird im nächsten Durchlauf erneut versucht</translation>
     </message>
@@ -4369,6 +4421,22 @@ Dateien auf der Festplatte werden unverändert gelassen, da nicht nachgewiesen w
 </context><context>
     <name>FilteringSettingsPanel</name>
     <message>
+        <source>Exclude hangul-only words</source>
+        <translation>Reine Hangul-Wörter ausschließen</translation>
+    </message>
+    <message>
+        <source>Exclude words containing hanja</source>
+        <translation>Wörter mit Hanja ausschließen</translation>
+    </message>
+    <message>
+        <source>Skip words written entirely in hangul. Leaves the deck to words written with hanja.</source>
+        <translation>Wörter überspringen, die vollständig in Hangul geschrieben sind. Lässt im Deck die mit Hanja geschriebenen Wörter übrig.</translation>
+    </message>
+    <message>
+        <source>Skip words that contain any hanja character, keeping the deck to plain hangul vocabulary.</source>
+        <translation>Wörter überspringen, die ein Hanja-Zeichen enthalten, sodass das Deck reinen Hangul-Wortschatz behält.</translation>
+    </message>
+    <message>
         <source>Word Frequency</source>
         <translation>Worthäufigkeit</translation>
     </message>
@@ -4601,6 +4669,26 @@ Dateien auf der Festplatte werden unverändert gelassen, da nicht nachgewiesen w
         <translation>Wenn ein Untertitel ein Wort in Kana schreibt (z. B. うなずく) und die Kanji-Wörterbuchform (頷く) bereits in Ihrer Sammlung oder Wortliste bekannter Wörter vorhanden ist, wird es übersprungen, anstatt eine zweite Karte zu erstellen. Kanji-Schreibweisen werden auf diese Weise nie zusammengeführt.</translation>
     </message>
     <message>
+        <source>Script Variants</source>
+        <translation>Schriftvarianten</translation>
+    </message>
+    <message>
+        <source>Simplified (简体)</source>
+        <translation>Vereinfacht (简体)</translation>
+    </message>
+    <message>
+        <source>Traditional (繁體)</source>
+        <translation>Traditionell (繁體)</translation>
+    </message>
+    <message>
+        <source>Character Set</source>
+        <translation>Zeichensatz</translation>
+    </message>
+    <message>
+        <source>Which spelling the card front and the dictionary lookup prefer.</source>
+        <translation>Welche Schreibweise Kartenvorderseite und Wörterbuchsuche bevorzugen.</translation>
+    </message>
+    <message>
         <source>i+1 Sentence Filter</source>
         <translation>i+1-Satzfilter</translation>
     </message>
@@ -4671,6 +4759,14 @@ Dateien auf der Festplatte werden unverändert gelassen, da nicht nachgewiesen w
     <message>
         <source>Wrap the mined word in &amp;lt;b&amp;gt;...&amp;lt;/b&amp;gt; inside the Sentence and SentenceFurigana fields. Match is the exact MeCab span of the mined morpheme, so duplicated surfaces in a sentence only bold the actually-mined occurrence.</source>
         <translation>Das gesammelte Wort in &amp;lt;b&amp;gt;...&amp;lt;/b&amp;gt; innerhalb der Felder Sentence und SentenceFurigana einschließen. Der Treffer ist die exakte MeCab-Spanne des gesammelten Morphems, sodass bei doppelten Oberflächenformen in einem Satz nur das tatsächlich gesammelte Vorkommen fett hervorgehoben wird.</translation>
+    </message>
+    <message>
+        <source>Colour the reading by tone</source>
+        <translation>Lesung nach Ton einfärben</translation>
+    </message>
+    <message>
+        <source>Wraps each pinyin syllable in a tone class so the card styling can colour it.</source>
+        <translation>Umschließt jede Pinyin-Silbe mit einer Tonklasse, damit die Kartengestaltung sie einfärben kann.</translation>
     </message>
     <message>
         <source>Exclude Deck</source>
@@ -4857,6 +4953,14 @@ Indexdateien auf der Festplatte bleiben unangetastet, da der Ordner nicht nachwe
         <translation>Aktives Einstellungsprofil. Beim Wechsel werden alle Einstellungen ausgetauscht; wählen Sie „Profile verwalten…“, um sie hinzuzufügen, umzubenennen oder zu entfernen.</translation>
     </message>
     <message>
+        <source>Mining language:</source>
+        <translation>Mining-Sprache:</translation>
+    </message>
+    <message>
+        <source>Mining language</source>
+        <translation>Mining-Sprache</translation>
+    </message>
+    <message>
         <source>Theme:</source>
         <translation>Design:</translation>
     </message>
@@ -4875,6 +4979,10 @@ Indexdateien auf der Festplatte bleiben unangetastet, da der Ordner nicht nachwe
     <message>
         <source>Manage profiles…</source>
         <translation>Profile verwalten…</translation>
+    </message>
+    <message>
+        <source>Mining language: %1. Opens the selector in Settings.</source>
+        <translation>Mining-Sprache: %1. Öffnet die Auswahl in den Einstellungen.</translation>
     </message>
 </context><context>
     <name>InlineReceipt</name>
@@ -5029,6 +5137,65 @@ Add %3 word(s) to your known list?</source>
     <message>
         <source>Remove ALL words you added to the local known words list? This cannot be undone. The Anki-synced cache is not affected.</source>
         <translation>ALLE Wörter entfernen, die Sie zur lokalen Liste bekannter Wörter hinzugefügt haben? Dies kann nicht rückgängig gemacht werden. Der mit Anki synchronisierte Cache ist nicht betroffen.</translation>
+    </message>
+</context><context>
+    <name>KoModelDownloadWorker</name>
+    <message>
+        <source>Downloading the Korean model…</source>
+        <translation>Koreanisches Modell wird heruntergeladen…</translation>
+    </message>
+    <message>
+        <source>Korean model installed successfully.</source>
+        <translation>Koreanisches Modell erfolgreich installiert.</translation>
+    </message>
+</context><context>
+    <name>LanguageSwitch</name>
+    <message>
+        <source>Switch mining language</source>
+        <translation>Mining-Sprache wechseln</translation>
+    </message>
+    <message numerus="yes">
+        <source>Switching to %1 discards %n queued item(s), on screen and in the copy saved for the next launch. Continue?</source>
+        <translation>
+            <numerusform>Der Wechsel zu %1 verwirft %n Eintrag der Warteschlange, auf dem Bildschirm und in der für den nächsten Start gespeicherten Kopie. Fortfahren?</numerusform>
+            <numerusform>Der Wechsel zu %1 verwirft %n Einträge der Warteschlange, auf dem Bildschirm und in der für den nächsten Start gespeicherten Kopie. Fortfahren?</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>First time mining this language</source>
+        <translation>Erstes Mining in dieser Sprache</translation>
+    </message>
+    <message>
+        <source>You have not mined %1 before.</source>
+        <translation>Sie haben %1 bisher noch nicht gesammelt.</translation>
+    </message>
+    <message>
+        <source>The known-words scan reads every deck that is not excluded, so words in %1 would count as already known. Exclude them from this language?</source>
+        <translation>Der Scan bekannter Wörter liest jeden nicht ausgeschlossenen Stapel, daher würden Wörter in %1 als bereits bekannt gelten. Sollen sie für diese Sprache ausgeschlossen werden?</translation>
+    </message>
+    <message>
+        <source>Exclude these decks</source>
+        <translation>Diese Stapel ausschließen</translation>
+    </message>
+    <message>
+        <source>Set up resources…</source>
+        <translation>Ressourcen einrichten…</translation>
+    </message>
+    <message>
+        <source>That mining language is not available in this build.</source>
+        <translation>Diese Mining-Sprache ist in diesem Build nicht verfügbar.</translation>
+    </message>
+    <message>
+        <source>Settings are busy. Nothing was switched.</source>
+        <translation>Die Einstellungen sind belegt. Es wurde nichts gewechselt.</translation>
+    </message>
+    <message>
+        <source>Mining is running. Stop it, then switch language.</source>
+        <translation>Das Mining läuft. Stoppen Sie es und wechseln Sie dann die Sprache.</translation>
+    </message>
+    <message>
+        <source>Could not switch to %1: %2. Nothing was switched.</source>
+        <translation>Wechsel zu %1 fehlgeschlagen: %2. Es wurde nichts gewechselt.</translation>
     </message>
 </context><context>
     <name>LogWidget</name>
@@ -5707,6 +5874,40 @@ Fortfahren?</translation>
         <translation>Hauptfenster anzeigen</translation>
     </message>
 </context><context>
+    <name>MiningLanguageSettingsPanel</name>
+    <message>
+        <source>Language</source>
+        <translation>Sprache</translation>
+    </message>
+    <message>
+        <source>Mining Language</source>
+        <translation>Mining-Sprache</translation>
+    </message>
+    <message>
+        <source>The language you mine. Separate from the interface language (Settings -&gt; Appearance &amp; Language). Switching swaps dictionaries, filters, deck and card fields to that language's own settings.</source>
+        <translation>Die Sprache, die Sie minen. Unabhängig von der Oberflächensprache (Einstellungen -&gt; Darstellung &amp; Sprache). Beim Wechsel werden Wörterbücher, Filter, Stapel und Kartenfelder auf die eigenen Einstellungen dieser Sprache umgestellt.</translation>
+    </message>
+    <message>
+        <source>Download Korean model</source>
+        <translation>Koreanisches Modell herunterladen</translation>
+    </message>
+    <message>
+        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
+        <translation>Lädt das koreanische Sprachmodell in den Ordner von Anki Miner herunter. Gebündelte Installationen enthalten die koreanische Engine ohne ihr Modell.</translation>
+    </message>
+    <message>
+        <source>Korean model</source>
+        <translation>Koreanisches Modell</translation>
+    </message>
+    <message>
+        <source>Installed</source>
+        <translation>Installiert</translation>
+    </message>
+    <message>
+        <source>Not installed</source>
+        <translation>Nicht installiert</translation>
+    </message>
+</context><context>
     <name>MiningTabBase</name>
     <message>
         <source>Failed: %1 — %2</source>
@@ -6051,6 +6252,10 @@ Indexdateien auf der Festplatte bleiben unangetastet, da der Ordner nicht nachwe
     <message>
         <source>Mining or card backfill is still using the dictionaries. Stop it and try again.</source>
         <translation>Mining oder Kartenauffüllung verwendet noch die Wörterbücher. Beenden Sie den Vorgang und versuchen Sie es erneut.</translation>
+    </message>
+    <message>
+        <source>That profile mines another language and the queues still hold work. Nothing was switched.</source>
+        <translation>Dieses Profil mint eine andere Sprache und die Warteschlangen enthalten noch Aufgaben. Es wurde nichts umgestellt.</translation>
     </message>
     <message>
         <source>Could not apply the profile '%1': %2. Your current settings are unchanged.</source>
@@ -6939,6 +7144,24 @@ Indexdateien auf der Festplatte bleiben unangetastet, da der Ordner nicht nachwe
         <translation>Vorherige Warteschlange wiederherstellen? %1 Elemente</translation>
     </message>
 </context><context>
+    <name>ResourceChain</name>
+    <message>
+        <source>Audio pack '%1' is for %2; skipped</source>
+        <translation>Audiopaket „%1“ ist für %2; übersprungen</translation>
+    </message>
+    <message>
+        <source>Dictionary '%1' is for %2; skipped</source>
+        <translation>Wörterbuch „%1“ ist für %2; übersprungen</translation>
+    </message>
+    <message>
+        <source>Frequency source '%1' is for %2; skipped</source>
+        <translation>Häufigkeitsquelle „%1“ ist für %2; übersprungen</translation>
+    </message>
+    <message>
+        <source>Pitch source '%1' is for %2; skipped</source>
+        <translation>Tonhöhenakzent-Quelle „%1“ ist für %2; übersprungen</translation>
+    </message>
+</context><context>
     <name>ResourceDownloadDialog</name>
     <message>
         <source>Starting download…</source>
@@ -7091,6 +7314,10 @@ Indexdateien auf der Festplatte bleiben unangetastet, da der Ordner nicht nachwe
     <message>
         <source>Download recommended resources</source>
         <translation>Empfohlene Ressourcen herunterladen</translation>
+    </message>
+    <message>
+        <source>No downloadable resources are recommended for this language — import a Yomitan dictionary in Settings → Dictionaries and a frequency list in Settings → Frequency.</source>
+        <translation>Für diese Sprache werden keine herunterladbaren Ressourcen empfohlen — importieren Sie ein Yomitan-Wörterbuch unter Einstellungen → Wörterbücher und eine Häufigkeitsliste unter Einstellungen → Häufigkeit.</translation>
     </message>
     <message>
         <source>Checking for an offline dictionary...</source>
@@ -7449,6 +7676,10 @@ Indexdateien auf der Festplatte bleiben unangetastet, da der Ordner nicht nachwe
     <message>
         <source>Mining</source>
         <translation>Mining</translation>
+    </message>
+    <message>
+        <source>Mining Language</source>
+        <translation>Mining-Sprache</translation>
     </message>
     <message>
         <source>Filtering</source>
@@ -8001,16 +8232,24 @@ Ihre installierten Wörterbücher, Audio, Häufigkeitslisten und Ihr Design blei
         <translation>Untertitelerstellung</translation>
     </message>
     <message>
+        <source>Japanese</source>
+        <translation>Japanisch</translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation>Koreanisch</translation>
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation>Chinesisch</translation>
+    </message>
+    <message>
         <source>Input</source>
         <translation>Eingabe</translation>
     </message>
     <message>
         <source>Language:</source>
         <translation>Sprache:</translation>
-    </message>
-    <message>
-        <source>Japanese</source>
-        <translation>Japanisch</translation>
     </message>
     <message>
         <source>Transcription is not ready. Open Settings → Transcription &amp; Alignment to finish setup.</source>
