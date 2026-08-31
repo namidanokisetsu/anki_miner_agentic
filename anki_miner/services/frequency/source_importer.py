@@ -39,7 +39,9 @@ from pathlib import Path
 
 from anki_miner.exceptions import OperationCancelled, SetupError
 from anki_miner.services._sqlite_index import (
+    language_identity,
     prove_owned_slot,
+    read_slot_language,
     resolve_auto_store_id,
     resolve_managed_slot,
     write_ownership_marker,
@@ -122,6 +124,7 @@ def import_frequency_source(
     cancel_check: Callable[[], bool] | None = None,
     overwrite: bool = False,
     before_promote: Callable[[], None] | None = None,
+    language: str = "ja",
 ) -> FreqSourceImportResult:
     """Import ``input_path`` into ``dest_root/<source_id>/index.sqlite``.
 
@@ -143,6 +146,8 @@ def import_frequency_source(
         overwrite: If true, replace an existing same-id source atomically.
         before_promote: Optional last-moment guard run immediately before the
             staged directory replaces the managed slot.
+        language: Mining language stamped into the index meta. Defaults to
+            ``"ja"``, the pre-transition value for every existing caller.
 
     Raises:
         SetupError: On a missing/unsupported input, or a source that yields zero
@@ -161,6 +166,7 @@ def import_frequency_source(
             cancel_check=cancel_check,
             overwrite=overwrite,
             before_promote=before_promote,
+            language=language,
         )
     if suffix in _CSV_SUFFIXES:
         return _import_csv(
@@ -171,6 +177,7 @@ def import_frequency_source(
             cancel_check=cancel_check,
             overwrite=overwrite,
             before_promote=before_promote,
+            language=language,
         )
     raise SetupError(
         f"Unsupported frequency source '{input_path.name}'. Provide a Yomitan .zip or a .csv/.tsv/.txt rank list."
@@ -187,6 +194,9 @@ def repair_frequency_source(
     cancel_check: Callable[[], bool] | None = None,
 ) -> FreqSourceImportResult:
     """Explicitly repair ``source_id``, retaining an invalid prior slot as quarantine."""
+    # Read the stamp before the rebuild: repair_managed_slot may quarantine the
+    # slot, and a re-import would otherwise fall back to the "ja" default.
+    language = read_slot_language(dest_root / source_id)
     return repair_managed_slot(
         input_path,
         dest_root,
@@ -200,6 +210,7 @@ def repair_frequency_source(
             progress=progress,
             cancel_check=cancel_check,
             overwrite=overwrite,
+            language=language,
         ),
     )
 
@@ -213,6 +224,7 @@ def _import_zip(
     cancel_check: Callable[[], bool] | None,
     overwrite: bool,
     before_promote: Callable[[], None] | None,
+    language: str,
 ) -> FreqSourceImportResult:
     with open_yomitan_meta_banks(zip_path, kind="frequency") as banks:
         title = banks.title
@@ -222,7 +234,7 @@ def _import_zip(
             dest_root,
             _derive_source_id(title),
             "frequency",
-            {"source_name": title, "source_revision": revision},
+            {"source_name": title, "source_revision": revision, **language_identity(language)},
         )
 
         # Numeric path: key = (term, reading) -> (best rank, display_value),
@@ -303,7 +315,7 @@ def _import_zip(
                     f"{skipped_display_only} display-only entries). "
                     "The dictionary may use an unsupported data format."
                 )
-            rows, converted = _iter_rank_rows(ranks, declared_mode)
+            rows, converted = _iter_rank_rows(ranks, declared_mode, language)
             entry_count = len(ranks)
 
         result = _finalize(
@@ -322,6 +334,7 @@ def _import_zip(
             cancel_check=cancel_check,
             overwrite=overwrite,
             before_promote=before_promote,
+            language=language,
         )
 
     logger.info(
@@ -345,6 +358,7 @@ def _import_csv(
     cancel_check: Callable[[], bool] | None,
     overwrite: bool,
     before_promote: Callable[[], None] | None,
+    language: str,
 ) -> FreqSourceImportResult:
     stem = csv_path.stem
     # Honor an explicit display name (reimport passes the existing meta name);
@@ -355,7 +369,7 @@ def _import_csv(
         dest_root,
         _derive_source_id(stem),
         "frequency",
-        {"source_name": resolved_name, "source_revision": ""},
+        {"source_name": resolved_name, "source_revision": "", **language_identity(language)},
     )
 
     # key = (term, reading) -> rank; first occurrence wins (matches the legacy
@@ -410,7 +424,7 @@ def _import_csv(
 
     # An explicit count/rank header is authoritative. Headerless and ambiguous
     # CSVs still use the statistical probe.
-    rows, converted = _iter_rank_rows(ranks, declared_mode)
+    rows, converted = _iter_rank_rows(ranks, declared_mode, language)
 
     result = _finalize(
         input_path=csv_path,
@@ -426,6 +440,7 @@ def _import_csv(
         cancel_check=cancel_check,
         overwrite=overwrite,
         before_promote=before_promote,
+        language=language,
     )
     logger.info(
         "Imported %d frequency entries from CSV '%s' as source '%s'",
@@ -439,17 +454,27 @@ def _import_csv(
 def _iter_rank_rows(
     ranks: Mapping[tuple[str, str | None], int | tuple[int, str | None]],
     declared_mode: str,
+    source_language: str = "ja",
 ) -> tuple[Iterable[storage.FreqRow], bool]:
     """Yield stored rows in stable order, re-ranking occurrence sources.
 
     The dedupe mapping remains necessary, but yielded rows stream into SQLite
     instead of duplicating the entire source in a second list.
+
+    ``source_language`` is the language the import stamps into ``meta.json``; it
+    selects the probe terms, so a source is only ever steered by its own
+    language's list.
     """
+    # terms_for_language, NOT mode_probe._terms_for: the latter pools every
+    # language's terms for an unknown code, which would let ja decide a ko
+    # source's direction. A language with no table contributes no terms, so
+    # term_values stays empty and probe_direction's own pooling fallback finds
+    # nothing to look up — the decision falls through to rank-based. Widening
+    # this set would re-open exactly that miscall.
     probe_terms = {
         term
         for table in (mode_probe.MORE_COMMON_TERMS, mode_probe.LESS_COMMON_TERMS)
-        for terms in table.values()
-        for term in terms
+        for term in mode_probe.terms_for_language(table, source_language)
     }
     term_values: dict[str, list[int]] = {}
     for (term, _reading), value in ranks.items():
@@ -457,7 +482,7 @@ def _iter_rank_rows(
             rank = value if isinstance(value, int) else value[0]
             term_values.setdefault(term, []).append(rank)
 
-    if mode_probe.resolve_is_occurrence(declared_mode, term_values):
+    if mode_probe.resolve_is_occurrence(declared_mode, term_values, source_language):
         ordered = sorted(
             ranks.items(),
             key=lambda item: (
@@ -525,6 +550,7 @@ def _finalize(
     cancel_check: Callable[[], bool] | None,
     overwrite: bool,
     before_promote: Callable[[], None] | None,
+    language: str,
 ) -> FreqSourceImportResult:
     """Build the index under a staging dir, then atomically promote it.
 
@@ -559,6 +585,7 @@ def _finalize(
             # "1"/"0" (not bool) — read back with an explicit == "1" compare so a
             # stored "0" never coerces truthy (bool("0") is True).
             "is_categorical": "1" if is_categorical else "0",
+            "language": language,
         }
         storage.build_index(db_path, rows, meta)
 

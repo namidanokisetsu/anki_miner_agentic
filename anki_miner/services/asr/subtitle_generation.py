@@ -20,7 +20,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from anki_miner.config.config import AnkiMinerConfig
@@ -63,6 +63,7 @@ def generate_subtitle_one(
     cancel_event: threading.Event | None = None,
     ct2_model_session: Ct2ModelSession | None = None,
     audio_track_override: int | None = None,
+    language: str = "ja",
 ) -> SubtitleGenResult:
     """Transcribe one video to an SRT at *out_srt*.
 
@@ -85,7 +86,9 @@ def generate_subtitle_one(
         cancel_event: Cooperative cancel, forwarded to extractor + transcriber.
         ct2_model_session: Optional queue-owned faster-whisper model state.
         audio_track_override: Optional zero-based audio-only stream index. When
-            omitted, the media extractor selects Japanese by language metadata.
+            omitted, the media extractor selects an audio track by language metadata.
+        language: ISO code from ``LanguageProfile.asr_language``, forwarded to the
+            transcriber; the default keeps every existing caller on Japanese.
 
     Unexpected exceptions propagate to the caller (the worker isolates them
     per-file); only the temp-WAV cleanup is guaranteed here.
@@ -128,9 +131,13 @@ def generate_subtitle_one(
             return SubtitleGenResult(SubtitleGenStatus.CANCELLED)
 
         # --- Stage 3: transcribe ---
-        transcribe_kwargs = {}
+        transcribe_kwargs: dict[str, Any] = {}
         if ct2_model_session is not None:
             transcribe_kwargs["ct2_model_session"] = ct2_model_session
+        # Omit-when-ja: the transcriber already defaults to Japanese, so the ja
+        # call shape into it stays exactly what it was before languages existed.
+        if language != "ja":
+            transcribe_kwargs["language"] = language
         segments = transcriber.transcribe(
             audio,
             model_name=config.asr_model,

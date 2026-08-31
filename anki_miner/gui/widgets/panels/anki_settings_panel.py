@@ -17,8 +17,10 @@ from PyQt6.QtWidgets import (
 )
 
 from anki_miner.gui.resources.styles import SPACING
+from anki_miner.gui.utils.language_gate import apply_language_gate, field_row_widgets
 from anki_miner.gui.widgets.base import FormPanel, StatusBadge
 from anki_miner.gui.widgets.enhanced import ModernButton
+from anki_miner.languages.registry import config_language, get_profile
 from anki_miner.services.note_presets import (
     NOTE_PRESETS,
     NotePreset,
@@ -178,6 +180,11 @@ class AnkiSettingsPanel(FormPanel):
 
     def _setup_fields(self) -> None:
         """Set up the panel fields."""
+        # Every capability contributor extends this list; Stage 2B adds the
+        # non-ja rows to the same one. A second assignment would drop these
+        # pairs, so this is the only place it is bound.
+        self._language_gate_pairs: list[tuple[QWidget, str]] = []
+
         # Connection status badge
         self.connection_status = StatusBadge("AnkiConnect", status="checking", clickable=False)
         self.add_widget(self.connection_status)
@@ -389,6 +396,45 @@ class AnkiSettingsPanel(FormPanel):
             helper=self.tr("Stores the sentence as plain kana."),
         )
 
+        # Chinese measure word / classifier. The canonical zh schema gives it a
+        # named field; ja and ko never see the row and never write the key.
+        self.measure_word_field_input = QLineEdit()
+        self.measure_word_field_input.setPlaceholderText("MeasureWord")
+        self.add_field(
+            self.tr("Measure Word Field"),
+            self.measure_word_field_input,
+            helper=self.tr("Stores the classifier parsed from the dictionary entry. Blank = skip."),
+        )
+
+        # Chinese pinyin reading of the word. Same rule as the row above: the
+        # mapped name is the on/off switch, so with no row the render hook can
+        # never reach a note.
+        self.expression_pinyin_field_input = QLineEdit()
+        self.expression_pinyin_field_input.setPlaceholderText("Pinyin")
+        self.add_field(
+            self.tr("Pinyin Field"),
+            self.expression_pinyin_field_input,
+            helper=self.tr("Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip."),
+        )
+
+        # Traditional spelling of a word mined in simplified (and the reverse).
+        self.expression_traditional_field_input = QLineEdit()
+        self.expression_traditional_field_input.setPlaceholderText("Traditional")
+        self.add_field(
+            self.tr("Traditional Field"),
+            self.expression_traditional_field_input,
+            helper=self.tr("Stores the word in the other script variant, when it differs. Blank = skip."),
+        )
+
+        # Korean hanja. ja and zh never see the row and never write the key.
+        self.hanja_field_input = QLineEdit()
+        self.hanja_field_input.setPlaceholderText("Hanja")
+        self.add_field(
+            self.tr("Hanja Field"),
+            self.hanja_field_input,
+            helper=self.tr("Stores the hanja characters contained in the word. Blank = skip."),
+        )
+
         # Auxiliary Data Fields section
         self.add_section(self.tr("Auxiliary Data Fields"))
 
@@ -525,6 +571,39 @@ class AnkiSettingsPanel(FormPanel):
             anchor_focus=self.card_type_word_and_sentence_input,
             anchor_text=lambda: (self.card_type_names_group.title(),),
         )
+
+        # Language-gated rows. Each row contributes its label too, so a hidden
+        # field never leaves a dangling caption behind. The Auxiliary Data
+        # Fields heading stays: frequency and source live under it as well.
+        self._language_gate_pairs.extend(
+            (w, "furigana")
+            for field in (
+                self.expression_furigana_field_input,
+                self.sentence_furigana_field_input,
+            )
+            for w in field_row_widgets(self, field)
+        )
+        self._language_gate_pairs.extend(
+            (w, "pitch")
+            for field in (
+                self.pitch_position_field_input,
+                self.pitch_category_field_input,
+                self.pitch_category_format_combo,
+                self.pitch_graph_field_input,
+                self.pitch_text_field_input,
+            )
+            for w in field_row_widgets(self, field)
+        )
+        self._language_gate_pairs.extend(
+            (w, "measure_word") for w in field_row_widgets(self, self.measure_word_field_input)
+        )
+        self._language_gate_pairs.extend(
+            (w, "pinyin") for w in field_row_widgets(self, self.expression_pinyin_field_input)
+        )
+        self._language_gate_pairs.extend(
+            (w, "script_variants") for w in field_row_widgets(self, self.expression_traditional_field_input)
+        )
+        self._language_gate_pairs.extend((w, "hanja") for w in field_row_widgets(self, self.hanja_field_input))
 
         self.add_stretch()
 
@@ -835,6 +914,17 @@ class AnkiSettingsPanel(FormPanel):
             "frequency_sort": self.frequency_sort_field_input.text().strip(),
             "source": self.source_field_input.text().strip(),
         }
+        # Language-scoped keys are contributed only while their row is on screen
+        # (or the mapping already carried them). Keeps a ja anki_fields
+        # byte-identical instead of seeding it with an empty zh key.
+        for key, widget in (
+            ("measure_word", self.measure_word_field_input),
+            ("expression_pinyin", self.expression_pinyin_field_input),
+            ("expression_traditional", self.expression_traditional_field_input),
+            ("hanja", self.hanja_field_input),
+        ):
+            if widget.isVisibleTo(self) or key in self._loaded_fields:
+                owned[key] = widget.text().strip()
         return {**self._loaded_fields, **owned}
 
     def set_card_fields(self, fields: Mapping[str, str]) -> None:
@@ -856,6 +946,10 @@ class AnkiSettingsPanel(FormPanel):
         self.expression_reading_field_input.setText(fields.get("expression_reading", ""))
         self.sentence_furigana_field_input.setText(fields.get("sentence_furigana", "SentenceFurigana"))
         self.sentence_reading_field_input.setText(fields.get("sentence_reading", ""))
+        self.measure_word_field_input.setText(fields.get("measure_word", ""))
+        self.expression_pinyin_field_input.setText(fields.get("expression_pinyin", ""))
+        self.expression_traditional_field_input.setText(fields.get("expression_traditional", ""))
+        self.hanja_field_input.setText(fields.get("hanja", ""))
         self.pitch_position_field_input.setText(fields.get("pitch_position", ""))
         self.pitch_category_field_input.setText(fields.get("pitch_category", ""))
         self.pitch_graph_field_input.setText(fields.get("pitch_graph", ""))
@@ -1025,6 +1119,7 @@ class AnkiSettingsPanel(FormPanel):
         self.set_pitch_category_format(config.pitch_category_format)
         self.set_card_type(config.card_type)
         self.set_card_type_marker_fields(config.card_type_marker_fields)
+        apply_language_gate(self._language_gate_pairs, get_profile(config_language(config)).capabilities)
 
     def contribute(self, config):
         """Return a new config with this panel's fields applied.

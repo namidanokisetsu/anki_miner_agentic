@@ -42,6 +42,7 @@ from anki_miner.gui.widgets.base import (
 from anki_miner.gui.widgets.dialogs.word_curation_dialog import CurationMediaContext, WordCurationDialog
 from anki_miner.gui.widgets.inline_receipt import InlineReceipt
 from anki_miner.gui.workers._queue_progress import QueueMiningProgressAdapter
+from anki_miner.languages.registry import config_language, get_profile
 from anki_miner.services.subtitle_parser import SubtitleParserService
 from anki_miner.utils.i18n import tr_format
 
@@ -563,9 +564,10 @@ class MiningTabBase(TaskPublisherMixin, ScreenIssueHost, QWidget):
         Runs ON A WORKER THREAD (the dialog dispatches it through
         ``run_off_thread``), so it must not touch Qt widgets.
         """
+        from anki_miner.gui.utils.service_factory import resolve_known_words_db_path
         from anki_miner.services.known_word_db import add_user_known_words
 
-        return add_user_known_words(self.config.known_words_db_path, forms)
+        return add_user_known_words(resolve_known_words_db_path(self.config), forms)
 
     # ------------------------------------------------------------------
     # Word curation bridge (Issue #60)
@@ -726,6 +728,7 @@ class MiningTabBase(TaskPublisherMixin, ScreenIssueHost, QWidget):
                 subtitle_entries=entries,
                 offset=offset,
                 audio_track_override=audio_track_override,
+                audio_track_codes=get_profile(config_language(config)).audio_track_codes,
                 audio_padding=config.audio_padding,
             )
         except Exception as exc:  # noqa: BLE001 — bucket A: curation loses its media player.
@@ -835,6 +838,7 @@ class MiningTabBase(TaskPublisherMixin, ScreenIssueHost, QWidget):
                 commit_known_callback=self._commit_known_words,
                 media_context=media_context,
                 lookup_fn=lookup_fn,
+                content_style=get_profile(config_language(self.config)).content_style,
             )
             self._curation_dialog_seq += 1
             presentation = self._curation_dialog_seq

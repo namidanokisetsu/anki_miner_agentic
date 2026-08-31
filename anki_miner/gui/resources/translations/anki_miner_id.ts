@@ -458,6 +458,38 @@
         <translation>Menyimpan kalimat sebagai kana polos.</translation>
     </message>
     <message>
+        <source>Measure Word Field</source>
+        <translation>Bidang Kata Penggolong</translation>
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation>Menyimpan kata penggolong yang diuraikan dari entri kamus. Kosong = lewati.</translation>
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation>Bidang Pinyin</translation>
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation>Menyimpan bacaan pinyin dari kata, diwarnai berdasarkan nada bila opsi itu aktif. Kosong = lewati.</translation>
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation>Bidang Aksara Tradisional</translation>
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation>Menyimpan kata dalam varian aksara lainnya, bila berbeda. Kosong = lewati.</translation>
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation>Bidang Hanja</translation>
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation>Menyimpan karakter hanja yang terkandung dalam kata. Kosong = lewati.</translation>
+    </message>
+    <message>
         <source>Auxiliary Data Fields</source>
         <translation>Bidang Data Tambahan</translation>
     </message>
@@ -696,6 +728,18 @@ Continue anyway?</source>
 </context><context>
     <name>AudioPackImportFlow</name>
     <message>
+        <source>Scanning folder for audio packs…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Batal</translation>
+    </message>
+    <message>
+        <source>Scanning %1 …</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>That folder could not be scanned.</source>
         <translation>Folder itu tidak dapat dipindai.</translation>
     </message>
@@ -740,10 +784,6 @@ Format yang didukung: AJT (index.json + media/), NHK16 (entries.json + audio/), 
     <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation>Impor selesai, tetapi pengaturan tidak dapat diperbarui.</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Batal</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -1672,6 +1712,14 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>Auto-update the bundled yt-dlp downloader, update it on demand, or point at your own binary.</source>
         <translation>Perbarui otomatis pengunduh yt-dlp bawaan, perbarui sesuai permintaan, atau arahkan ke biner Anda sendiri.</translation>
+    </message>
+    <message>
+        <source>Mine Japanese, Korean or Chinese</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>i+1 sentence mining</source>
@@ -3902,6 +3950,10 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
         <translation>Kegagalan koneksi/sertifikat sumber audio kata — audio dilewati pada proses ini, akan dicoba ulang pada proses berikutnya</translation>
     </message>
@@ -4356,6 +4408,22 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
 </context><context>
     <name>FilteringSettingsPanel</name>
     <message>
+        <source>Exclude hangul-only words</source>
+        <translation>Kecualikan Kata Hanya-Hangul</translation>
+    </message>
+    <message>
+        <source>Exclude words containing hanja</source>
+        <translation>Kecualikan Kata yang Mengandung Hanja</translation>
+    </message>
+    <message>
+        <source>Skip words written entirely in hangul. Leaves the deck to words written with hanja.</source>
+        <translation>Lewati kata yang ditulis sepenuhnya dengan hangul. Menyisakan kata yang ditulis dengan hanja di dek.</translation>
+    </message>
+    <message>
+        <source>Skip words that contain any hanja character, keeping the deck to plain hangul vocabulary.</source>
+        <translation>Lewati kata yang mengandung karakter hanja, sehingga dek berisi kosakata hangul murni.</translation>
+    </message>
+    <message>
         <source>Word Frequency</source>
         <translation>Frekuensi Kata</translation>
     </message>
@@ -4588,6 +4656,26 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
         <translation>Ketika subtitel mengeja kata dalam kana (misalnya うなずく) dan bentuk kamus kanji-nya (頷く) sudah ada di koleksi Anda atau daftar kata yang dikenal, kata tersebut dilewati alih-alih dibuatkan kartu kedua. Ejaan kanji tidak pernah digabungkan dengan cara ini.</translation>
     </message>
     <message>
+        <source>Script Variants</source>
+        <translation>Varian Aksara</translation>
+    </message>
+    <message>
+        <source>Simplified (简体)</source>
+        <translation>Sederhana (简体)</translation>
+    </message>
+    <message>
+        <source>Traditional (繁體)</source>
+        <translation>Tradisional (繁體)</translation>
+    </message>
+    <message>
+        <source>Character Set</source>
+        <translation>Set Karakter</translation>
+    </message>
+    <message>
+        <source>Which spelling the card front and the dictionary lookup prefer.</source>
+        <translation>Ejaan mana yang didahulukan oleh bagian depan kartu dan pencarian kamus.</translation>
+    </message>
+    <message>
         <source>i+1 Sentence Filter</source>
         <translation>Filter Kalimat i+1</translation>
     </message>
@@ -4658,6 +4746,14 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
     <message>
         <source>Wrap the mined word in &amp;lt;b&amp;gt;...&amp;lt;/b&amp;gt; inside the Sentence and SentenceFurigana fields. Match is the exact MeCab span of the mined morpheme, so duplicated surfaces in a sentence only bold the actually-mined occurrence.</source>
         <translation>Bungkus kata yang di-mining dalam &amp;lt;b&amp;gt;...&amp;lt;/b&amp;gt; di dalam bidang Sentence dan SentenceFurigana. Kecocokan adalah rentang MeCab yang tepat dari morfem yang di-mining, sehingga permukaan yang berulang dalam sebuah kalimat hanya menebalkan kemunculan yang benar-benar di-mining.</translation>
+    </message>
+    <message>
+        <source>Colour the reading by tone</source>
+        <translation>Warnai bacaan berdasarkan nada</translation>
+    </message>
+    <message>
+        <source>Wraps each pinyin syllable in a tone class so the card styling can colour it.</source>
+        <translation>Membungkus setiap suku kata pinyin dalam kelas nada agar gaya kartu dapat mewarnainya.</translation>
     </message>
     <message>
         <source>Exclude Deck</source>
@@ -4844,6 +4940,14 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>Profil pengaturan aktif. Beralih akan menukar setiap pengaturan; pilih 'Kelola profil…' untuk menambah, mengganti nama, atau menghapusnya.</translation>
     </message>
     <message>
+        <source>Mining language:</source>
+        <translation>Bahasa mining:</translation>
+    </message>
+    <message>
+        <source>Mining language</source>
+        <translation>Bahasa mining</translation>
+    </message>
+    <message>
         <source>Theme:</source>
         <translation>Tema:</translation>
     </message>
@@ -4862,6 +4966,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>Manage profiles…</source>
         <translation>Kelola profil…</translation>
+    </message>
+    <message>
+        <source>Mining language: %1. Opens the selector in Settings.</source>
+        <translation>Bahasa mining: %1. Membuka pemilihnya di Pengaturan.</translation>
     </message>
 </context><context>
     <name>InlineReceipt</name>
@@ -5016,6 +5124,64 @@ Tambahkan %3 kata ke daftar kata yang dikenal Anda?</translation>
     <message>
         <source>Remove ALL words you added to the local known words list? This cannot be undone. The Anki-synced cache is not affected.</source>
         <translation>Hapus SEMUA kata yang Anda tambahkan ke daftar kata yang dikenal lokal? Ini tidak dapat dibatalkan. Cache yang tersinkron dengan Anki tidak terpengaruh.</translation>
+    </message>
+</context><context>
+    <name>KoModelDownloadWorker</name>
+    <message>
+        <source>Downloading the Korean model…</source>
+        <translation>Mengunduh model Korea…</translation>
+    </message>
+    <message>
+        <source>Korean model installed successfully.</source>
+        <translation>Model Korea berhasil dipasang.</translation>
+    </message>
+</context><context>
+    <name>LanguageSwitch</name>
+    <message>
+        <source>Switch mining language</source>
+        <translation>Ganti bahasa mining</translation>
+    </message>
+    <message numerus="yes">
+        <source>Switching to %1 discards %n queued item(s), on screen and in the copy saved for the next launch. Continue?</source>
+        <translation>
+            <numerusform>Beralih ke %1 akan membuang %n item dalam antrean, di layar maupun pada salinan yang disimpan untuk peluncuran berikutnya. Lanjutkan?</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>First time mining this language</source>
+        <translation>Pertama kali mining bahasa ini</translation>
+    </message>
+    <message>
+        <source>You have not mined %1 before.</source>
+        <translation>Anda belum pernah mining %1.</translation>
+    </message>
+    <message>
+        <source>The known-words scan reads every deck that is not excluded, so words in %1 would count as already known. Exclude them from this language?</source>
+        <translation>Pemindaian kata yang dikenal membaca setiap dek yang tidak dikecualikan, sehingga kata dalam %1 akan dihitung sebagai sudah dikenal. Kecualikan dek tersebut untuk bahasa ini?</translation>
+    </message>
+    <message>
+        <source>Exclude these decks</source>
+        <translation>Kecualikan dek ini</translation>
+    </message>
+    <message>
+        <source>Set up resources…</source>
+        <translation>Siapkan sumber daya…</translation>
+    </message>
+    <message>
+        <source>That mining language is not available in this build.</source>
+        <translation>Bahasa mining tersebut tidak tersedia di build ini.</translation>
+    </message>
+    <message>
+        <source>Settings are busy. Nothing was switched.</source>
+        <translation>Pengaturan sedang sibuk. Tidak ada yang diganti.</translation>
+    </message>
+    <message>
+        <source>Mining is running. Stop it, then switch language.</source>
+        <translation>Mining sedang berjalan. Hentikan dulu, lalu ganti bahasa.</translation>
+    </message>
+    <message>
+        <source>Could not switch to %1: %2. Nothing was switched.</source>
+        <translation>Tidak dapat beralih ke %1: %2. Tidak ada yang diganti.</translation>
     </message>
 </context><context>
     <name>LogWidget</name>
@@ -5694,6 +5860,40 @@ Lanjutkan?</translation>
         <translation>Tampilkan jendela utama</translation>
     </message>
 </context><context>
+    <name>MiningLanguageSettingsPanel</name>
+    <message>
+        <source>Language</source>
+        <translation>Bahasa</translation>
+    </message>
+    <message>
+        <source>Mining Language</source>
+        <translation>Bahasa Mining</translation>
+    </message>
+    <message>
+        <source>The language you mine. Separate from the interface language (Settings -&gt; Appearance &amp; Language). Switching swaps dictionaries, filters, deck and card fields to that language's own settings.</source>
+        <translation>Bahasa yang di-mining. Terpisah dari bahasa antarmuka (Pengaturan -&gt; Tampilan &amp; Bahasa). Beralih akan mengganti kamus, filter, dek, dan bidang kartu ke pengaturan milik bahasa tersebut.</translation>
+    </message>
+    <message>
+        <source>Download Korean model</source>
+        <translation>Unduh model Korea</translation>
+    </message>
+    <message>
+        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
+        <translation>Unduh model bahasa Korea ke folder Anki Miner. Instalasi bundel menyertakan mesin Korea tanpa modelnya.</translation>
+    </message>
+    <message>
+        <source>Korean model</source>
+        <translation>Model Korea</translation>
+    </message>
+    <message>
+        <source>Installed</source>
+        <translation>Terpasang</translation>
+    </message>
+    <message>
+        <source>Not installed</source>
+        <translation>Tidak terpasang</translation>
+    </message>
+</context><context>
     <name>MiningTabBase</name>
     <message>
         <source>Failed: %1 — %2</source>
@@ -6038,6 +6238,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>Mining or card backfill is still using the dictionaries. Stop it and try again.</source>
         <translation>Mining atau pengisian ulang kartu masih menggunakan kamus. Hentikan dan coba lagi.</translation>
+    </message>
+    <message>
+        <source>That profile mines another language and the queues still hold work. Nothing was switched.</source>
+        <translation>Profil itu melakukan mining bahasa lain dan antrean masih berisi pekerjaan. Tidak ada yang diganti.</translation>
     </message>
     <message>
         <source>Could not apply the profile '%1': %2. Your current settings are unchanged.</source>
@@ -6926,6 +7130,24 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>Pulihkan antrean sebelumnya? %1 item</translation>
     </message>
 </context><context>
+    <name>ResourceChain</name>
+    <message>
+        <source>Audio pack '%1' is for %2; skipped</source>
+        <translation>Paket audio "%1" untuk %2; dilewati</translation>
+    </message>
+    <message>
+        <source>Dictionary '%1' is for %2; skipped</source>
+        <translation>Kamus "%1" untuk %2; dilewati</translation>
+    </message>
+    <message>
+        <source>Frequency source '%1' is for %2; skipped</source>
+        <translation>Sumber frekuensi "%1" untuk %2; dilewati</translation>
+    </message>
+    <message>
+        <source>Pitch source '%1' is for %2; skipped</source>
+        <translation>Sumber aksen nada "%1" untuk %2; dilewati</translation>
+    </message>
+</context><context>
     <name>ResourceDownloadDialog</name>
     <message>
         <source>Starting download…</source>
@@ -7078,6 +7300,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>Download recommended resources</source>
         <translation>Unduh sumber daya yang direkomendasikan</translation>
+    </message>
+    <message>
+        <source>No downloadable resources are recommended for this language — import a Yomitan dictionary in Settings → Dictionaries and a frequency list in Settings → Frequency.</source>
+        <translation>Tidak ada sumber daya unduhan yang direkomendasikan untuk bahasa ini — impor kamus Yomitan di Pengaturan → Kamus dan daftar frekuensi di Pengaturan → Frekuensi.</translation>
     </message>
     <message>
         <source>Checking for an offline dictionary...</source>
@@ -7436,6 +7662,10 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>Mining</source>
         <translation>Mining</translation>
+    </message>
+    <message>
+        <source>Mining Language</source>
+        <translation>Bahasa Mining</translation>
     </message>
     <message>
         <source>Filtering</source>
@@ -7986,16 +8216,24 @@ Kamus, audio, daftar frekuensi yang terpasang, dan tema Anda tetap dipertahankan
         <translation>Pembuatan subtitel</translation>
     </message>
     <message>
+        <source>Japanese</source>
+        <translation>Jepang</translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation>Korea</translation>
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation>Mandarin</translation>
+    </message>
+    <message>
         <source>Input</source>
         <translation>Masukan</translation>
     </message>
     <message>
         <source>Language:</source>
         <translation>Bahasa:</translation>
-    </message>
-    <message>
-        <source>Japanese</source>
-        <translation>Jepang</translation>
     </message>
     <message>
         <source>Transcription is not ready. Open Settings → Transcription &amp; Alignment to finish setup.</source>

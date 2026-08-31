@@ -20,6 +20,7 @@ from typing import Any, Callable
 from PyQt6.QtCore import pyqtSignal
 
 from anki_miner.gui.workers.base_worker import CancellableWorker
+from anki_miner.services._sqlite_index import language_kwarg
 from anki_miner.services.audio_packs.importer import import_android_audio_db, import_audio_pack, repair_audio_pack
 from anki_miner.services.dictionary.importers.jmdict_importer import import_jmdict_xml, repair_jmdict_xml
 from anki_miner.services.dictionary.importers.yomitan_importer import import_yomitan_zip, repair_yomitan_zip
@@ -103,12 +104,16 @@ class ImportWorker(CancellableWorker):
         dest_root: Path,
         overwrite: bool = False,
         dict_id: str | None = None,
+        *,
+        language: str = "ja",
     ) -> ImportWorker:
         """Build a worker that imports a Yomitan-format dictionary zip.
 
         ``dict_id`` pins the on-disk slot (see ``import_yomitan_zip``); re-import
         flows pass the existing slot id so a title with a changing date rebuilds
-        the index in place instead of forking a new folder.
+        the index in place instead of forking a new folder. ``language`` is the
+        stamp the rebuilt index carries — a slot-pinned rebuild replays the
+        slot's own stamp (``slot_language_kwarg``) so it is not reset to "ja".
         """
 
         def runner(progress_fn: ProgressFn, cancel_fn: CancelFn) -> tuple[str, dict[str, Any]]:
@@ -119,6 +124,7 @@ class ImportWorker(CancellableWorker):
                 cancel_check=cancel_fn,
                 overwrite=overwrite,
                 dict_id=dict_id,
+                **language_kwarg(language),
             )
             meta: dict[str, Any] = {
                 "entry_count": getattr(result, "entry_count", 0),
@@ -220,11 +226,14 @@ class ImportWorker(CancellableWorker):
         source_id: str | None = None,
         source_name: str | None = None,
         overwrite: bool = False,
+        language: str = "ja",
     ) -> ImportWorker:
         """Build a worker that imports a frequency source file.
 
         ``source_name`` is forwarded so reimport can preserve the existing
-        display name (see ``import_frequency_source``).
+        display name (see ``import_frequency_source``). ``language`` is the
+        stamp the new index carries; the repair path never takes one, so a
+        rebuild keeps the slot's own.
         """
 
         def runner(progress_fn: ProgressFn, cancel_fn: CancelFn) -> tuple[str, dict[str, Any]]:
@@ -236,6 +245,7 @@ class ImportWorker(CancellableWorker):
                 progress=progress_fn,
                 cancel_check=cancel_fn,
                 overwrite=overwrite,
+                **language_kwarg(language),
             )
             meta: dict[str, Any] = {
                 "entry_count": getattr(result, "entry_count", 0),
@@ -290,11 +300,13 @@ class ImportWorker(CancellableWorker):
         source_id: str | None = None,
         source_name: str | None = None,
         overwrite: bool = False,
+        language: str = "ja",
     ) -> ImportWorker:
         """Build a worker that imports a pitch accent source file.
 
         ``source_name`` is forwarded so reimport can preserve the existing
-        display name (see ``import_pitch_source``).
+        display name (see ``import_pitch_source``). ``language`` is the stamp
+        the new index carries.
         """
 
         def runner(progress_fn: ProgressFn, cancel_fn: CancelFn) -> tuple[str, dict[str, Any]]:
@@ -306,6 +318,7 @@ class ImportWorker(CancellableWorker):
                 progress=progress_fn,
                 cancel_check=cancel_fn,
                 overwrite=overwrite,
+                **language_kwarg(language),
             )
             meta: dict[str, Any] = {
                 "entry_count": result.entry_count,
@@ -355,12 +368,14 @@ class ImportWorker(CancellableWorker):
         *,
         pack_id: str | None = None,
         overwrite: bool = False,
+        language: str = "ja",
     ) -> ImportWorker:
         """Build a worker that imports an audio pack directory.
 
         The audio pack importer reports progress as a single human-readable
         string; the runner adapts it to the ``(cur, total, msg)`` triplet the
         worker emits (indeterminate cur/total — the flow shows only the label).
+        ``language`` is the stamp the new pack index carries.
         """
 
         def runner(progress_fn: ProgressFn, cancel_fn: CancelFn) -> tuple[str, dict[str, Any]]:
@@ -371,6 +386,7 @@ class ImportWorker(CancellableWorker):
                 progress=lambda msg: progress_fn(0, 0, msg),
                 cancel_check=cancel_fn,
                 overwrite=overwrite,
+                **language_kwarg(language),
             )
             meta: dict[str, Any] = {
                 "entry_count": getattr(result, "entry_count", 0),
@@ -389,8 +405,13 @@ class ImportWorker(CancellableWorker):
         *,
         pack_id: str | None = None,
         overwrite: bool = False,
+        language: str = "ja",
     ) -> ImportWorker:
-        """Build a worker that registers a local-audio-yomichan ``android.db``."""
+        """Build a worker that registers a local-audio-yomichan ``android.db``.
+
+        ``language`` is the stamp the re-registered slot carries; a slot-pinned
+        rebuild replays the slot's own stamp (``slot_language_kwarg``).
+        """
 
         def runner(progress_fn: ProgressFn, cancel_fn: CancelFn) -> tuple[str, dict[str, Any]]:
             result = import_android_audio_db(
@@ -400,6 +421,7 @@ class ImportWorker(CancellableWorker):
                 progress=lambda msg: progress_fn(0, 0, msg),
                 cancel_check=cancel_fn,
                 overwrite=overwrite,
+                **language_kwarg(language),
             )
             return result.pack_id, {
                 "entry_count": result.entry_count,

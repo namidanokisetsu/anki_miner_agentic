@@ -15,7 +15,9 @@ from typing import Any, Callable
 
 from anki_miner.exceptions import OperationCancelled, SetupError
 from anki_miner.services._sqlite_index import (
+    language_identity,
     prove_owned_slot,
+    read_slot_language,
     resolve_auto_store_id,
     resolve_managed_slot,
     write_ownership_marker,
@@ -125,6 +127,7 @@ def import_yomitan_zip(
     cancel_check: Callable[[], bool] | None = None,
     dict_id: str | None = None,
     before_promote: Callable[[], None] | None = None,
+    language: str = "ja",
 ) -> YomitanImportResult:
     """Import a Yomitan zip into dest_root/<dict_id>/index.sqlite.
 
@@ -168,6 +171,8 @@ def import_yomitan_zip(
                  comes from the zip title; only the folder name is pinned.
         before_promote: Optional last-moment guard run immediately before the
                         staged directory replaces the managed slot.
+        language: Mining language stamped into the index meta. Defaults to
+                  ``"ja"``, the pre-transition value for every existing caller.
 
     Raises:
         SetupError: On invalid input, format mismatch, or already-exists when
@@ -216,7 +221,7 @@ def import_yomitan_zip(
                 dest_root,
                 _derive_dict_id(title, revision),
                 "dictionary",
-                {"source_name": title, "source_revision": revision},
+                {"source_name": title, "source_revision": revision, **language_identity(language)},
             )
 
         try:
@@ -375,11 +380,21 @@ def import_yomitan_zip(
                 # that regex.
                 progress(min(cur, total), total, f"Inserted {inserted:,} entries")
 
+        # Import-side key folding MUST match the query side (IndexedDictProvider),
+        # which resolves its DictKeyFolding from the SAME language this import
+        # stamps into meta below. A mismatch is silent: the rows land under keys
+        # no query ever builds, so every lookup misses with no exception and no
+        # log line. The import is function-local because languages/ja/support.py
+        # delegates back into services/dictionary/storage.py — a module-level one
+        # would make that a load-order question for no benefit.
+        from anki_miner.languages.registry import get_profile
+
         bulk_insert(
             db_path,
             rows(),
             progress=on_insert_progress if progress else None,
             cancel_check=cancel_check,
+            keys=get_profile(language).dict_keys,
         )
 
         if progress:
@@ -419,6 +434,9 @@ def import_yomitan_zip(
             "source_revision": revision,
             "import_date": datetime.now(UTC).isoformat(),
             "entry_count": str(total_entries),
+            # Mining language this dictionary serves. Read back by the registries
+            # and (Stage 1B) used to skip a mismatched chain entry.
+            "language": language,
         }
         # Attribution metadata (author / attribution / description) shown in the
         # dictionary settings list.
@@ -481,6 +499,9 @@ def repair_yomitan_zip(
     cancel_check: Callable[[], bool] | None = None,
 ) -> YomitanImportResult:
     """Explicitly repair ``dict_id``, retaining an invalid prior slot as quarantine."""
+    # Read the stamp before the rebuild: repair_managed_slot may quarantine the
+    # slot, and a re-import would otherwise fall back to the "ja" default.
+    language = read_slot_language(dest_root / dict_id)
     return repair_managed_slot(
         zip_path,
         dest_root,
@@ -493,6 +514,7 @@ def repair_yomitan_zip(
             overwrite=overwrite,
             cancel_check=cancel_check,
             dict_id=dict_id,
+            language=language,
         ),
     )
 

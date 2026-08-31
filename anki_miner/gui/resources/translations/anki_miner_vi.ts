@@ -458,6 +458,38 @@
         <translation>Lưu câu dưới dạng kana thuần túy.</translation>
     </message>
     <message>
+        <source>Measure Word Field</source>
+        <translation>Trường Lượng từ</translation>
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation>Lưu lượng từ được phân tích từ mục từ điển. Để trống = bỏ qua.</translation>
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation>Trường Pinyin</translation>
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation>Lưu cách đọc pinyin của từ, được tô màu theo thanh điệu khi tùy chọn đó bật. Để trống = bỏ qua.</translation>
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation>Trường Phồn thể</translation>
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation>Lưu từ ở biến thể chữ viết còn lại, khi có khác biệt. Để trống = bỏ qua.</translation>
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation>Trường Hanja</translation>
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation>Lưu các ký tự hanja có trong từ. Để trống = bỏ qua.</translation>
+    </message>
+    <message>
         <source>Auxiliary Data Fields</source>
         <translation>Trường Dữ liệu Phụ trợ</translation>
     </message>
@@ -696,6 +728,18 @@ Continue anyway?</source>
 </context><context>
     <name>AudioPackImportFlow</name>
     <message>
+        <source>Scanning folder for audio packs…</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Hủy</translation>
+    </message>
+    <message>
+        <source>Scanning %1 …</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>That folder could not be scanned.</source>
         <translation>Không thể quét thư mục đó.</translation>
     </message>
@@ -740,10 +784,6 @@ Supported formats: AJT (index.json + media/), NHK16 (entries.json + audio/), For
     <message>
         <source>The import finished, but the settings could not be updated.</source>
         <translation>Đã hoàn tất nhập, nhưng không thể cập nhật cài đặt.</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Hủy</translation>
     </message>
     <message>
         <source>Cancelling…</source>
@@ -1672,6 +1712,14 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>Auto-update the bundled yt-dlp downloader, update it on demand, or point at your own binary.</source>
         <translation>Tự động cập nhật trình tải yt-dlp đi kèm, cập nhật theo yêu cầu, hoặc trỏ đến tệp thực thi riêng của bạn.</translation>
+    </message>
+    <message>
+        <source>Mine Japanese, Korean or Chinese</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
+        <translation type="unfinished" />
     </message>
     <message>
         <source>i+1 sentence mining</source>
@@ -3902,6 +3950,10 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
         <translation>Nguồn âm thanh từ gặp lỗi kết nối/chứng chỉ — bỏ qua âm thanh lần này, sẽ thử lại lần sau</translation>
     </message>
@@ -4356,6 +4408,22 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
 </context><context>
     <name>FilteringSettingsPanel</name>
     <message>
+        <source>Exclude hangul-only words</source>
+        <translation>Loại trừ từ chỉ có hangul</translation>
+    </message>
+    <message>
+        <source>Exclude words containing hanja</source>
+        <translation>Loại trừ từ có chứa hanja</translation>
+    </message>
+    <message>
+        <source>Skip words written entirely in hangul. Leaves the deck to words written with hanja.</source>
+        <translation>Bỏ qua các từ viết hoàn toàn bằng hangul. Giữ lại trong bộ thẻ những từ viết bằng hanja.</translation>
+    </message>
+    <message>
+        <source>Skip words that contain any hanja character, keeping the deck to plain hangul vocabulary.</source>
+        <translation>Bỏ qua các từ có chứa ký tự hanja, giữ cho bộ thẻ chỉ có từ vựng hangul thuần.</translation>
+    </message>
+    <message>
         <source>Word Frequency</source>
         <translation>Tần suất từ</translation>
     </message>
@@ -4588,6 +4656,26 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
         <translation>Khi phụ đề viết một từ bằng kana (ví dụ: うなずく) và dạng từ điển bằng kanji (頷く) đã có trong bộ sưu tập hoặc danh sách từ đã biết, bỏ qua từ đó thay vì tạo thêm thẻ thứ hai. Cách viết kanji không bao giờ được gộp theo cách này.</translation>
     </message>
     <message>
+        <source>Script Variants</source>
+        <translation>Biến thể chữ viết</translation>
+    </message>
+    <message>
+        <source>Simplified (简体)</source>
+        <translation>Giản thể (简体)</translation>
+    </message>
+    <message>
+        <source>Traditional (繁體)</source>
+        <translation>Phồn thể (繁體)</translation>
+    </message>
+    <message>
+        <source>Character Set</source>
+        <translation>Bộ ký tự</translation>
+    </message>
+    <message>
+        <source>Which spelling the card front and the dictionary lookup prefer.</source>
+        <translation>Cách viết mà mặt trước của thẻ và tra cứu từ điển ưu tiên.</translation>
+    </message>
+    <message>
         <source>i+1 Sentence Filter</source>
         <translation>Bộ lọc câu i+1</translation>
     </message>
@@ -4658,6 +4746,14 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
     <message>
         <source>Wrap the mined word in &amp;lt;b&amp;gt;...&amp;lt;/b&amp;gt; inside the Sentence and SentenceFurigana fields. Match is the exact MeCab span of the mined morpheme, so duplicated surfaces in a sentence only bold the actually-mined occurrence.</source>
         <translation>Bọc từ đã khai thác trong &amp;lt;b&amp;gt;...&amp;lt;/b&amp;gt; bên trong các trường Sentence và SentenceFurigana. Phần khớp là đúng khoảng MeCab của hình vị đã khai thác, nên các dạng bề mặt trùng lặp trong một câu chỉ in đậm lần xuất hiện thực sự được khai thác.</translation>
+    </message>
+    <message>
+        <source>Colour the reading by tone</source>
+        <translation>Tô màu cách đọc theo thanh điệu</translation>
+    </message>
+    <message>
+        <source>Wraps each pinyin syllable in a tone class so the card styling can colour it.</source>
+        <translation>Bọc mỗi âm tiết pinyin trong một lớp thanh điệu để kiểu dáng thẻ có thể tô màu cho nó.</translation>
     </message>
     <message>
         <source>Exclude Deck</source>
@@ -4844,6 +4940,14 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Hồ sơ cài đặt đang hoạt động. Việc chuyển đổi thay mọi cài đặt; chọn 'Quản lý hồ sơ…' để thêm, đổi tên hoặc xóa.</translation>
     </message>
     <message>
+        <source>Mining language:</source>
+        <translation>Ngôn ngữ khai thác:</translation>
+    </message>
+    <message>
+        <source>Mining language</source>
+        <translation>Ngôn ngữ khai thác</translation>
+    </message>
+    <message>
         <source>Theme:</source>
         <translation>Giao diện:</translation>
     </message>
@@ -4862,6 +4966,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>Manage profiles…</source>
         <translation>Quản lý hồ sơ…</translation>
+    </message>
+    <message>
+        <source>Mining language: %1. Opens the selector in Settings.</source>
+        <translation>Ngôn ngữ khai thác: %1. Mở trình chọn trong Cài đặt.</translation>
     </message>
 </context><context>
     <name>InlineReceipt</name>
@@ -5016,6 +5124,64 @@ Thêm %3 từ vào danh sách từ đã biết?</translation>
     <message>
         <source>Remove ALL words you added to the local known words list? This cannot be undone. The Anki-synced cache is not affected.</source>
         <translation>Gỡ bỏ TẤT CẢ các từ bạn đã thêm vào danh sách từ đã biết cục bộ? Không thể hoàn tác. Bộ nhớ đệm đồng bộ với Anki không bị ảnh hưởng.</translation>
+    </message>
+</context><context>
+    <name>KoModelDownloadWorker</name>
+    <message>
+        <source>Downloading the Korean model…</source>
+        <translation>Đang tải mô hình tiếng Hàn…</translation>
+    </message>
+    <message>
+        <source>Korean model installed successfully.</source>
+        <translation>Đã cài đặt mô hình tiếng Hàn thành công.</translation>
+    </message>
+</context><context>
+    <name>LanguageSwitch</name>
+    <message>
+        <source>Switch mining language</source>
+        <translation>Đổi ngôn ngữ khai thác</translation>
+    </message>
+    <message numerus="yes">
+        <source>Switching to %1 discards %n queued item(s), on screen and in the copy saved for the next launch. Continue?</source>
+        <translation>
+            <numerusform>Chuyển sang %1 sẽ loại bỏ %n mục trong hàng đợi, cả trên màn hình lẫn trong bản lưu cho lần khởi động sau. Tiếp tục?</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>First time mining this language</source>
+        <translation>Lần đầu khai thác ngôn ngữ này</translation>
+    </message>
+    <message>
+        <source>You have not mined %1 before.</source>
+        <translation>Chưa từng khai thác %1 trước đây.</translation>
+    </message>
+    <message>
+        <source>The known-words scan reads every deck that is not excluded, so words in %1 would count as already known. Exclude them from this language?</source>
+        <translation>Quá trình quét từ đã biết đọc mọi bộ thẻ không bị loại trừ, nên các từ trong %1 sẽ bị tính là đã biết. Loại trừ chúng khỏi ngôn ngữ này?</translation>
+    </message>
+    <message>
+        <source>Exclude these decks</source>
+        <translation>Loại trừ các bộ thẻ này</translation>
+    </message>
+    <message>
+        <source>Set up resources…</source>
+        <translation>Thiết lập tài nguyên…</translation>
+    </message>
+    <message>
+        <source>That mining language is not available in this build.</source>
+        <translation>Ngôn ngữ khai thác đó không có trong bản dựng này.</translation>
+    </message>
+    <message>
+        <source>Settings are busy. Nothing was switched.</source>
+        <translation>Cài đặt đang bận. Không có gì được đổi.</translation>
+    </message>
+    <message>
+        <source>Mining is running. Stop it, then switch language.</source>
+        <translation>Đang khai thác. Hãy dừng lại rồi đổi ngôn ngữ.</translation>
+    </message>
+    <message>
+        <source>Could not switch to %1: %2. Nothing was switched.</source>
+        <translation>Không thể chuyển sang %1: %2. Không có gì được đổi.</translation>
     </message>
 </context><context>
     <name>LogWidget</name>
@@ -5694,6 +5860,40 @@ Tiếp tục?</translation>
         <translation>Hiện cửa sổ chính</translation>
     </message>
 </context><context>
+    <name>MiningLanguageSettingsPanel</name>
+    <message>
+        <source>Language</source>
+        <translation>Ngôn ngữ</translation>
+    </message>
+    <message>
+        <source>Mining Language</source>
+        <translation>Ngôn ngữ khai thác</translation>
+    </message>
+    <message>
+        <source>The language you mine. Separate from the interface language (Settings -&gt; Appearance &amp; Language). Switching swaps dictionaries, filters, deck and card fields to that language's own settings.</source>
+        <translation>Ngôn ngữ được khai thác. Tách biệt với ngôn ngữ giao diện (Cài đặt -&gt; Diện mạo &amp; Ngôn ngữ). Khi chuyển đổi, từ điển, bộ lọc, bộ thẻ và các trường thẻ sẽ đổi sang cài đặt riêng của ngôn ngữ đó.</translation>
+    </message>
+    <message>
+        <source>Download Korean model</source>
+        <translation>Tải mô hình tiếng Hàn</translation>
+    </message>
+    <message>
+        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
+        <translation>Tải mô hình ngôn ngữ tiếng Hàn vào thư mục của Anki Miner. Bản cài đóng gói có sẵn công cụ tiếng Hàn nhưng không kèm mô hình.</translation>
+    </message>
+    <message>
+        <source>Korean model</source>
+        <translation>Mô hình tiếng Hàn</translation>
+    </message>
+    <message>
+        <source>Installed</source>
+        <translation>Đã cài đặt</translation>
+    </message>
+    <message>
+        <source>Not installed</source>
+        <translation>Chưa cài đặt</translation>
+    </message>
+</context><context>
     <name>MiningTabBase</name>
     <message>
         <source>Failed: %1 — %2</source>
@@ -6038,6 +6238,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>Mining or card backfill is still using the dictionaries. Stop it and try again.</source>
         <translation>Việc khai thác hoặc điền lại thẻ vẫn đang dùng các từ điển. Hãy dừng và thử lại.</translation>
+    </message>
+    <message>
+        <source>That profile mines another language and the queues still hold work. Nothing was switched.</source>
+        <translation>Hồ sơ đó khai thác ngôn ngữ khác và hàng đợi vẫn còn công việc. Không có gì được chuyển đổi.</translation>
     </message>
     <message>
         <source>Could not apply the profile '%1': %2. Your current settings are unchanged.</source>
@@ -6926,6 +7130,24 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Khôi phục hàng đợi trước? %1 mục</translation>
     </message>
 </context><context>
+    <name>ResourceChain</name>
+    <message>
+        <source>Audio pack '%1' is for %2; skipped</source>
+        <translation>Gói âm thanh "%1" dành cho %2; đã bỏ qua</translation>
+    </message>
+    <message>
+        <source>Dictionary '%1' is for %2; skipped</source>
+        <translation>Từ điển "%1" dành cho %2; đã bỏ qua</translation>
+    </message>
+    <message>
+        <source>Frequency source '%1' is for %2; skipped</source>
+        <translation>Nguồn tần suất "%1" dành cho %2; đã bỏ qua</translation>
+    </message>
+    <message>
+        <source>Pitch source '%1' is for %2; skipped</source>
+        <translation>Nguồn trọng âm cao độ "%1" dành cho %2; đã bỏ qua</translation>
+    </message>
+</context><context>
     <name>ResourceDownloadDialog</name>
     <message>
         <source>Starting download…</source>
@@ -7078,6 +7300,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>Download recommended resources</source>
         <translation>Tải các tài nguyên được đề xuất</translation>
+    </message>
+    <message>
+        <source>No downloadable resources are recommended for this language — import a Yomitan dictionary in Settings → Dictionaries and a frequency list in Settings → Frequency.</source>
+        <translation>Không có tài nguyên tải xuống nào được đề xuất cho ngôn ngữ này — hãy nhập từ điển Yomitan trong Cài đặt → Từ điển và danh sách tần suất trong Cài đặt → Tần suất.</translation>
     </message>
     <message>
         <source>Checking for an offline dictionary...</source>
@@ -7436,6 +7662,10 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>Mining</source>
         <translation>Khai thác</translation>
+    </message>
+    <message>
+        <source>Mining Language</source>
+        <translation>Ngôn ngữ khai thác</translation>
     </message>
     <message>
         <source>Filtering</source>
@@ -7986,16 +8216,24 @@ Các từ điển đã cài đặt, âm thanh, danh sách tần suất, và giao
         <translation>Tạo phụ đề</translation>
     </message>
     <message>
+        <source>Japanese</source>
+        <translation>Tiếng Nhật</translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation>Tiếng Hàn</translation>
+    </message>
+    <message>
+        <source>Chinese</source>
+        <translation>Tiếng Trung</translation>
+    </message>
+    <message>
         <source>Input</source>
         <translation>Đầu vào</translation>
     </message>
     <message>
         <source>Language:</source>
         <translation>Ngôn ngữ:</translation>
-    </message>
-    <message>
-        <source>Japanese</source>
-        <translation>Tiếng Nhật</translation>
     </message>
     <message>
         <source>Transcription is not ready. Open Settings → Transcription &amp; Alignment to finish setup.</source>
