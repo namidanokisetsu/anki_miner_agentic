@@ -526,7 +526,7 @@ class AnkiMinerConfig:
 
     # ASR (Automatic Speech Recognition) settings. Used by the Local Subtitle
     # Creation feature (offline transcription via faster-whisper). Requires
-    # the optional `[asr]` extra: pip install "anki-miner[asr]".
+    # the optional `[asr]` extra: pip install "anki-miner-agentic[asr]".
     # `asr_model` selects the faster-whisper model size. Unknown values are
     # silently reset to the default in __post_init__.
     # `asr_models_root` is the directory where downloaded model weights are

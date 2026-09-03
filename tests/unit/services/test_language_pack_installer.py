@@ -1097,7 +1097,7 @@ class TestKoAvailability:
         reason = availability.ko_missing_required_reason() or ""
 
         assert "kiwipiepy" in reason
-        assert 'pip install "anki-miner[ko]"' in reason
+        assert 'pip install "anki-miner-agentic[ko]"' in reason
 
     def test_the_selector_offers_ko_once_the_pack_is_installed(self, home, monkeypatch) -> None:
         from anki_miner.gui.utils import language_choices

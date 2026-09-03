@@ -169,9 +169,7 @@ def test_agent_config_rejects_removed_limit_keys(tmp_path, monkeypatch, key, val
         json.dumps(
             {
                 "agent": {
-                    "knowledge_sources": [
-                        {"deck": "Known", "note_type": "ExampleNote", "word_fields": ["word"]}
-                    ],
+                    "knowledge_sources": [{"deck": "Known", "note_type": "ExampleNote", "word_fields": ["word"]}],
                     "write_target": {"deck": "Mining", "note_type": "ExampleNote"},
                     key: value,
                 }

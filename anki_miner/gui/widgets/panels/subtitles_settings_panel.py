@@ -83,9 +83,9 @@ def _device_options(vulkan_available: bool = False) -> list[tuple[str, str]]:
 
 # Exact command that installs the optional speech-to-text engine. Shown
 # verbatim (and copyable) when faster-whisper is not importable.
-_ASR_INSTALL_COMMAND = 'pip install "anki-miner[asr]"'
+_ASR_INSTALL_COMMAND = 'pip install "anki-miner-agentic[asr]"'
 # PyInstaller bundles are sealed; pipx creates a separate ASR-capable install.
-_ASR_FROZEN_INSTALL_COMMAND = 'pipx install "anki-miner[asr]"'
+_ASR_FROZEN_INSTALL_COMMAND = 'pipx install "anki-miner-agentic[asr]"'
 
 # Homebrew command for alass on macOS, where no upstream binary is published.
 _ALASS_BREW_COMMAND = "brew install alass"

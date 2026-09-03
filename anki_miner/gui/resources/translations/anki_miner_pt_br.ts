@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="pt_BR">
-    <context>
+  <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>About Anki Miner</source>
-        <translation type="unfinished">Sobre o Anki Miner</translation>
+        <translation>Sobre o Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -682,13 +682,15 @@
     <name>App</name>
     <message>
         <source>Anki Miner Is Already Running</source>
-        <translation type="unfinished" />
+        <translation>O Anki Miner Já Está em Execução</translation>
     </message>
     <message>
         <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation type="unfinished" />
+        <translation>Outra cópia do Anki Miner parece estar em execução. Executar duas cópias ao mesmo tempo pode corromper os bancos de dados de palavras conhecidas e de estatísticas.
+
+Continuar mesmo assim?</translation>
     </message>
     <message>
         <source>Continue anyway</source>
@@ -9767,7 +9769,7 @@ O seletor “Frases” oferece uma opção por linha de legenda, então costuma 
     <name>app</name>
     <message>
         <source>Anki Miner — Unexpected Error</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner — Erro inesperado</translation>
     </message>
     <message>
         <source>%1: %2

@@ -122,9 +122,11 @@ class ExistingPipelineCandidateWriter:
                         )
                     note_ids = self.processor.anki_service.last_created_note_ids
                     aligned = [
-                        {"outcome": "created", "note_id": note_ids[0]}
-                        if note_ids
-                        else {"outcome": "duplicate_skipped", "note_id": None}
+                        (
+                            {"outcome": "created", "note_id": note_ids[0]}
+                            if note_ids
+                            else {"outcome": "duplicate_skipped", "note_id": None}
+                        )
                     ]
                 for media_index, outcome in zip(valid_indexes, aligned, strict=True):
                     original_index = media_original_indexes[media_index]

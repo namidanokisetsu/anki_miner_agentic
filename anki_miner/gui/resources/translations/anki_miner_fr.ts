@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="fr_FR">
-    <context>
+  <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>About Anki Miner</source>
-        <translation type="unfinished">À propos d'Anki Miner</translation>
+        <translation>À propos d'Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -682,13 +682,15 @@
     <name>App</name>
     <message>
         <source>Anki Miner Is Already Running</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner est déjà en cours d'exécution</translation>
     </message>
     <message>
         <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation type="unfinished" />
+        <translation>Une autre instance d'Anki Miner semble être en cours d'exécution. Exécuter deux instances simultanément peut corrompre les bases de données des mots connus et des statistiques.
+
+Continuer quand même ?</translation>
     </message>
     <message>
         <source>Continue anyway</source>
@@ -9767,7 +9769,7 @@ Le sélecteur « Phrases » propose une option par ligne de sous-titres et en li
     <name>app</name>
     <message>
         <source>Anki Miner — Unexpected Error</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner — Erreur inattendue</translation>
     </message>
     <message>
         <source>%1: %2

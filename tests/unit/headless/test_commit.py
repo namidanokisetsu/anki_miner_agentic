@@ -68,12 +68,8 @@ def test_commit_is_selected_only_and_idempotent(tmp_path):
     service = MiningCommitService(store, cfg(), writer)
 
     dry_run = service.commit("batch_one", ["candidate_one"], dry_run=True)
-    first = service.commit(
-        "batch_one", ["candidate_one"], dry_run=False, validation_token=dry_run["validation_token"]
-    )
-    second = service.commit(
-        "batch_one", ["candidate_one"], dry_run=False, validation_token=dry_run["validation_token"]
-    )
+    first = service.commit("batch_one", ["candidate_one"], dry_run=False, validation_token=dry_run["validation_token"])
+    second = service.commit("batch_one", ["candidate_one"], dry_run=False, validation_token=dry_run["validation_token"])
 
     assert first["state"] == "completed"
     assert second["job_id"] == first["job_id"]

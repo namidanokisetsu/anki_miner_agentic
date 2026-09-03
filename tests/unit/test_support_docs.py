@@ -21,7 +21,7 @@ def test_asr_less_frozen_install_guidance_offers_only_executable_remedies(qtbot,
     assert "This packaged app cannot be extended" in message
     assert "launch the separate pipx-installed Anki Miner" in message
     assert "ASR-capable AppImage" in message
-    assert commands == ['pipx install "anki-miner[asr]"']
+    assert commands == ['pipx install "anki-miner-agentic[asr]"']
     assert "pip install" not in message + " ".join(commands)
 
     readme = (ROOT / "README.md").read_text(encoding="utf-8")

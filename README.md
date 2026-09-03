@@ -17,8 +17,8 @@ You need Python 3.11+, Anki with [AnkiConnect](https://ankiweb.net/shared/info/2
 git clone https://github.com/namidanokisetsu/anki_miner_agentic.git
 cd anki_miner_agentic
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-python -m pip install -e ".[mcp,languages]"
+source .venv/bin/activate  # Windows PowerShell: .\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[mcp]"
 anki_miner_agentic_gui
 ```
 

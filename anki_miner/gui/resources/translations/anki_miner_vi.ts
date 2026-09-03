@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="vi_VN">
-    <context>
+  <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>About Anki Miner</source>
-        <translation type="unfinished">Giới thiệu Anki Miner</translation>
+        <translation>Giới thiệu Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -681,13 +681,15 @@
     <name>App</name>
     <message>
         <source>Anki Miner Is Already Running</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner đang chạy</translation>
     </message>
     <message>
         <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation type="unfinished" />
+        <translation>Có vẻ một bản Anki Miner khác đang chạy. Chạy hai bản cùng lúc có thể làm hỏng CSDL từ đã biết và CSDL thống kê.
+
+Vẫn tiếp tục?</translation>
     </message>
     <message>
         <source>Continue anyway</source>
@@ -9751,7 +9753,7 @@ Khung chọn “Câu” đưa ra một lựa chọn cho mỗi dòng phụ đề 
     <name>app</name>
     <message>
         <source>Anki Miner — Unexpected Error</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner — Lỗi Không Mong Đợi</translation>
     </message>
     <message>
         <source>%1: %2

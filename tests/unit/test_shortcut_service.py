@@ -215,7 +215,10 @@ class TestCreateShortcut:
         assert app_dir in result.paths_created
         assert launcher.stat().st_mode & 0o111
         assert "unset PYTHONPATH" in launcher.read_text()
-        assert 'export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin${PATH:+:$PATH}"' in launcher.read_text()
+        assert (
+            'export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin${PATH:+:$PATH}"'
+            in launcher.read_text()
+        )
         assert f"'{fake_exe}' \"$@\"" in launcher.read_text()
         assert f"exec '{fake_exe}'" not in launcher.read_text()
         assert "child_pid=$!" in launcher.read_text()
@@ -228,9 +231,7 @@ class TestCreateShortcut:
         assert (app_dir / "Contents" / "Resources" / "anki_miner.icns").is_file()
 
     @pytest.mark.parametrize("protected_dir", ["Desktop", "Documents", "Downloads"])
-    def test_macos_refuses_launcher_target_inside_privacy_protected_folder(
-        self, tmp_path, monkeypatch, protected_dir
-    ):
+    def test_macos_refuses_launcher_target_inside_privacy_protected_folder(self, tmp_path, monkeypatch, protected_dir):
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         fake_exe = tmp_path / protected_dir / "project" / ".venv" / "bin" / "anki_miner_gui"
         fake_exe.parent.mkdir(parents=True)

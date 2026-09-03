@@ -16,8 +16,9 @@ def test_ko_extra_pins_kiwipiepy_and_its_model():
 
 
 def test_languages_extra_aggregates_zh_and_ko():
-    extras = _data()["project"]["optional-dependencies"]
-    assert set(extras["languages"]) == {"anki-miner[zh]", "anki-miner[ko]"}
+    project = _data()["project"]
+    extras = project["optional-dependencies"]
+    assert set(extras["languages"]) == {f"{project['name']}[zh]", f"{project['name']}[ko]"}
 
 
 def test_mypy_ignores_missing_kiwipiepy_imports():

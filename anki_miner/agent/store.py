@@ -241,9 +241,7 @@ class AgentStore:
         """Persist proof that this exact selection passed a dry run."""
         token = f"validation_{secrets.token_urlsafe(24)}"
         with self._transaction() as conn:
-            batch = conn.execute(
-                "SELECT state FROM mining_batches WHERE revision_id=?", (revision_id,)
-            ).fetchone()
+            batch = conn.execute("SELECT state FROM mining_batches WHERE revision_id=?", (revision_id,)).fetchone()
             require(batch is not None, "batch_not_found", "Mining batch does not exist", batch_revision=revision_id)
             require(
                 batch["state"] == "ready",
@@ -557,8 +555,7 @@ class AgentStore:
                 "Live commits require a validation token returned by a successful dry run",
             )
             require(
-                validation["batch_revision"] == revision_id
-                and json.loads(validation["selection_json"]) == selection,
+                validation["batch_revision"] == revision_id and json.loads(validation["selection_json"]) == selection,
                 "validated_selection_changed",
                 "The live selection must exactly match the validated dry-run selection",
             )
@@ -743,7 +740,9 @@ class AgentStore:
                 for row in connection.execute("SELECT * FROM mining_outputs WHERE job_id=?", (job_id,))
             }
             selection = json.loads(job["selection_json"])
-            outputs = [output_by_id[candidate_id] for candidate_id in selection["selected"] if candidate_id in output_by_id]
+            outputs = [
+                output_by_id[candidate_id] for candidate_id in selection["selected"] if candidate_id in output_by_id
+            ]
             counts = {"selected": len(selection["selected"]), "created": 0, "duplicate_skipped": 0, "failed": 0}
             for output in outputs:
                 counts[output["outcome"]] += 1
