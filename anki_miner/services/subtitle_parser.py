@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 import pysubs2
 
 from anki_miner.config import AnkiMinerConfig
-from anki_miner.exceptions import SubtitleParseError
+from anki_miner.exceptions import SetupError, SubtitleParseError
 from anki_miner.languages.tagger_provider import get_tagger
 from anki_miner.models import LineLemmas, TokenizedWord
 from anki_miner.models.reading import ReadingUnit
@@ -124,6 +124,11 @@ _FRONT_CACHE_CAP: int = 200_000
 # purpose — きれい is attested only as 綺麗's READING, so a term-only probe misses it.
 # Maps each queried card front to whether any offline dictionary attests it.
 KanaAttestLookup = Callable[[list[str]], dict[str, bool]]
+
+# Language-specific token-merge pass (languages/ko/predicate_merge.py), called as
+# merge_line(text, tokens, attest). Duck-typed: services keeps no runtime import
+# of languages.
+TokenMerger = Any
 
 # POS backstop for kana recovery: only inflectional content words are recovered
 # from the pure-hiragana script gate. Deliberately EXCLUDES 名詞 — formal nouns
@@ -347,6 +352,7 @@ class SubtitleParserService:
         mined_form_policy: "MinedFormPolicy | None" = None,
         reading_support: "ReadingSupport | None" = None,
         script_gate: Callable[[str], bool] | None = None,
+        token_merger: "TokenMerger | None" = None,
     ):
         """Initialize the subtitle parser.
 
@@ -409,6 +415,14 @@ class SubtitleParserService:
                 katakana / loanword ladder exactly as it was; a callable
                 replaces only its last step, which is what lets a pure-hangul
                 Korean word be mined at all.
+            token_merger: Optional language-specific token-merge pass run on the
+                merged stream, right after the JA compound-suffix passes
+                (``languages.ko.predicate_merge.KoreanPredicateMerger``). Called
+                as ``merge_line(text, tokens, attest)`` with the SAME memoised
+                existence probe the compound matcher uses. ``None`` — every JA
+                and ZH path — and any config with no offline dictionary (no
+                probe to pass) skip it entirely, so output stays byte-identical.
+                Duck-typed like ``mined_form_policy``.
         """
         self.config = config
         # Perf-audit counters (Task 28): cumulative wall-clock spent in offline-
@@ -426,6 +440,10 @@ class SubtitleParserService:
         # Word-reading provider for the emit site. None ⇒ the JA derivation runs
         # verbatim (see _emit_word); the ja profile never injects one.
         self._reading_support = reading_support
+        # Language-specific merge pass for the merged stream (ko: 공부 + 하 →
+        # 공부하다). Runs only when an offline existence probe exists (see
+        # _build_line_state); None ⇒ JA/ZH behaviour verbatim.
+        self._token_merger = token_merger
         self._reading_lookup = reading_lookup
         self._name_lookup = name_lookup
         # Shared process-wide tagger (see services/tagger.py for the single-flight
@@ -448,6 +466,15 @@ class SubtitleParserService:
 
         language = config_language(config)
         self.tagger = get_shared_tagger() if language == "ja" else get_tagger(language)
+        # The language whose tagger this is - NOT config.language: the two part
+        # ways on the degrade path, and _warn_if_nothing_mined names both.
+        self._tagger_language = language
+        # A whitelisted code with no registered profile degrades to ja above so
+        # Settings still loads; tokenizing it would mine the wrong language.
+        requested = getattr(config, "language", None)
+        self._unavailable_language: str | None = (
+            requested if isinstance(requested, str) and requested != language else None
+        )
         # POS/subtype inclusion gate, snapshotted from the (frozen) config.
         self._inclusion_rule = TokenInclusionRule(
             allowed_pos=frozenset(config.allowed_pos),
@@ -616,6 +643,65 @@ class SubtitleParserService:
             file=subtitle_file,
             tokenize_s=f"{self._tokenize_time_s:.4f}",
             probe_s=f"{self._probe_time_s:.4f}",
+        )
+
+    def _require_engine(self) -> None:
+        """Refuse to tokenize a config whose language degraded to ja.
+
+        ``config_language`` maps a whitelisted code with no registered profile
+        to "ja" so Settings and previews keep working, but a mining run on that
+        config tokenized Chinese/Korean text with the Japanese tagger and then
+        reported "No words found in subtitles" - the config's POS whitelist
+        rejects every unidic tag. Raised at the tokenizing entry points, not in
+        ``__init__``: the GUI builds this service for ``parse_raw_entries``
+        previews, which never tokenize and must not fail.
+        """
+        if self._unavailable_language is None:
+            return
+        raise SetupError(
+            f"Mining language {self._unavailable_language!r} is not available in this installation: "
+            "no language profile is registered for it. Install its language pack, or pick another "
+            "mining language in Settings -> Mining Language."
+        )
+
+    def _warn_if_nothing_mined(
+        self, subtitle_file: Path, all_words: list[TokenizedWord], subtitle_offset: float | None
+    ) -> None:
+        """One WARNING naming why a subtitle with lines mined nothing.
+
+        The GUI says "No words found in subtitles" and the run log only
+        ``tokens=0``; the first zh YouTube report (v3.0.0) was undiagnosable
+        from either. Every zero-word outcome reproduced so far has one shape -
+        every tagger token failing ``TokenInclusionRule`` - with three causes
+        that read identically from outside: a POS whitelist belonging to
+        another language's tagger (unidic names against jieba flags), a
+        language ``config_language`` degraded to ja, or text the engine cannot
+        segment (English cues under a Chinese caption code). The mining
+        language, the language whose tagger ran, the whitelist and the tags the
+        tagger actually emitted tell them apart. Replays the line cache the
+        parse just filled, so nothing is re-tokenized; silent when the file had
+        no mineable lines at all (that case is reported upstream).
+        """
+        if all_words:
+            return
+        lines = raw_tokens = 0
+        tags: collections.Counter[str] = collections.Counter()
+        for _text, raw, _merged, _start, _end, _duration in self._iter_parsed_lines(subtitle_file, subtitle_offset):
+            lines += 1
+            raw_tokens += len(raw)
+            tags.update(str(getattr(getattr(token, "feature", None), "pos1", "") or "?") for token in raw)
+        if lines == 0:
+            return
+        logger.warning(
+            "Subtitle parse mined no words: file=%s language=%s tagger_language=%s allowed_pos=%s "
+            "lines=%d raw_tokens=%d top_pos=%s",
+            subtitle_file.name,
+            getattr(self.config, "language", "?"),
+            self._tagger_language,
+            ",".join(sorted(self._inclusion_rule.allowed_pos)),
+            lines,
+            raw_tokens,
+            ",".join(f"{pos}:{count}" for pos, count in tags.most_common(5)),
         )
 
     @property
@@ -905,6 +991,10 @@ class SubtitleParserService:
         raw_tokens = list(self.tagger(text))
         self._tokenize_time_s += time.perf_counter() - tokenize_start
         merged_tokens = self._merge_compound_suffixes(raw_tokens)
+        # Language-specific merge (ko: 공부 + 하 → 공부하다). Placed with the other
+        # merge passes and gated on the same probe; no probe ⇒ no merge.
+        if self._token_merger is not None and self._attest is not None:
+            merged_tokens = self._token_merger.merge_line(text, merged_tokens, self._attest)
         if self._name_matcher is not None:
             merged_tokens = self._name_matcher.merge_line(text, merged_tokens)
         if self._compound_matcher is not None:
@@ -1497,6 +1587,7 @@ class SubtitleParserService:
         Raises:
             SubtitleParseError: If subtitle file cannot be parsed
         """
+        self._require_engine()
         # Reset per-parse memo caches so a second call on the same instance
         # does not serve entries from a previous parse run.
         self._reset_caches()
@@ -1513,6 +1604,7 @@ class SubtitleParserService:
             all_words.extend(line_words)
 
         self._log_parse_probe_timing(subtitle_file)
+        self._warn_if_nothing_mined(subtitle_file, all_words, subtitle_offset)
         return all_words
 
     def parse_subtitle_file_with_index(
@@ -1544,6 +1636,7 @@ class SubtitleParserService:
         Raises:
             SubtitleParseError: If subtitle file cannot be parsed
         """
+        self._require_engine()
         # Reset per-parse memo caches; see parse_subtitle_file for rationale.
         self._reset_caches()
 
@@ -1560,6 +1653,7 @@ class SubtitleParserService:
             all_words.extend(line_words)
 
         self._log_parse_probe_timing(subtitle_file)
+        self._warn_if_nothing_mined(subtitle_file, all_words, subtitle_offset)
         return all_words, line_index
 
     def parse_mining_episode(
@@ -1641,6 +1735,7 @@ class SubtitleParserService:
             ``want_line_index`` else ``None``; ``counts`` maps lemma → total
             included occurrences (``count_lemmas`` semantics, no dedup).
         """
+        self._require_engine()
         # Public parse_* convention: reset the per-parse memo caches so a
         # multi-volume queue on one shared processor never serves stale
         # furigana/reading entries and cache growth stays bounded across units.
@@ -1714,6 +1809,7 @@ class SubtitleParserService:
         Raises:
             SubtitleParseError: If subtitle file cannot be parsed
         """
+        self._require_engine()
         # Unlike the parse_* entry points above, count_lemmas does not call
         # _reset_caches() (it never touches the reading/furigana memos) — but
         # it does tokenize and probe, so it resets the perf counters directly.

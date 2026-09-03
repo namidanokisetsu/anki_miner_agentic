@@ -292,6 +292,38 @@
 </context><context>
     <name>AnkiSettingsPanel</name>
     <message>
+        <source>Measure Word Field</source>
+        <translation>Поле счётного слова</translation>
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation>Хранит счётное слово, разобранное из словарной статьи. Пусто = пропустить.</translation>
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation>Поле пиньиня</translation>
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation>Хранит чтение слова в пиньине, раскрашенное по тонам, если эта опция включена. Пусто = пропустить.</translation>
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation>Поле традиционного написания</translation>
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation>Хранит слово в другом варианте письменности, если он отличается. Пусто = пропустить.</translation>
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation>Поле ханчи</translation>
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation>Хранит знаки ханчи, содержащиеся в слове. Пусто = пропустить.</translation>
+    </message>
+    <message>
         <source>Not in Anki — mining will fail until you pick a real one or create it in Anki.</source>
         <translation>Нет в Anki — майнинг не будет работать, пока вы не выберете существующий тип или не создадите его в Anki.</translation>
     </message>
@@ -458,38 +490,6 @@
     <message>
         <source>Stores the sentence as plain kana.</source>
         <translation>Хранит предложение в виде чистой каны.</translation>
-    </message>
-    <message>
-        <source>Measure Word Field</source>
-        <translation>Поле счётного слова</translation>
-    </message>
-    <message>
-        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
-        <translation>Хранит счётное слово, разобранное из словарной статьи. Пусто = пропустить.</translation>
-    </message>
-    <message>
-        <source>Pinyin Field</source>
-        <translation>Поле пиньиня</translation>
-    </message>
-    <message>
-        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
-        <translation>Хранит чтение слова в пиньине, раскрашенное по тонам, если эта опция включена. Пусто = пропустить.</translation>
-    </message>
-    <message>
-        <source>Traditional Field</source>
-        <translation>Поле традиционного написания</translation>
-    </message>
-    <message>
-        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
-        <translation>Хранит слово в другом варианте письменности, если он отличается. Пусто = пропустить.</translation>
-    </message>
-    <message>
-        <source>Hanja Field</source>
-        <translation>Поле ханчи</translation>
-    </message>
-    <message>
-        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
-        <translation>Хранит знаки ханчи, содержащиеся в слове. Пусто = пропустить.</translation>
     </message>
     <message>
         <source>Auxiliary Data Fields</source>
@@ -699,6 +699,10 @@ Continue anyway?</source>
         <source>Quit</source>
         <translation>Выйти</translation>
     </message>
+    <message>
+        <source>Open Settings</source>
+        <translation>Открыть настройки</translation>
+    </message>
 </context><context>
     <name>AsrModelDownloadWorker</name>
     <message>
@@ -731,7 +735,7 @@ Continue anyway?</source>
     <name>AudioPackImportFlow</name>
     <message>
         <source>Scanning folder for audio packs…</source>
-        <translation type="unfinished" />
+        <translation>Сканирование папки на наличие аудиопакетов…</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -739,7 +743,7 @@ Continue anyway?</source>
     </message>
     <message>
         <source>Scanning %1 …</source>
-        <translation type="unfinished" />
+        <translation>Сканирование %1 …</translation>
     </message>
     <message>
         <source>That folder could not be scanned.</source>
@@ -1719,11 +1723,11 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Mine Japanese, Korean or Chinese</source>
-        <translation type="unfinished" />
+        <translation>Майнинг японского, корейского или китайского</translation>
     </message>
     <message>
         <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
-        <translation type="unfinished" />
+        <translation>Переключайте язык майнинга — у каждого свои словари, фильтры, колода и поля карточек.</translation>
     </message>
     <message>
         <source>i+1 sentence mining</source>
@@ -3214,8 +3218,8 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>пустое поле слова</translation>
     </message>
     <message>
-        <source>not Japanese</source>
-        <translation>не японский</translation>
+        <source>not the mining language</source>
+        <translation>не язык майнинга</translation>
     </message>
     <message>
         <source>duplicate within the deck</source>
@@ -3954,8 +3958,12 @@ Files on disk will be left untouched because the folder could not be proven to b
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Audio pack '%1' is slow to read — audio skipped for those words. Its folder is probably on a cloud-synced, network or external drive: move it to a local drive, then re-import the pack (Settings -&gt; Audio -&gt; Re-import…).</source>
+        <translation>Аудиопакет «%1» читается слишком медленно — аудио для этих слов пропущено. Его папка, вероятно, находится на облачном, сетевом или внешнем диске: переместите её на локальный диск и повторно импортируйте пакет (Настройки -&gt; Аудио -&gt; Повторный импорт…).</translation>
+    </message>
+    <message>
         <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
-        <translation type="unfinished" />
+        <translation>Источник аудио слов отвечает слишком медленно — аудио для этих слов пропущено. Если это повторяется, измените порядок или отключите его в Настройки -&gt; Аудио.</translation>
     </message>
     <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
@@ -4004,6 +4012,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Sentence audio: %1/%2 sentences</source>
         <translation>Аудио предложений: %1/%2 предложений</translation>
+    </message>
+    <message>
+        <source>Subtitles contain no %1 text</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No words found in subtitles</source>
+        <translation>Слов в субтитрах не найдено</translation>
     </message>
     <message>
         <source>All %1 new word(s) were removed by active filters — no cards created</source>
@@ -4196,10 +4212,6 @@ Files on disk will be left untouched because the folder could not be proven to b
             <numerusform>Майнятся %n выбранных слова</numerusform>
             <numerusform>Майнится %n выбранных слов</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>No words found in subtitles</source>
-        <translation>Слов в субтитрах не найдено</translation>
     </message>
     <message>
         <source>No media extracted successfully</source>
@@ -4762,6 +4774,18 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>Минимальное число раз, которое слово должно встретиться в книге или томе, чтобы быть добытым. 1 = без минимума (фильтр выключен).</translation>
     </message>
     <message>
+        <source>Card Order</source>
+        <translation>Порядок карточек</translation>
+    </message>
+    <message>
+        <source>Create cards in order of appearance</source>
+        <translation>Создавать карточки в порядке появления</translation>
+    </message>
+    <message>
+        <source>Adds cards to Anki in the order the words appear in the media, instead of the order their media finished extracting. Overrides the whitelist's force-include ordering and any column sort in the Word Curator.</source>
+        <translation>Добавляет карточки в Anki в порядке появления слов в медиафайле, а не в порядке завершения извлечения их медиа. Переопределяет порядок принудительного включения белого списка и любую сортировку столбцов в Кураторе слов.</translation>
+    </message>
+    <message>
         <source>Card Formatting</source>
         <translation>Форматирование карточки</translation>
     </message>
@@ -4966,14 +4990,6 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>Активный профиль настроек. При переключении заменяются все настройки; выберите «Управление профилями…», чтобы добавить, переименовать или удалить профиль.</translation>
     </message>
     <message>
-        <source>Mining language:</source>
-        <translation>Язык майнинга:</translation>
-    </message>
-    <message>
-        <source>Mining language</source>
-        <translation>Язык майнинга</translation>
-    </message>
-    <message>
         <source>Theme:</source>
         <translation>Тема:</translation>
     </message>
@@ -4992,10 +5008,6 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Manage profiles…</source>
         <translation>Управление профилями…</translation>
-    </message>
-    <message>
-        <source>Mining language: %1. Opens the selector in Settings.</source>
-        <translation>Язык майнинга: %1. Открывает выбор языка в настройках.</translation>
     </message>
 </context><context>
     <name>InlineReceipt</name>
@@ -5152,14 +5164,14 @@ Add %3 word(s) to your known list?</source>
         <translation>Удалить ВСЕ слова, добавленные вами в локальный список известных слов? Это нельзя отменить. Синхронизированный с Anki кэш не затрагивается.</translation>
     </message>
 </context><context>
-    <name>KoModelDownloadWorker</name>
+    <name>LanguagePackDownloadWorker</name>
     <message>
-        <source>Downloading the Korean model…</source>
-        <translation>Скачивание корейской модели…</translation>
+        <source>Downloading the %1 pack…</source>
+        <translation>Загрузка пакета %1…</translation>
     </message>
     <message>
-        <source>Korean model installed successfully.</source>
-        <translation>Корейская модель успешно установлена.</translation>
+        <source>%1 pack installed successfully.</source>
+        <translation>Пакет %1 успешно установлен.</translation>
     </message>
 </context><context>
     <name>LanguageSwitch</name>
@@ -5902,24 +5914,20 @@ Continue?</source>
         <translation>Язык, который вы майните. Не связан с языком интерфейса (Настройки -&gt; Внешний вид и язык). Переключение меняет словари, фильтры, колоду и поля карточек на настройки этого языка.</translation>
     </message>
     <message>
-        <source>Download Korean model</source>
-        <translation>Скачать корейскую модель</translation>
+        <source>Download %1 pack</source>
+        <translation>Скачать пакет %1</translation>
     </message>
     <message>
-        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
-        <translation>Скачать модель корейского языка в папку Anki Miner. В упакованных сборках корейский движок поставляется без своей модели.</translation>
-    </message>
-    <message>
-        <source>Korean model</source>
-        <translation>Корейская модель</translation>
+        <source>Download the engine and data Anki Miner needs to mine %1, into its own folder.</source>
+        <translation>Скачивает движок и данные, необходимые Anki Miner для майнинга %1, в отдельную папку.</translation>
     </message>
     <message>
         <source>Installed</source>
         <translation>Установлено</translation>
     </message>
     <message>
-        <source>Not installed</source>
-        <translation>Не установлено</translation>
+        <source>Not installed - about %1 MB download</source>
+        <translation>Не установлено - около %1 МБ для загрузки</translation>
     </message>
 </context><context>
     <name>MiningTabBase</name>
@@ -9376,12 +9384,12 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
 Список «Предложения» предлагает по одному варианту на строку субтитров, поэтому обычно их меньше: повторы в одной строке здесь считаются один раз, а строки, где слово стоит в форме, меняющей поле «Слово (намайнено)» карточки, пропускаются.</translation>
     </message>
     <message>
-        <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S — включить/исключить · Пробел — воспроизведение/пауза · Ctrl+A — включить видимые · Ctrl+D — исключить видимые · Ctrl+Enter — подтвердить</translation>
+        <source>S include/exclude · Space play/pause · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S — включить/исключить · Пробел — воспроизведение/пауза · K — отметить как известное · Ctrl+A — включить видимые · Ctrl+D — исключить видимые · Ctrl+Enter — подтвердить</translation>
     </message>
     <message>
-        <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S — включить/исключить · Ctrl+A — включить видимые · Ctrl+D — исключить видимые · Ctrl+Enter — подтвердить</translation>
+        <source>S include/exclude · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S — включить/исключить · K — отметить как известное · Ctrl+A — включить видимые · Ctrl+D — исключить видимые · Ctrl+Enter — подтвердить</translation>
     </message>
     <message>
         <source>+ Previous line</source>

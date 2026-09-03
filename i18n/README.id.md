@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md sha256:3faba83f26c9d1af -->
+<!-- i18n-source: README.md sha256:3bd1e330de2efafb -->
 
 <h1 align="center">
   <img src="https://raw.githubusercontent.com/0xzerolight/anki_miner/main/anki_miner/gui/resources/icons/anki_miner.svg" height="76" align="absmiddle" alt=""> Anki Miner
@@ -67,8 +67,8 @@ Ambil unduhan untuk platform Anda dari [rilis terbaru](https://github.com/0xzero
 | Platform | Unduhan |
 |----------|----------|
 | Windows | `AnkiMiner-*-Setup.exe` |
-| macOS (Apple Silicon / M1-M4) | `AnkiMiner-macOS-arm64.tar.gz` |
-| macOS (Intel) | `AnkiMiner-macOS-x86_64.tar.gz` ¹ |
+| macOS (Apple Silicon / M1-M4) | `AnkiMiner-*-macOS-arm64.tar.gz` |
+| macOS (Intel) | `AnkiMiner-*-macOS-x86_64.tar.gz` ¹ |
 | Linux (Debian/Ubuntu) | `anki-miner_*_amd64.deb` |
 | Linux (lainnya) | `AnkiMiner-*-Linux-x86_64.AppImage` |
 
@@ -87,6 +87,14 @@ Ambil unduhan untuk platform Anda dari [rilis terbaru](https://github.com/0xzero
 pipx install anki-miner   # or: pip install anki-miner
 anki_miner_gui
 ```
+
+Bahasa Jepang tidak perlu tambahan apa pun. Untuk mining bahasa Mandarin atau Korea, tambahkan mesinnya:
+
+```bash
+pipx install "anki-miner[languages]"   # both; or [zh] / [ko] for one
+```
+
+Unduhan di atas mengambilnya langsung di dalam aplikasi, lewat Pengaturan -> Bahasa Mining.
 
 </details>
 
@@ -111,7 +119,7 @@ Untuk pengaturan pengembangan lengkap, lihat [CONTRIBUTING.md](../CONTRIBUTING.m
 - **Buku Audio** - mining buku audio, podcast, radio, lagu (pasangan audio + subtitel/transkrip).
 - **Bacaan** - mining manga (mokuro), novel (`.epub`, `.txt`; satu buku atau seluruh folder), berkas subtitel mandiri, atau teks yang ditempel.
 - **Analitik** - riwayat mining, peringkat kesulitan, milestone.
-- **Utilitas** - membuat subtitel (Whisper lokal), mengatur ulang waktu subtitel (ffsubsync/alass), memadatkan media menjadi audio berisi dialog saja, menyalin bagian yang layak dipelajari dari dek siap pakai ke dek baru, dan mengisi ulang bidang pada kartu yang sudah ada.
+- **Utilitas** - membuat subtitel (Whisper lokal), mengatur ulang waktu subtitel (ffsubsync/alass), memadatkan media menjadi audio berisi dialog saja, mengunduh video/audio/subtitel dari situs mana pun yang didukung yt-dlp, menyalin bagian yang layak dipelajari dari dek siap pakai ke dek baru, dan mengisi ulang bidang pada kartu yang sudah ada.
 - **Pengaturan** - semua yang bisa dikonfigurasi.
 
 ## Fitur Lainnya
@@ -162,6 +170,8 @@ Ingin tema lain ditambahkan? Ajukan lewat GitHub Issue.
 
 ## Sumber Daya yang Direkomendasikan
 
+Bahasa Jepang kecuali ditandai lain. Panduan Penyiapan menawarkan set yang sesuai untuk bahasa mining Anda.
+
 | Jenis | Sumber Daya | Unduhan | Tambah melalui |
 |------|----------|----------|---------|
 | Kamus | [JMdict](https://github.com/yomidevs/jmdict-yomitan) | [Yomitan zip](https://github.com/yomidevs/jmdict-yomitan/releases/latest/download/JMdict_english.zip) | Tambahkan kamus… |
@@ -172,6 +182,8 @@ Ingin tema lain ditambahkan? Ajukan lewat GitHub Issue.
 | Frekuensi | [JPDB v2.2 Kana](https://github.com/Kuuuube/yomitan-dictionaries) | [Yomitan zip](https://github.com/Kuuuube/yomitan-dictionaries/raw/main/dictionaries/JPDB_v2.2_Frequency_Kana_2024-10-13.zip) | Frekuensi -> Tambahkan sumber frekuensi… |
 | Frekuensi | [BCCWJ SUW+LUW](https://github.com/Kuuuube/yomitan-dictionaries) | [Yomitan zip](https://github.com/Kuuuube/yomitan-dictionaries/raw/main/dictionaries/BCCWJ_SUW_LUW_combined.zip) | Frekuensi -> Tambahkan sumber frekuensi… |
 | Audio kata | [local-audio-yomichan](https://github.com/yomidevs/local-audio-yomichan) | Torrent koleksi atau `android.db` yang dihasilkan | Audio -> Tambahkan sumber audio… |
+| Kamus (Mandarin) | [CC-CEDICT](https://github.com/MarvNC/cc-cedict-yomitan) | [Yomitan zip](https://github.com/MarvNC/cc-cedict-yomitan/releases/latest/download/CC-CEDICT.zip) | Tambahkan kamus… |
+| Kamus (Korea) | [KRDICT](https://github.com/Lyroxide/yomitan-ko-dic) | [Yomitan zip](https://github.com/Lyroxide/yomitan-ko-dic/releases/latest/download/KO-EN.KRDICT.No.Examples.zip) | Tambahkan kamus… |
 
 
 <details>

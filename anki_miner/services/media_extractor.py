@@ -7,6 +7,7 @@ import logging
 import subprocess
 import tempfile
 import threading
+import time
 import wave
 from collections.abc import Callable
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
@@ -456,7 +457,13 @@ class MediaExtractorService:
         else:
             animated_fmt = animated_format
 
-        media_data_list: list[tuple[TokenizedWord, MediaData]] = []
+        # Keyed by submission index, not appended: the pool is harvested with
+        # wait(FIRST_COMPLETED) over a set, so append order is ffmpeg-completion
+        # order and varies run to run. Cards are created in this list's order
+        # (phases 4/5 and addNotes are all strictly positional), so the return
+        # must be the caller's input order — matching the sequential reading
+        # path, _phase3_reading_media.
+        kept: dict[int, tuple[TokenizedWord, MediaData]] = {}
         max_workers = self.config.max_parallel_workers
         was_cancelled = False
         attempted = 0
@@ -511,8 +518,8 @@ class MediaExtractorService:
                     include_screenshot=include_screenshot,
                     include_audio=include_audio,
                     animated_format=animated_fmt,
-                ): word
-                for word in words
+                ): (index, word)
+                for index, word in enumerate(words)
             }
 
             # Collect results as they complete. concurrent.futures.wait with a
@@ -534,7 +541,7 @@ class MediaExtractorService:
                         break
 
                     attempted += 1
-                    word = future_to_word[future]
+                    index, word = future_to_word[future]
 
                     try:
                         media = future.result()
@@ -567,7 +574,7 @@ class MediaExtractorService:
                             if audio_only and include_screenshot and cover_path is not None:
                                 media.screenshot_path = cover_path
                                 media.screenshot_filename = cover_path.name
-                            media_data_list.append((word, media))
+                            kept[index] = (word, media)
                             succeeded += 1
                             if progress_callback:
                                 progress_callback.on_progress(
@@ -647,7 +654,7 @@ class MediaExtractorService:
             warnings_logged=n_logged,
             cancelled=was_cancelled,
         )
-        return media_data_list
+        return [kept[index] for index in sorted(kept)]
 
     def extract_cover_art(
         self,
@@ -803,6 +810,7 @@ class MediaExtractorService:
         # avoids an extra ffprobe round-trip; it is a ceiling, not a target.
         timeout = 1800
 
+        started = time.monotonic()
         success = self._run_ffmpeg(
             cmd,
             "Full audio extraction",
@@ -829,6 +837,16 @@ class MediaExtractorService:
         except (wave.Error, OSError) as exc:
             logger.warning("extract_full_audio: could not verify %s: %s", out_wav.name, exc)
             return False
+        # The only line this stage leaves on success. Subtitle generation runs
+        # this, then a WAV load, then model construction, before it has a segment
+        # to report; without a receipt here the log cannot tell a stall inside
+        # ffmpeg from one after it.
+        log_summary(
+            logger,
+            "Full audio extraction done",
+            file=video_file,
+            seconds=f"{time.monotonic() - started:.1f}",
+        )
         return True
 
     def _extract_screenshot(

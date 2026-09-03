@@ -290,6 +290,38 @@
 </context><context>
     <name>AnkiSettingsPanel</name>
     <message>
+        <source>Measure Word Field</source>
+        <translation>量詞欄位</translation>
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation>儲存從字典詞條中解析出的量詞。留空＝略過。</translation>
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation>拼音欄位</translation>
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation>儲存單字的拼音讀音；若已開啟聲調上色，則會帶顏色。留空＝略過。</translation>
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation>繁體字欄位</translation>
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation>當另一種字形變體不同時，儲存該變體的寫法。留空＝略過。</translation>
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation>韓文漢字欄位</translation>
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation>儲存單字中包含的韓文漢字。留空＝略過。</translation>
+    </message>
+    <message>
         <source>Not in Anki — mining will fail until you pick a real one or create it in Anki.</source>
         <translation>不在 Anki 中 — 在選取有效項目或於 Anki 建立前，採集會失敗。</translation>
     </message>
@@ -456,38 +488,6 @@
     <message>
         <source>Stores the sentence as plain kana.</source>
         <translation>以純假名儲存例句。</translation>
-    </message>
-    <message>
-        <source>Measure Word Field</source>
-        <translation>量詞欄位</translation>
-    </message>
-    <message>
-        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
-        <translation>儲存從字典詞條中解析出的量詞。留空＝略過。</translation>
-    </message>
-    <message>
-        <source>Pinyin Field</source>
-        <translation>拼音欄位</translation>
-    </message>
-    <message>
-        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
-        <translation>儲存單字的拼音讀音；若已開啟聲調上色，則會帶顏色。留空＝略過。</translation>
-    </message>
-    <message>
-        <source>Traditional Field</source>
-        <translation>繁體字欄位</translation>
-    </message>
-    <message>
-        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
-        <translation>當另一種字形變體不同時，儲存該變體的寫法。留空＝略過。</translation>
-    </message>
-    <message>
-        <source>Hanja Field</source>
-        <translation>韓文漢字欄位</translation>
-    </message>
-    <message>
-        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
-        <translation>儲存單字中包含的韓文漢字。留空＝略過。</translation>
     </message>
     <message>
         <source>Auxiliary Data Fields</source>
@@ -697,6 +697,10 @@ Continue anyway?</source>
         <source>Quit</source>
         <translation>結束</translation>
     </message>
+    <message>
+        <source>Open Settings</source>
+        <translation>開啟設定</translation>
+    </message>
 </context><context>
     <name>AsrModelDownloadWorker</name>
     <message>
@@ -729,7 +733,7 @@ Continue anyway?</source>
     <name>AudioPackImportFlow</name>
     <message>
         <source>Scanning folder for audio packs…</source>
-        <translation type="unfinished" />
+        <translation>正在掃描資料夾中的音訊包…</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -737,7 +741,7 @@ Continue anyway?</source>
     </message>
     <message>
         <source>Scanning %1 …</source>
-        <translation type="unfinished" />
+        <translation>正在掃描 %1 …</translation>
     </message>
     <message>
         <source>That folder could not be scanned.</source>
@@ -1715,11 +1719,11 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Mine Japanese, Korean or Chinese</source>
-        <translation type="unfinished" />
+        <translation>採集日文、韓文或中文</translation>
     </message>
     <message>
         <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
-        <translation type="unfinished" />
+        <translation>切換你採集的語言；每種語言都保留各自的字典、篩選器、牌組與卡片欄位。</translation>
     </message>
     <message>
         <source>i+1 sentence mining</source>
@@ -3210,8 +3214,8 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>單字欄位為空白</translation>
     </message>
     <message>
-        <source>not Japanese</source>
-        <translation>非日文</translation>
+        <source>not the mining language</source>
+        <translation>非採集語言</translation>
     </message>
     <message>
         <source>duplicate within the deck</source>
@@ -3950,8 +3954,12 @@ Files on disk will be left untouched because the folder could not be proven to b
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Audio pack '%1' is slow to read — audio skipped for those words. Its folder is probably on a cloud-synced, network or external drive: move it to a local drive, then re-import the pack (Settings -&gt; Audio -&gt; Re-import…).</source>
+        <translation>音訊包「%1」讀取速度過慢——已略過這些單字的音訊。其資料夾可能位於雲端同步、網路或外接磁碟機上：請移至本機磁碟機，然後重新匯入該音訊包（設定 -&gt; 音訊 -&gt; 重新匯入…）。</translation>
+    </message>
+    <message>
         <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
-        <translation type="unfinished" />
+        <translation>單字音訊來源回應速度過慢——已略過這些單字的音訊。若持續發生，請在設定 -&gt; 音訊中重新排序或停用它。</translation>
     </message>
     <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
@@ -4000,6 +4008,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Sentence audio: %1/%2 sentences</source>
         <translation>句子音訊：%1/%2 個句子</translation>
+    </message>
+    <message>
+        <source>Subtitles contain no %1 text</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No words found in subtitles</source>
+        <translation>字幕中找不到單字</translation>
     </message>
     <message>
         <source>All %1 new word(s) were removed by active filters — no cards created</source>
@@ -4174,10 +4190,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>
             <numerusform>正在採集 %n 個已選取的單字</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>No words found in subtitles</source>
-        <translation>字幕中找不到單字</translation>
     </message>
     <message>
         <source>No media extracted successfully</source>
@@ -4736,6 +4748,18 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>單字在一本書或一卷中至少須出現的次數才會被採集。1 = 無下限（篩選器關閉）。</translation>
     </message>
     <message>
+        <source>Card Order</source>
+        <translation>卡片順序</translation>
+    </message>
+    <message>
+        <source>Create cards in order of appearance</source>
+        <translation>依出現順序建立卡片</translation>
+    </message>
+    <message>
+        <source>Adds cards to Anki in the order the words appear in the media, instead of the order their media finished extracting. Overrides the whitelist's force-include ordering and any column sort in the Word Curator.</source>
+        <translation>依單字在媒體中出現的順序，而非依媒體擷取完成的順序，將卡片加入 Anki。會覆寫白名單（強制加入）的排序，以及單字整理工具中依欄位排序的結果。</translation>
+    </message>
+    <message>
         <source>Card Formatting</source>
         <translation>卡片格式</translation>
     </message>
@@ -4940,14 +4964,6 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>使用中的設定檔。切換會替換所有設定；選取「管理設定檔…」即可新增、重新命名或移除。</translation>
     </message>
     <message>
-        <source>Mining language:</source>
-        <translation>採集語言：</translation>
-    </message>
-    <message>
-        <source>Mining language</source>
-        <translation>採集語言</translation>
-    </message>
-    <message>
         <source>Theme:</source>
         <translation>主題：</translation>
     </message>
@@ -4966,10 +4982,6 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Manage profiles…</source>
         <translation>管理設定檔…</translation>
-    </message>
-    <message>
-        <source>Mining language: %1. Opens the selector in Settings.</source>
-        <translation>採集語言：%1。開啟設定中的選擇器。</translation>
     </message>
 </context><context>
     <name>InlineReceipt</name>
@@ -5126,14 +5138,14 @@ Add %3 word(s) to your known list?</source>
         <translation>要移除你加入本機已知單字清單的所有單字嗎？此操作無法復原。不會影響與 Anki 同步的快取。</translation>
     </message>
 </context><context>
-    <name>KoModelDownloadWorker</name>
+    <name>LanguagePackDownloadWorker</name>
     <message>
-        <source>Downloading the Korean model…</source>
-        <translation>正在下載韓文模型…</translation>
+        <source>Downloading the %1 pack…</source>
+        <translation>正在下載 %1 套件…</translation>
     </message>
     <message>
-        <source>Korean model installed successfully.</source>
-        <translation>韓文模型已成功安裝。</translation>
+        <source>%1 pack installed successfully.</source>
+        <translation>%1 套件安裝成功。</translation>
     </message>
 </context><context>
     <name>LanguageSwitch</name>
@@ -5874,24 +5886,20 @@ Continue?</source>
         <translation>要採集的語言。與介面語言（設定 -&gt; 外觀與語言）各自獨立。切換後，字典、篩選器、牌組與卡片欄位都會換成該語言自己的設定。</translation>
     </message>
     <message>
-        <source>Download Korean model</source>
-        <translation>下載韓文模型</translation>
+        <source>Download %1 pack</source>
+        <translation>下載 %1 套件</translation>
     </message>
     <message>
-        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
-        <translation>將韓文語言模型下載至 Anki Miner 的資料夾。套裝安裝內含韓文引擎，但不包含其模型。</translation>
-    </message>
-    <message>
-        <source>Korean model</source>
-        <translation>韓文模型</translation>
+        <source>Download the engine and data Anki Miner needs to mine %1, into its own folder.</source>
+        <translation>下載 Anki Miner 採集 %1 所需的引擎與資料，存放到專屬資料夾。</translation>
     </message>
     <message>
         <source>Installed</source>
         <translation>已安裝</translation>
     </message>
     <message>
-        <source>Not installed</source>
-        <translation>未安裝</translation>
+        <source>Not installed - about %1 MB download</source>
+        <translation>未安裝 - 下載約 %1 MB</translation>
     </message>
 </context><context>
     <name>MiningTabBase</name>
@@ -9344,12 +9352,12 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
 「句子」選單每一行字幕只提供一個選項，因此列出的通常較少：同一行中的重複在這裡只算一次，而單字以會改變卡片「單字（已採集）」的形式出現的行會被略過。</translation>
     </message>
     <message>
-        <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S 包含／排除 · Space 播放／暫停 · Ctrl+A 包含可見項目 · Ctrl+D 排除可見項目 · Ctrl+Enter 確認</translation>
+        <source>S include/exclude · Space play/pause · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S 包含／排除 · Space 播放／暫停 · K 標記為已知 · Ctrl+A 包含可見項目 · Ctrl+D 排除可見項目 · Ctrl+Enter 確認</translation>
     </message>
     <message>
-        <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S 包含／排除 · Ctrl+A 包含可見項目 · Ctrl+D 排除可見項目 · Ctrl+Enter 確認</translation>
+        <source>S include/exclude · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S 包含／排除 · K 標記為已知 · Ctrl+A 包含可見項目 · Ctrl+D 排除可見項目 · Ctrl+Enter 確認</translation>
     </message>
     <message>
         <source>+ Previous line</source>

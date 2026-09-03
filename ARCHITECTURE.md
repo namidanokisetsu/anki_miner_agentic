@@ -1,6 +1,8 @@
 # Architecture
 
-Anki Miner is a PyQt6 desktop application. It processes video/subtitle files through a 5-stage pipeline to create Japanese vocabulary flashcards in Anki.
+> Describes Anki Miner v3.0.0 (2026-09-02). Counts and file lists in this document were taken from the tree at that release; recount before relying on one.
+
+Anki Miner is a PyQt6 desktop application. It processes video/subtitle files through a 5-stage pipeline to create vocabulary flashcards in Anki, from Japanese, Chinese or Korean source material — the active mining language is `config.language` and every language-varying decision routes through a `LanguageProfile` (see [Mining Languages](#mining-languages)).
 
 ## Processing Pipeline
 
@@ -24,7 +26,8 @@ Subtitle file (ASS/SRT/SSA/VTT)
   ▼
 ┌─────────────────────────────────────────────────────┐
 │ 1. Parse Subtitles                                  │
-│    SubtitleParserService (pysubs2 + fugashi/MeCab)   │
+│    SubtitleParserService (pysubs2 + the language's   │
+│    tokenizer: fugashi / kiwipiepy / jieba)           │
 │    → list[TokenizedWord]                            │
 ├─────────────────────────────────────────────────────┤
 │ 2. Filter Unknown Words                             │
@@ -54,7 +57,7 @@ ProcessingResult
 
 Before Phase 1, a pre-flight step validates the configured note type, field mapping, and target deck against Anki. Nothing is created — a missing deck is an error. Cancellation is checked between each phase. An optional curation callback lets the GUI present a word selection dialog between stages 2 and 3.
 
-The offline dictionary also participates in stage 1 when available: `service_factory` injects `DefinitionService.offline_terms_exist` into the parser, whose `CompoundDictionaryMatcher` (`services/compound_matcher.py`) merges adjacent MeCab tokens into a single word whenever the joined form — with the tail token deinflected via UniDic orthBase — is an exact dictionary headword (Yomitan's longest-match principle; fixes fragment mining like 走り出した→走り). With no offline dictionary, stage 1 is unchanged.
+The offline dictionary also participates in stage 1 when available (this paragraph describes the Japanese path; the compound matcher is ja-only): `service_factory` injects `DefinitionService.offline_terms_exist` into the parser, whose `CompoundDictionaryMatcher` (`services/compound_matcher.py`) merges adjacent MeCab tokens into a single word whenever the joined form — with the tail token deinflected via UniDic orthBase — is an exact dictionary headword (Yomitan's longest-match principle; fixes fragment mining like 走り出した→走り). With no offline dictionary, stage 1 is unchanged.
 
 ## Package Dependencies
 
@@ -66,7 +69,10 @@ orchestration/
   │
   ▼
 services/  (+ services/dictionary/providers/)
-  │
+  │        ▲
+  │        └── languages/  ← profile.py imports services/resource_catalog,
+  │                           so this is NOT a leaf; gui/ and services/ both
+  │                           import it
 ┌───────┼───────┐
 ▼       ▼       ▼
 interfaces/ models/ utils/
@@ -82,6 +88,8 @@ resources/   ← packaged data (wordsets, etc.), no code
 ```
 
 Leaf packages (`config`, `models`, `exceptions`, `utils`) have no internal dependencies. `interfaces` depends only on `models` for type signatures. `services` depends on `interfaces`, `models`, `config`, `exceptions`, and `utils`. `orchestration` composes services. `gui` is the sole top-level entry point.
+
+`languages` sits beside `services` rather than under it. The package `__init__.py` deliberately exports nothing but `AVAILABLE_LANGUAGES` and may import neither Qt, a tokenizer, nor `anki_miner.services` — profile types and the registry are imported from `anki_miner.languages.registry` instead, because `profile.py` imports `services/resource_catalog` at module level and an eager re-export would drag the service layer into every `import anki_miner.languages`. `AnkiMinerConfig` duplicates the language tuple as `config.config._LANGUAGE_CODES` for the same reason (config must not import this package); `tests/unit/test_config_language.py` pins the two identical.
 
 ## Core Abstractions
 
@@ -109,6 +117,8 @@ Implementations: `GUIPresenter` (Qt signals) and `NullPresenter` (tests). The pr
 **SentenceAudioFetcher** (`interfaces/sentence_audio.py`): sentence-level TTS lookup via `fetch`.
 
 All use `typing.Protocol` for structural subtyping. Implementations satisfy the protocol via duck typing, without explicit inheritance.
+
+A second protocol family lives in `languages/profile.py` and is the extension point added in v3.0.0. Eight protocols — `SubtitleParser`, `MinedFormPolicy`, `LookupStrategy`, `ReadingSupport`, `SentenceAnnotator`, `ScriptSupport`, `DictKeyFolding`, `CardRenderHook` — describe the decisions that vary by mining language, alongside the frozen dataclasses that carry the non-behavioural half (`ScriptFilterOption`, `SentenceRules`, `AudioDefaults`, `CaptionLangs`, `PosDefaults`, `CardFieldSpec`, `ContentTextStyle`). `LanguageProfile` is the 27-field frozen aggregate holding all of them; see [Mining Languages](#mining-languages).
 
 ## Models
 
@@ -138,9 +148,9 @@ Data classes in `models/`:
 | `ReadingQueueItem` | `reading_queue.py` | Reading (manga/novel/subtitle/text) mining queue item; carries `ReadyItemStatus` |
 | `ReadingDocument` / `ReadingSourceRef` / `ReadingUnit` / `ImageRef` | `reading.py` | Parsed reading source: units of text + page/cover image refs |
 | `DeckBuildRequest` / `DeckBuildPreview` / `DeckSelectionMode` | `deck_build.py` | Deck Builder request, corpus preview, and selection mode (ALL/TOP_N/COVERAGE_PCT) |
-| `VideoInfo` | `youtube.py` | YouTube probe result: id, title, duration, sub availability, is_live, is_age_restricted |
+| `VideoInfo` | `youtube.py` | YouTube probe result: id, title, duration, sub availability, is_live, is_age_restricted, has_dub_ja_subs |
 | `FetchedMedia` | `youtube.py` | yt-dlp fetch result: video path, subtitle path, `sub_source` ("manual" or "auto") |
-| `SubMode` | `youtube.py` | `Literal["manual_only", "auto_only"]` — resolved in the GUI from the probe + user acceptance |
+| `SubMode` | `youtube.py` | `Literal["manual_only", "auto_only", "auto_dub"]` — resolved in the GUI from the probe + user acceptance; `auto_dub` is an AI Japanese dub with machine-translated captions |
 | `PlaylistEntry` | `youtube.py` | A single entry from a flat playlist probe: video_id, title, duration_s (optional), canonical URL |
 | `PlaylistInfo` | `youtube.py` | Flat playlist probe result: playlist_id (optional), title, entries tuple, total_count (optional) |
 
@@ -150,7 +160,7 @@ Stateless business logic classes in `services/`. Each receives the frozen `AnkiM
 
 **Core services (always created):**
 
-- **SubtitleParserService**: parses ASS/SRT/SSA/WebVTT files via `pysubs2` (format is autodetected from content, not the extension), tokenizes Japanese text with `fugashi` (MeCab wrapper), generates furigana annotations against `TokenizedWord.mined_form` (source-orthography dictionary form for verbs/adjectives, surface for nouns), and deduplicates emitted words by `mined_form`. The token-shaping itself — mining-base selection, prefix / noun-suffix / verb-nominalizer compound merges, synthetic tokens, reading attestation — lives in `services/morphology.py`, which the parser drives.
+- **SubtitleParserService**: parses ASS/SRT/SSA/WebVTT files via `pysubs2` (format is autodetected from content, not the extension), tokenizes the source text with the active language's tokenizer (`fugashi`/MeCab for Japanese, `kiwipiepy` for Korean, `jieba` for Chinese), generates furigana annotations where the language has them against `TokenizedWord.mined_form` (source-orthography dictionary form for verbs/adjectives, surface for nouns), and deduplicates emitted words by `mined_form`. The token-shaping itself — mining-base selection, prefix / noun-suffix / verb-nominalizer compound merges, synthetic tokens, reading attestation — lives in `services/morphology.py`, which the parser drives.
 - **WordFilterService**: multi-layer filtering, applied in this order: `partition_whitelisted` (force-included words split off first; they bypass every optional coverage filter), then `filter_unknown`, `filter_by_frequency`, `filter_by_word_lists` (blacklist only — the whitelist was already consumed), `filter_by_script_type`, `filter_by_wordsets`, `deduplicate_by_sentence`, `filter_by_sentence_length`, `filter_i_plus_one`, `filter_by_episode_count`. Everything keys on `mined_form`, the same string written to the Expression field and the one Anki dedups on. `attach_sentence_candidates` and `attach_occurrence_counts` annotate rather than filter. The name-wordset step runs in `_phase2_filter` and is gated on `bypass_optional_filters`; `config.excluded_wordsets` picks which of the bundled JMnedict-derived lists (`anki_miner/resources/wordsets/`) are active, via `services/wordset_service.py`.
 - **MediaExtractorService**: extracts screenshots and audio clips at subtitle timestamps, in parallel via a `ThreadPoolExecutor` of `max_parallel_workers` threads, auto-detecting the Japanese audio stream with `ffprobe` behind a thread-safe cache. The audio encoder follows `config.audio_format`; optional animated screenshots use `libsvtav1` (AVIF) or `libwebp_anim` (WebP), each probed for availability first.
 - **DefinitionService**: orchestrates the provider chain built by `DictionaryRegistry` from `config.dictionary_chain`. First-hit-wins across offline `IndexedDictProvider` instances, with an enabled `JishoProvider` entry as the online fallback. Returns HTML-formatted definition strings.
@@ -163,9 +173,9 @@ Stateless business logic classes in `services/`. Each receives the frozen `AnkiM
 - **MultiFrequencyService** (`services/frequency/`): **additive** aggregator over an ordered chain of SQLite-indexed sources built by `FrequencySourceRegistry` from `config.frequency_chain`. `lookup_all(word)` returns the per-source breakdown the card displays; the best (lowest) rank used for filtering and sorting comes from `min_rank(lookup_all(word))`, with `harmonic_rank` as the sort field.
 - **MultiPitchAccentService** (`services/pitch_accent/`): **first-hit-wins** aggregator over `config.pitch_chain`, built by `PitchSourceRegistry` — deliberately unlike the frequency chain. The first enabled source whose three-tier `lookup_entry` resolves wins, and later sources only fill what earlier ones miss. Each index is read fully into memory on `load()` and its connection closed; the SQLite file exists for the shared recovery substrate, not for per-lookup queries.
 - **ASR transcription** (`services/asr/`): offline speech-to-text with two interchangeable backends — `faster-whisper` and whisper.cpp via `pywhispercpp`. `transcriber.py` runs the model, `model_manager.py` and `ggml_model_installer.py` handle in-app model and acceleration-pack downloads, and `_engine.py` probes what is actually loadable (both backends, plus the CUDA and Vulkan native libraries) so the app degrades gracefully when the `[asr]` extra is absent. `config.asr_device` accepts `auto`, `cuda`, `vulkan`, or `cpu`; `auto` falls back down that order when a GPU path proves unusable at load time. Feeds the Utilities → Generate tab.
-- **Subtitle retiming** (`services/subtitle_retimer.py`): the module-level `retime_subtitle()` orchestrates a self-tuning clean → align → validate → commit pipeline, not a single tool call. `retime_reference.py` picks what to align against — an embedded dialogue subtitle track when the video has one (elected by title/disposition/cue-count against signs-and-songs tracks, then gated on covering at least 60% of the episode), falling back to extracted audio and finally raw video. `subtitle_cleaner.py` strips non-dialogue cues (signs, songs, ♪ markers, HoH annotations) from both the reference and the input into same-format copies, recording which input cues survived so `map_deltas_back` can reapply the winning timings onto the untouched original — every line and all ASS styling survive the round trip. Alignment itself lives in `services/sync_engines/` behind one `SyncResult` type: `ffsubsync_engine.py` runs ffsubsync in-process, `alass_engine.py` shells out to the external `alass` binary (resolved by `utils/alass_resolver.py`, installed in-app by `services/alass_installer.py`) via `utils/process_supervisor.run_supervised`. Engines are tried in order — ffsubsync split, alass split, alass single-offset, ffsubsync single-offset — until one survives `sync_validator.py`, which rejects the wrong-optimum failure signatures aligners produce (implausible shifts, scrambled cue order, a 00:00 pile-up, cues past the video's end) while `ok` from an engine only ever means the tool ran to completion. Only a validated candidate replaces the output, atomically, and an existing file is first copied to `<name>.pre-retime.bak`; when every candidate fails validation the original files are left exactly as they were and the outcome says why — a bad sync never overwrites a usable subtitle. Feeds the Utilities → Retime tab.
+- **Subtitle retiming** (`services/subtitle_retimer.py`): the module-level `retime_subtitle()` orchestrates a self-tuning clean → align → validate → commit pipeline, not a single tool call. `retime_reference.py` picks what to align against — an embedded dialogue subtitle track when the video has one (elected by title/disposition/cue-count against signs-and-songs tracks, then gated on covering at least 60% of the episode), falling back to extracted audio and finally raw video. `subtitle_cleaner.py` strips non-dialogue cues (signs, songs, ♪ markers, HoH annotations) from both the reference and the input into same-format copies, recording which input cues survived so `map_deltas_back` can reapply the winning timings onto the untouched original — every line and all ASS styling survive the round trip. Alignment itself lives in `services/sync_engines/` behind one `SyncResult` type: `ffsubsync_engine.py` runs ffsubsync out-of-process — it re-enters the app's own entry point with `--ffsubsync-child` (`CHILD_FLAG`, `services/sync_engines/_ffsubsync_child.py`, dispatched at `gui/launch.py:179`) and reads one JSON verdict off fd 1, so an ffsubsync crash cannot take the GUI down, `alass_engine.py` shells out to the external `alass` binary (resolved by `utils/alass_resolver.py`, installed in-app by `services/alass_installer.py`) via `utils/process_supervisor.run_supervised`. Engines are tried in order — ffsubsync split, alass split, alass single-offset, ffsubsync single-offset — until one survives `sync_validator.py`, which rejects the wrong-optimum failure signatures aligners produce (implausible shifts, scrambled cue order, a 00:00 pile-up, cues past the video's end) while `ok` from an engine only ever means the tool ran to completion. Only a validated candidate replaces the output, atomically, and the result is written to a `<stem>_retimed<ext>` sibling, leaving the subtitle it read untouched (mining and Condense then prefer the retimed file over the original); when every candidate fails validation the original files are left exactly as they were and the outcome says why — a bad sync never overwrites a usable subtitle. Feeds the Utilities → Retime tab.
 - **Audio condensing** (`services/audio_condenser.py`): `AudioCondenserService` builds dialogue-only condensed audio from a media file plus its subtitles — kept intervals (padding, gap-merge, offset, line filtering) computed as pure interval math, then extracted, concatenated, and re-encoded through ffmpeg, optionally with a re-timed `.srt`+`.lrc`. Takes an external subtitle file or an embedded text track. Feeds the Utilities → Condense tab; output tagging is `services/audio_tagger.py`.
-- **Reading sources** (`services/reading/`): parses mokuro-processed manga volumes and Japanese books into `ReadingDocument`s. `detector.py` classifies a path and `load()` dispatches to `mokuro_source.py`, `epub_source.py`, or `aozora_source.py`; `sentence_splitter.py` segments text and `images.py` materializes page/cover images. A `.cbz`/`.zip` resolves through its sibling `.mokuro` sidecar, else an embedded `.mokuro` member read in-memory under a size cap — never extracted. Anki Miner consumes mokuro's existing OCR and does none itself. DRM-protected EPUBs are rejected up front.
+- **Reading sources** (`services/reading/`): parses mokuro-processed manga volumes and books into `ReadingDocument`s. `detector.py` classifies a path and `load()` dispatches to `mokuro_source.py`, `epub_source.py`, or `aozora_source.py`; `sentence_splitter.py` segments text and `images.py` materializes page/cover images. A `.cbz`/`.zip` resolves through its sibling `.mokuro` sidecar, else an embedded `.mokuro` member read in-memory under a size cap — never extracted. Anki Miner consumes mokuro's existing OCR and does none itself. DRM-protected EPUBs are rejected up front.
 - **KnownWordDB**: SQLite-backed persistent known word cache. Supports differential sync with Anki vocabulary.
 - **WordListService**: loads blacklist/whitelist text files for word filtering.
 - **StatsService**: SQLite-backed analytics (`mining_sessions`, `series_difficulty` tables). Provides aggregated stats and milestones.
@@ -196,7 +206,7 @@ Stateless business logic classes in `services/`. Each receives the frozen `AnkiM
 
 Word-level audio runs through a `ChainedExpressionAudioFetcher` that walks an ordered list of `ExpressionAudioFetcher` implementations (protocol in `interfaces/expression_audio.py`; fetchers never raise) and returns the first non-None path. `service_factory` assembles the chain from `config.expression_audio_chain` — `AudioSourceEntry` objects tagged `kind: "pack"|"jpod101"|"googletts"|"custom"|"custom_json"`, each with an enabled flag. The default chain is JPod101 plus a disabled Google Translate entry, so users who import nothing see pre-feature behavior with no extra I/O.
 
-Every fetcher keys on `mined_form` + kana reading, not lemma, and skips the fetch outright on an empty reading — a reading-less lookup degrades to wildcard row selection and would cache the wrong homograph's pronunciation permanently. Hits are copied into per-source caches under `audio_cache/` (see Data Storage) rather than referenced in place, so what Anki stores is always a file the app owns.
+Every fetcher keys on `mined_form` + the language's reading (kana for Japanese), not lemma, and skips the fetch outright on an empty reading — a reading-less lookup degrades to wildcard row selection and would cache the wrong homograph's pronunciation permanently. Hits are copied into per-source caches under `audio_cache/` (see Data Storage) rather than referenced in place, so what Anki stores is always a file the app owns.
 
 Local packs are imported from [local-audio-yomichan](https://github.com/themoeway/local-audio-yomichan)-compatible directories; `services/audio_packs/formats.py` detects five physical layouts (`ozk5`, `ajt`, `nhk16`, `forvo`, `jpod_legacy`) and `importer.py` stages each into a SQLite index at `audio_packs_root/<pack_id>/index.sqlite`. The audio files themselves never move — entries store a pack-relative path plus the absolute `pack_dir` they resolve against. `AudioPackRegistry` keeps `__init__` I/O-free and does its scanning in `load()`.
 
@@ -206,16 +216,33 @@ The gate is the field mapping, not a separate flag: expression audio is written 
 
 The import flow is `gui/controllers/audio_pack_import_flow.py`, driving `gui/widgets/panels/audio_pack_settings_panel.py`. Newly imported packs are inserted above the JPod101 chain entry in a fixed pack-id priority (nhk16 > shinmeikai8 > forvo > jpod > jpod_alternate, `_PACK_PRIORITY`) — a pack-id ordering, distinct from the physical-format list above.
 
+**Standalone media download** (`services/media_downloader.py`): the engine behind Utilities → Download, saving video, audio or subtitles from any site yt-dlp supports without mining them. `MediaDownloaderService` takes a `DownloadOptions` and returns a `DownloadResult` carrying a `DownloadStatus`; failures raise `MediaDownloadError`. `FORMAT_PRESETS` holds the quality choices offered in the UI.
+
+**Shared yt-dlp invocation** (`services/ytdlp_invocation.py`): the single source of truth for how yt-dlp is called and how its stderr is read, used by both `youtube_fetcher.py` and `media_downloader.py`. Owns `YTDLP_MISSING_HINT`, `PROGRESS_RE`, `POSTPROCESS_MARKERS`, `JS_RUNTIMES`, the `cookie_args(config)` builder and the capability probes (`ytdlp_supports_js_runtimes`, `ytdlp_supports_remote_components`). A new classified failure belongs here, not in a call site.
+
+**Language pack installation** (`services/language_pack_installer.py`): fetches the per-language engines the frozen build excludes — see [Mining Languages](#mining-languages).
+
+**Resource staleness gate** (`services/resource_staleness.py`): one pre-run gate over all four resource families. It aggregates `stale_enabled_dicts`, `stale_enabled_freq_sources`, `stale_enabled_pitch_sources` and `stale_enabled_audio_packs` from their respective registries, and `_FAMILY_LABELS` is the single place a family is added. `format_stale_family_message` and `stale_resource_reimport_error` produce the abort-once message every mining path, the queue workers and the backfill worker share, so a stale index cannot silently produce wrong cards.
+
+**Yomitan meta-bank scaffolding** (`services/yomitan_meta_bank.py`): the shared `term_meta_bank` reader behind the frequency and pitch importers (`YomitanMetaIndex`, `YomitanMetaBanks`, `open_yomitan_meta_banks`), strict about `format == 3`, plus `atomic_write_csv`.
+
+**Known-words import** (`services/known_words_import.py`): parses an external known-word export into the known-words DB. `FORMAT_KEYS` covers jpdb, Migaku (JSON, legacy and CSV), AnkiMorphs and a generic list; `parse_known_words_file` returns a `KnownWordsImportResult` and raises `KnownWordsImportError`.
+
 ## Orchestration
 
 **EpisodeProcessor** (`orchestration/episode_processor.py`):
 - Receives all services via constructor injection
-- `process_episode(video_file, subtitle_file, progress_callback, curation_callback, episode_name_override, series_name_override, audio_track_override, source_label_override, audio_only, cancel_event)` runs the 5-stage pipeline. `audio_only=True` is the Audiobook path (no per-word screenshots); `audio_track_override` pins a specific audio stream; `source_label_override` names the source on the card.
+- `process_episode(video_file, subtitle_file, progress_callback, curation_callback, episode_name_override, series_name_override, audio_track_override, source_label_override, audio_only, cancel_event, subtitle_offset)` runs the 5-stage pipeline. `audio_only=True` is the Audiobook path (no per-word screenshots); `audio_track_override` pins a specific audio stream; `source_label_override` names the source on the card.
 - `_run_pipeline(ctx, cancel_event, body)` is the shared run skeleton both entry points wrap: pre-flight gates (dictionary staleness, card-target verify, offline dictionary — all outside the `try` so a `SetupError` propagates instead of collapsing into a "completed" result), per-run temp allocation, the Anki accumulator reset, the `_external_cancel` bridge, and the try/except/finally tail. Path-specific work lives in the caller's `body` closure.
 - `_stamp_write_provenance(result, failure=...)` is the single funnel every returned `ProcessingResult` passes through. It stamps `anki_write_state` from the live `AnkiService` (fail-closed to `NOTE_WRITE_UNCERTAIN` for anything that is not a real `AnkiWriteState`) and `failure_is_transient` from the raised exception — the two fields automatic retry consumes.
+- `profile` is a settable property returning the run's `LanguageProfile`, so a language switch re-points a live processor rather than rebuilding it.
+- `check_resource_staleness()` is the abort-once pre-run gate over `services/resource_staleness.py`.
+- `_apply_render_hooks(word, definition, extra_fields)` runs the profile's `render_hooks`, which is how zh gets tone-coloured pinyin and a Measure Word field, and ko a Hanja field.
+- `_materialize_line_expansions(...)` folds a curator line-merge into the card sentence and the extracted media.
+- `_apply_strict_card_order(...)` re-sorts the surviving words into order of appearance when `config.strict_card_order` is on. It runs after curation and is deliberately the last word on ordering, overriding the whitelist force-include prepend, a curator column sort and season mode's merged pool order.
 - `orchestration/audio_stage.py` (`AudioStage`) owns the expression-audio and sentence-TTS fetch loops and their progress-band accounting. It is the one cluster lifted out of the phase methods because it touches no pipeline ctx; `EpisodeProcessor` still constructs and closes the fetchers.
 - `process_youtube_url()` calls `YouTubeFetcherService.fetch_video`, then delegates to the unchanged `process_episode` with `episode_name_override=f"YT:{video_id}"` and `series_name_override="YouTube"`. The workspace is allocated and cleaned by the worker, not the orchestrator.
-- `process_reading()` mines mokuro manga volumes and Japanese novels. It reuses `_phase2_filter`, `_phase4_lookup`, and `_phase5_create` but swaps the video media stage for `_phase3_reading_media`, which materializes each word's page/cover image and expression audio (no ffmpeg, no sentence audio). Between filtering and media it applies a `reading_min_occurrence` floor (`WordFilterService.filter_by_episode_count`) that drops words appearing fewer than the configured number of times in the volume (1 = off); force-included words bypass the floor.
+- `process_reading()` mines mokuro manga volumes and novels. It reuses `_phase2_filter`, `_phase4_lookup`, and `_phase5_create` but swaps the video media stage for `_phase3_reading_media`, which materializes each word's page/cover image and expression audio (no ffmpeg, no sentence audio). Between filtering and media it applies a `reading_min_occurrence` floor (`WordFilterService.filter_by_episode_count`) that drops words appearing fewer than the configured number of times in the volume (1 = off); force-included words bypass the floor.
 - Cancellation checkpoints between each phase (`self._cancelled` flag); the YouTube flow additionally threads a `threading.Event` into the fetcher so an in-flight yt-dlp subprocess can be killed. A `curation_callback` between stages 2 and 3 lets the GUI put a word-selection dialog in the way. Stats and the known-word DB are written after a successful run, and temp media is cleaned in `finally`.
 
 **Batch processing** (`gui/workers/batch_queue_worker.py`):
@@ -232,11 +259,11 @@ Phase 2 — build: `AnkiService.ensure_deck` creates the target deck if it does 
 
 ## Configuration
 
-`AnkiMinerConfig` (`config/config.py`) is a frozen (immutable) dataclass of roughly 110 fields. Grouped by area (not every field is listed):
+`AnkiMinerConfig` (`config/config.py`) is a frozen (immutable) dataclass of 118 fields. Grouped by area (not every field is listed):
 
 - **Anki:** deck name, note type, field mappings, AnkiConnect URL
 - **Media:** audio padding, screenshot offset, temp folder, subtitle offset (range ±300s), `ffmpeg_location` / `ffprobe_location` (explicit binary paths consumed by the resolver — see [ffmpeg / ffprobe](#ffmpeg--ffprobe))
-- **Filtering:** min word length, allowed POS tags, excluded subtypes, deduplication, `exclude_hiragana_only_words` / `exclude_katakana_only_words` (kana-only drops, default off), `excluded_wordsets` (active bundled JMnedict name wordsets), `reading_min_occurrence` (per-volume minimum word occurrence for the Reading tab; 1 = off)
+- **Filtering:** min word length, allowed POS tags, excluded subtypes, deduplication, `exclude_hiragana_only_words` / `exclude_katakana_only_words` (Japanese; other languages supply their own `ScriptFilterOption` set, such as Korean's Hangul-only and contains-hanja filters) (kana-only drops, default off), `excluded_wordsets` (active bundled JMnedict name wordsets), `reading_min_occurrence` (per-volume minimum word occurrence for the Reading tab; 1 = off)
 - **Dictionary:** `dictionary_chain` (the runtime-authoritative ordered list of providers — indexed dicts and Jisho, each toggleable), `dicts_root` (root for all installed `.sqlite` indexes; defaults to `ANKI_MINER_HOME/dicts/` via the `ANKI_MINER_HOME` constant in `config/paths.py`), Jisho URL/delay. Legacy `jmdict_path` is retained for the first-launch JMdict-XML migration only (`use_offline_dict` and the pre-v2.5 migration shims are gone; `gui_config.json` now carries a `config_schema_version` stamp).
 - **Frequency:** `frequency_chain` (ordered tuple of `FreqEntry(source_id, enabled)` — the runtime-authoritative chain of frequency sources), `freqs_root` (root for the per-source `index.sqlite` files; defaults to `ANKI_MINER_HOME/freqs/`). The `frequency_sort` `anki_fields` entry writes the chosen sort value to its own card field.
 - **Expression audio:** `expression_audio_chain` (ordered `AudioSourceEntry` list), `expression_audio_delay`, `audio_packs_root`
@@ -246,6 +273,11 @@ Phase 2 — build: `AnkiService.ensure_deck` creates the target deck if it does 
 - **Optional data:** pitch accent, frequency, known words DB, blacklist/whitelist paths and toggles
 - **Analytics:** stats DB path
 - **Performance:** max parallel workers (default 6)
+- **Language:** `language` (the active mining language) and `language_stash` (parked `LANGUAGE_SCOPED_FIELDS` snapshots for every inactive language — see [Mining Languages](#mining-languages)), plus the scoped `script_variant` and `reading_tone_color`
+- **Card shape:** `card_type` (`Literal["", "word_and_sentence", "click", "sentence", "audio"]`), `card_type_marker_fields`, `strict_card_order` (create cards in order of appearance; off by default), `bold_target_in_sentence`
+- **Downloader (Utilities → Download):** `downloader_format_preset`, `downloader_custom_format`, `downloader_write_subtitles`, `downloader_subtitle_langs`, `downloader_embed_thumbnail`, `downloader_embed_metadata`
+- **yt-dlp:** `ytdlp_location`, `auto_update_ytdlp`, `ytdlp_prerelease` (selects the nightly channel in `services/ytdlp_updater.py`)
+- **Misc:** `excluded_decks` (negated into the vocab query, so a parent deck covers its subdecks), `bin_root`, `alass_location`, `use_native_file_dialogs`, `pitch_category_format`, `subtitle_regex_filter` / `subtitle_regex_replacement` / `use_subtitle_regex_filter`, and `config_version` — a staleness counter on the config object, not to be confused with the `config_schema_version` stamp `gui_config.json` carries
 
 The `__post_init__` method uses `object.__setattr__` to convert string paths to `Path` objects (required because the dataclass is frozen). New config instances are created with `dataclasses.replace()`.
 
@@ -255,6 +287,31 @@ The `__post_init__` method uses `object.__setattr__` to convert string paths to 
 **Named profiles.** `gui_config.json` stays the single live config; profiles are full-config sidecar snapshots in `profiles/<id>.json`, written by `gui/utils/profile_store.py` (storage only, Qt-free). There is deliberately **no index file** — the directory listing enumerates profiles, each file carries its own display name, and the active id is a marker inside `gui_config.json`; an index would duplicate both and buy a class of marker-vs-index divergence bugs. `gui/controllers/profile_controller.py` owns the *ordering* of a switch, which is where the data-loss paths sit: snapshot the outgoing profile first, save an unattributable live config as a **new** profile rather than adopting an existing id (profile files have no `.bak`), read the incoming file before advancing the pointer, and roll the pointer back if the commit fails. Machine-local runtime state is structurally excluded from profiles and settings export, because both serialize only `AnkiMinerConfig`.
 
 **UI language.** `config.ui_language` (normalized to lower-case, empty → `"en"`) selects the catalog `gui/i18n.py` installs at startup — the app's own `.qm` plus Qt's bundled `qtbase_<lang>.qm` for standard dialog buttons and file pickers — before any widget is constructed. `"en"` is the source language and installs nothing. Catalogs are extracted and compiled by `scripts/i18n.py` (`extract`, `compile`); this is a manual step, not CI-gated.
+
+## Mining Languages
+
+Anki Miner mines Japanese, Korean and Chinese. `AVAILABLE_LANGUAGES = ("ja", "ko", "zh")` (`languages/__init__.py`) is the full set; `config.language` names the active one. Everything that varies by language is reached through one object, so no call site branches on a language code.
+
+**The profile is the single dispatch point.** `LanguageProfile` (`languages/profile.py`) is a frozen 27-field dataclass carrying both behaviour (the eight protocols in [Core Abstractions](#core-abstractions)) and data (`sentence_rules`, `audio`, `captions`, `pos_defaults`, `catalog`, `card_field_defaults`, `content_style`, `import_encodings`, `audio_track_codes`, `asr_language`, and the rest). `registry.get_profile(code)` returns it; `registry.config_language(config)` is how a service reads the active code without importing config internals. `orchestration/episode_processor.py` exposes it as a `profile` property, and the composition root threads it in: `service_factory._create_subtitle_parser` builds the run's parser from `get_profile(config_language(config)).create_parser`, so stage 1 gets fugashi for ja, kiwipiepy for ko and jieba for zh without a conditional. `languages/tagger_provider.py::get_tagger(language)` is the shared per-language tagger cache.
+
+The per-language packages are `languages/ja/` (3 modules), `languages/ko/` (11) and `languages/zh/` (14). Japanese is the thinnest because most of its behaviour is the historical default; Chinese carries the most, adding pinyin readings, tone colouring, simplified/traditional variants and its own part-of-speech mapping.
+
+**A language may also shape the token stream.** `SubtitleParserService` takes an optional `token_merger`, run in `_build_line_state` with the same memoised offline-headword probe the compound matcher uses. Korean supplies one: `languages/ko/predicate_merge.py::KoreanPredicateMerger` merges an attached nominal + predicate suffix into the dictionary form (공부/NNG + 하/XSV → 공부하다, 깨끗/XR + 하/XSA → 깨끗하다), gated on that form being an exact dictionary headword — without it the suffix is dropped and the card front is the bare noun, or a bound root that is not a word. Japanese and Chinese pass nothing, so their streams are untouched; with no offline dictionary wired the pass never runs.
+
+**Settings are scoped, and a switch swaps them.** `LANGUAGE_SCOPED_FIELDS` (`languages/switching.py`) is the 22-name tuple of config fields whose value belongs to the active language — the four resource chains, the filters, the Anki deck/note-type/field mapping, the blacklist and whitelist, `script_variant` and `reading_tone_color`. `switch_language(config, new_code)` parks the outgoing language's values in `config.language_stash[old]` and pops the incoming language's parked snapshot back, or on a first visit fills every scoped field from the profile's `scoped_defaults` — which covers all 22 by construction, so no Japanese-shaped dataclass default can leak into a zh or ko session. `blank_scoped_defaults()` derives that blank from the config dataclass itself, so a field appended to `LANGUAGE_SCOPED_FIELDS` lands in every language's defaults automatically. The stash holds a snapshot for every language that is *not* active; `language` survives a settings import while `language_stash` is machine-specific and stripped from one.
+
+**The switch refuses rather than half-completes.** `gui/controllers/language_switch.py::request_language_change` gates in a fixed order: the profile must exist in this build; its `unavailable_reason()` probe must pass (a profile constructs without the packages it parses with, since every third-party import is function-local, so the probe is what decides whether the destination can actually mine); the dictionary mutation guard must be free, or "Settings are busy"; `release_dictionary_resources()` must succeed, or "Mining is running" — this covers mining, card backfill and prewarm, none of which the settings preflight knows about, and drops the SQLite handles a chain swap needs dropped anyway; and queued rows prompt before being flushed. Every refusal costs the user nothing. The config is read *inside* the guard, because the guard's preflight commits pending Settings edits and a read taken earlier would write them back to their pre-edit values.
+
+**Data is partitioned per language.** Japanese keeps every existing path byte-for-byte; the other two get siblings:
+
+- **Known words**: `service_factory.resolve_known_words_db_path(config)` is the sole derivation site. `ja` returns `config.known_words_db_path` verbatim; every other language returns `<stem>.<lang><suffix>`, so 学生 being known in Japanese never marks it known in Chinese, and Card Backfill and Deck Filter each receive the right database by construction rather than by an audited `WHERE` clause.
+- **Statistics**: one `stats.db`, both tables carrying a `language TEXT NOT NULL DEFAULT 'ja'` column added by `stats_service._migrate_language_column`; reads filter on it. `StatsService.language` is a live-settable property that `gui.app._bind_stats_language` re-stamps on a switch.
+- **Audio caches**: stems come from `AudioDefaults.cache_stem_prefix` and `sentence_cache_stem_prefix`, injected at fetcher construction, rather than the Japanese literals. The ko and zh default expression-audio chain is `(AudioSourceEntry(kind="googletts"),)`, not JPod101; Korean sentence TTS uses the Papago speaker `kyuri`.
+- **Resources**: each profile carries its own `catalog`. Japanese uses `services/resource_catalog.RECOMMENDED_DEFAULT_SET`, Korean `languages/ko/catalog.py` (KRDICT), Chinese `languages/zh/catalog.py` (CC-CEDICT).
+
+**Engines that are not bundled arrive as language packs.** The frozen build ships the Japanese engine only; `anki_miner.spec` lists `jieba`, `pypinyin`, `opencc`, `kiwipiepy` and `kiwipiepy_model` in `excludes` so their absence is a guarantee rather than an accident. Each non-bundled language declares its dependencies in a `languages/<code>/pack.py::PACK` manifest typed by `languages/pack_spec.py` (`ArtifactSpec`, `PackComponent`, `LanguagePack`): sha256-pinned PyPI artifacts, per platform where the wheel is platform-specific. `services/language_pack_installer.py` fetches and extracts them into `~/.anki_miner/language_packs/<code>/`, one extracted top-level package per component, and `ensure_language_packs_on_syspath()` puts those roots on `sys.path` at boot so a plain `import jieba` resolves. A component already satisfied — by a complete extracted directory, or by a package importable from outside the pack roots — is skipped, so a pip install with the `[zh]` or `[ko]` extra never downloads anything. `ko_model/` is a read-only legacy tier: installs that fetched the Korean model before packs existed keep working and are never written to again. Downloads run on `InstallWorker.language_pack_task(code, root, display_name)`, tracked in `BackgroundTaskController.language_pack_workers`.
+
+**Where the GUI touches it.** `gui/widgets/panels/mining_language_settings_panel.py::MiningLanguageSettingsPanel` is the Settings destination (key `mining_language`, group "Mining"). `gui/utils/language_gate.py` and `gui/utils/language_choices.py` decide what a language may show and offer; `gui/utils/content_text.py` applies the profile's `content_style` to displayed source text. `MainWindow.sync_mining_language_surfaces` repaints everything a switch changed, and `gui.app._warn_if_active_language_unavailable` falls back to Japanese when a build cannot supply the configured language, rather than stranding the user with no route back into Settings.
 
 ## GUI Architecture
 
@@ -268,8 +325,8 @@ Mining screens share a base chain in `gui/widgets/`. `MiningTabBase(TaskPublishe
 3. **AudiobookTab** (`gui/widgets/audiobook_tab.py`, "Audiobooks") — local audio + subtitle pairs, so items enter the queue READY with no probe stage. Mining runs `process_episode(audio_only=True)`: no per-word screenshots, embedded cover art extracted once per book and shared as every card's Picture, and the keep/drop decision keyed on audio clip success. Stats identity is `series_name_override="Audiobook"` + the audio file stem.
 4. **ReadingTab** (`gui/widgets/reading_tab.py`) — container over **Manga** (mokuro volumes, or a series folder expanded into per-volume items), **Novels** (one `.epub`/`.txt`, or a non-recursive folder scan via `detector.detect_book_folder`), **Subtitles** (standalone subtitle files, no video, rows removable mid-run through `ReadingQueueWorker.skip_item`), and **Text** (pasted text — the one reading source that builds its own pathless `ReadingSourceRef` and never touches `detector`). All four subclass `_ReadingMiningTabBase` → `_QueueMiningTabBase` → `MiningTabBase` and run `EpisodeProcessor.process_reading`.
 5. **AnalyticsTab** — mining statistics dashboard over `StatsService`.
-6. **SubtitlesTab** (`gui/widgets/subtitles_tab.py`, "Utilities") — container over five tools in two shapes. Three are file-queue tools on `FileQueueWorker`: **Generate** (`SubtitleCreationTab` → `services/asr/`), **Retime** (`SubtitleRetimeTab` → `services/subtitle_retimer.py`), **Condense** (`CondenseTab` → `services/audio_condenser.py`). Two reach into an existing Anki collection through a read-only scan worker the user approves before an apply worker writes: **Card Backfill** (`CardBackfillTab` → `services/card_backfiller.py`) and **Deck Filter** (`DeckFilterTab` → `services/deck_filter.py`, which copies a premade deck's surviving notes into a new deck).
-7. **SettingsTab** (`gui/widgets/settings_tab.py`) — a grouped nav list driving a `QStackedWidget`: 5 groups, 10 destinations, each with a stable key (`anki`, `media`, `dictionaries`, `audio`, `frequency`, `pitch`, `filtering`, `youtube`, `subtitles`, `ui`) that `reveal_setting` and the capability browser address it by. `gui/widgets/settings_search.py` indexes the anchors registered by `gui/widgets/base/setting_anchor.py` (built after the Qt translators install, so the index is localized) and jumps to a result — a jump aid, never a filter. Panels live in `gui/widgets/panels/`. The tab emits `config_changed`; `MainWindow` stamps and saves, then fans the committed object back out via `config_refreshed` so a stale worker snapshot cannot regain authority.
+6. **SubtitlesTab** (`gui/widgets/subtitles_tab.py`, "Utilities") — container over six tools in two shapes. Four are file-queue tools on `FileQueueWorker`, built from `_ToolTabBase` (`gui/widgets/_tool_tab_base.py`) — the sibling base family to `MiningTabBase`: **Generate** (`SubtitleCreationTab` → `services/asr/`), **Retime** (`SubtitleRetimeTab` → `services/subtitle_retimer.py`), **Condense** (`CondenseTab` → `services/audio_condenser.py`), **Download** (`DownloadTab` → `gui/workers/download_worker.py` → `services/media_downloader.py`, the standalone yt-dlp saver). Two reach into an existing Anki collection through a read-only scan worker the user approves before an apply worker writes: **Card Backfill** (`CardBackfillTab` → `services/card_backfiller.py`, whose `FIELD_GROUPS` covers `pitch`, `frequency`, `definition`, `glossary`, `reading` and `word_audio` — the last being the only proposal that fetches over the network rather than doing a local lookup, built by `services/backfill_audio.py::word_audio_candidates`) and **Deck Filter** (`DeckFilterTab` → `services/deck_filter.py`, which copies a premade deck's surviving notes into a new deck).
+7. **SettingsTab** (`gui/widgets/settings_tab.py`) — a grouped nav list driving a `QStackedWidget`: 5 groups, 11 destinations, each with a stable key (`anki`, `media`, `dictionaries`, `audio`, `frequency`, `pitch`, `mining_language`, `filtering`, `youtube`, `subtitles`, `ui`) that `reveal_setting` and the capability browser address it by. `gui/widgets/settings_search.py` indexes the anchors registered by `gui/widgets/base/setting_anchor.py` (built after the Qt translators install, so the index is localized) and jumps to a result — a jump aid, never a filter. Panels live in `gui/widgets/panels/`. The tab emits `config_changed`; `MainWindow` stamps and saves, then fans the committed object back out via `config_refreshed` so a stale worker snapshot cannot regain authority.
 
 ### Worker Threads
 
@@ -284,15 +341,17 @@ Two intermediate bases sit on it, both in `base_worker.py`:
 Two shared spines sit above those, so a new queue screen inherits its contract instead of inventing one:
 
 - `_queue_worker_base.py` (`SequentialQueueWorker`) drives the three sequential mining queues — YouTube, Reading, Audiobook — with a frozen item snapshot, an identical four-signal shape, a staleness pre-loop gate, a deferred factory build, and retry backoff. `RunBoundaryControls` in the same module owns Pause / Finish-current semantics.
-- `file_queue_worker.py` (`FileQueueWorker`) does the same for the file-processing tools (subtitle generate / retime / condense), which share a byte-identical five-signal contract.
+- `file_queue_worker.py` (`FileQueueWorker`) does the same for the file-processing tools (subtitle generate / retime / condense / download), which share a byte-identical five-signal contract.
 
 The rest of `gui/workers/` is one file per job and `ls` is the index. The shapes worth knowing before adding one:
 
 - **Mining**: `EpisodeWorkerThread` (one pair), `BatchQueueWorkerThread` and `ManualPairWorkerThread` (many pairs, both with the season two-pass path), `DeckBuilderWorker` (see Orchestration).
 - **Scan-then-apply over an existing collection**: `BackfillScanWorker`/`BackfillApplyWorker`, `DeckFilterScanWorker`/`DeckFilterApplyWorker`. The scan is read-only and produces a plan the user approves; the apply writes exactly that plan's precomputed values.
 - **Unified installers and importers**: `ImportWorker` (dictionary, frequency, pitch, audio packs — per-domain `for_*` factories; user cancel routes to a distinct `cancelled` signal, never `failed`) and `InstallWorker` (ASR models, CUDA/ONNX packs, external binaries).
+- **Standalone media download**: `DownloadWorker` (a `FileQueueWorker` over `MediaDownloaderService`), driving Utilities → Download.
+- **Whole-collection rewrite**: `RestyleCardsWorker`, which re-applies current card styling to notes already in Anki (no tab; launched from the Tools menu).
 - **Short-lived AnkiConnect fetches**: `FetchDecksWorker` / `FetchNotetypesWorker` / `FetchFieldsWorker`, each a `SingleCallWorker` around one getter.
-- **Window-level background work**: `ValidationWorkerThread`, `UpdateWorkerThread`, `YtdlpUpdateWorker`, `PrewarmWorker` (warms `fugashi.Tagger()` and the dictionary indexes right after first paint, so the first Mine click does not build them on the GUI thread).
+- **Window-level background work**: `ValidationWorkerThread`, `UpdateWorkerThread`, `YtdlpUpdateWorker`, `PrewarmWorker` (warms the active language's tagger via `get_tagger(config.language)` and the dictionary indexes right after first paint, so the first Mine click does not build them on the GUI thread).
 
 Beyond QThreads, `gui/utils/run_off_thread.py` provides `run_off_thread` for one-off blocking work in a GUI slot (worker ownership is automatic so it cannot be GC'd mid-run) plus `still_running` / `join_or_retain` for deleted-wrapper-safe bounded joins. Offloading is an **enforced convention, not an option**: `gui/utils/stall_watchdog.py` runs by default in the shipped app (250 ms heartbeat QTimer + daemon monitor thread) and logs a WARNING with the GUI thread's stack trace whenever the event loop goes stale, so a re-introduced blocking slot surfaces in the log instead of as an unexplained freeze.
 
@@ -310,7 +369,7 @@ Progress has exactly one owner. Three pieces in `gui/controllers/` hold it, with
 
 - **`task_registry.py`**: `TaskRegistry` is the one authoritative record of what the app is doing, and owns the one-second tick. Producers write through a `TaskHandle` carrying a run token, so a late signal from a finished run cannot overwrite the run the user is watching. Views render immutable `TaskSnapshot`s and hold no progress state of their own. Two honesty rules are enforced here rather than at each call site: `fraction` is `None` unless a real denominator exists (a synthetic blended percentage is what produces a frozen-looking progress bar), and the elapsed clock is driven by the tick rather than by producer updates, with `no_update_age_s` stating the silence actually observed — neither asserts the worker is alive.
 - **`run_receipt.py`**: `RunReceiptAccumulator` — one per run, fed by the same per-item signals the screen already handles, outliving both the progress bar and the worker, so a run's numbers survive the cancel or failure that resets the bar. A cancelled run still reports what it finished; the counts are *notes*, not cards; elapsed is active time (`gui/utils/progress_telemetry.active_duration`), so a run spanning a laptop sleep does not claim to have worked through it.
-- **`background_tasks.py`**: `BackgroundTaskController` owns the four window-level worker handles (validation, update check, JMdict migration, prewarm) and the single shutdown join policy `closeEvent` routes every owned and tab-owned worker through. Lifecycle only — results flow back to `MainWindow` via forwarding signals, and all UI consumption stays there.
+- **`background_tasks.py`**: `BackgroundTaskController` owns the twelve window-level worker handles (validation, app update, yt-dlp update, JMdict migration, ASR model download, alass install, CUDA pack, ONNX pack, Vulkan model, restyle cards, resource download, prewarm) plus the `language_pack_workers: dict[str, InstallWorker | None]` map keyed by language code (`start_language_pack_download`), and the single shutdown join policy `closeEvent` routes every owned and tab-owned worker through. Lifecycle only — results flow back to `MainWindow` via forwarding signals, and all UI consumption stays there.
 
 `TaskPublisherMixin` (`gui/widgets/base/task_publisher.py`) is a base of `MiningTabBase`, so every mining screen publishes into the registry; `bind_task_registry` wires the list queues in `gui/app.py`.
 
@@ -351,6 +410,8 @@ All in `gui/widgets/dialogs/`.
 - `ResourceDownloadWindow` / `ResourceDownloadSession`: pick and download recommended resources from `resource_catalog`, driving `ResourceDownloadWorker`.
 - `KnownWordsManagerDialog`: manage the user-curated known-word list.
 - `SubtitleTracksDialog` / `AudioTracksDialog` (over the shared `_track_picker_dialog.py` base): pick an embedded stream out of a media file.
+- `CondenseMetadataDialog` (`condense_metadata_dialog.py`): confirm or edit the tags written into a condensed audio file before it is produced.
+- `RetimeReferenceDialog` (`retime_reference_dialog.py`): choose what Retime aligns against when the automatic reference election needs confirming.
 - `AboutDialog`: version, credits, and the generated keyboard-shortcut table.
 
 ## External Integrations
@@ -371,18 +432,18 @@ GET `https://jisho.org/api/v1/search/words?keyword=<word>`. Rate-limited with co
 ### ffmpeg / ffprobe
 
 - **ffmpeg:** `-ss` seek + `-i` input + `-frames:v 1` for screenshots, `libmp3lame` (mp3) or `libopus` (opus) for audio extraction per `config.audio_format`
-- **ffprobe:** `-show_streams -select_streams a` for Japanese audio track detection
+- **ffprobe:** `-show_streams -select_streams a` for audio track detection against the active language's `LanguageProfile.audio_track_codes` (consumed by `services/audio_condenser.py` and `services/retime_reference.py`)
 - Parallel execution via `ThreadPoolExecutor` (default 6 workers)
 
 **Binary resolution.** Every ffmpeg/ffprobe invocation goes through a resolver rather than assuming a bare `ffmpeg` on PATH. Order: explicit `config.ffmpeg_location` / `config.ffprobe_location` → binaries bundled inside the frozen app → PATH. Every standalone build ships GPL ffmpeg and ffprobe (the `.deb` included, since v2.10 — it packages the same full PyInstaller tree as the AppImage); PyPI/`pipx` and source installs rely on PATH. A startup health check validates whatever was resolved and surfaces a clear error when nothing usable is found.
 
 ### yt-dlp
 
-Subprocess invoked by `YouTubeFetcherService`. Single-video probe uses `--skip-download --dump-single-json --no-playlist`; playlist probe uses `--flat-playlist` with one item past the cap; fetch adds `--sub-lang ja --sub-format vtt/best --convert-subs srt` and a height-capped format string.
+Subprocess invoked by `YouTubeFetcherService` and, for Utilities → Download, by `MediaDownloaderService`. Both build their argv and classify stderr through the shared `services/ytdlp_invocation.py` (`YTDLP_MISSING_HINT`, `PROGRESS_RE`), which is the source of truth for both. Single-video probe uses `--skip-download --dump-single-json --no-playlist`; playlist probe uses `--flat-playlist` with one item past the cap; fetch adds `--sub-lang <captions.primary> --sub-format srt/vtt/best` — the code comes from the active language's `LanguageProfile.captions` (`CaptionLangs`: `primary`, `codes`, `orig_codes`, `audio_pattern`, `bare_fallback`), so it is `ja`, `ko` or `zh-Hans` rather than a literal and a height-capped format string. YouTube serves srt among its caption formats, so the first tier lands SubRip with no ffmpeg postprocessor; vtt is the fall-through, and `_resolve_outputs` accepts either. `MediaDownloaderService` (Utilities → Download) states `--sub-format srt/best` for the same reason — left unstated, yt-dlp's `best` default resolves to the last entry of the extractor's format tuple, which on YouTube is vtt.
 
-The subtitle flags carry one load-bearing invariant. `auto_only` passes `--write-auto-sub`; `manual_only` passes `--write-sub`, and adds `--write-auto-sub` **only** when `fallback_allowed` — meaning the probe already certified the auto track as native Japanese. Both flags in one invocation mean "manual preferred, auto as fallback", because yt-dlp loads manual tracks first and lets `automatic_captions` fill only the languages still missing. Passing the auto flag unconditionally would silently mine machine-translated Japanese whenever a `manual_only` video's manual track vanished between probe and fetch.
+The subtitle flags carry one load-bearing invariant. `auto_only` passes `--write-auto-sub`; `manual_only` passes `--write-sub`, and adds `--write-auto-sub` **only** when `fallback_allowed` — meaning the probe already certified the auto track as native to the mining language (the `orig_codes` check, e.g. `ja-orig`). Both flags in one invocation mean "manual preferred, auto as fallback", because yt-dlp loads manual tracks first and lets `automatic_captions` fill only the languages still missing. Passing the auto flag unconditionally would silently mine machine-translated Japanese whenever a `manual_only` video's manual track vanished between probe and fetch.
 
-Progress is parsed from a custom `--progress-template`, with post-download phases detected from the `_POSTPROCESS_MARKERS` line signatures. Optional `--cookies-from-browser` or `--cookies` bypasses bot-detection prompts and age restrictions.
+Progress is parsed from a custom `--progress-template`, with post-download phases detected from the `ytdlp_invocation.POSTPROCESS_MARKERS` line signatures. Optional `--cookies-from-browser` or `--cookies` bypasses bot-detection prompts and age restrictions.
 
 ### Bundling yt-dlp
 
@@ -399,7 +460,8 @@ Loaded in-process through the `python-mpv` binding — see [Video Preview (embed
 ```
 AnkiMinerException (base)
 ├── SetupError
-│   └── OperationCancelled
+│   ├── OperationCancelled
+│   └── DownloadFailed
 ├── AnkiConnectionError
 ├── SubtitleParseError
 ├── SubtitleRetimeError
@@ -410,10 +472,11 @@ AnkiMinerException (base)
     ├── CookieDatabaseLockedError
     ├── VideoTooLongError
     ├── YtdlpNotFoundError
-    └── NoJapaneseSubtitlesError
+    ├── NoJapaneseSubtitlesError   (alias: NoSourceSubtitlesError)
+    └── DubAudioUnavailableError
 ```
 
-Defined across `exceptions/` (`base.py`, `validation.py`, `anki.py`, `media.py`, `subtitle.py`, `youtube.py`, `cancel.py`). `FfmpegNotFoundError` is a direct subclass of `AnkiMinerException`, not of `YouTubeFetchError`, even though only the YouTube fetch path raises it today. `OperationCancelled` is a `SetupError` so a user cancel unwinds through the same pre-flight path a setup failure does, without being reported as one.
+Defined across `exceptions/` (`base.py`, `validation.py`, `anki.py`, `media.py`, `subtitle.py`, `youtube.py`, `cancel.py`). `FfmpegNotFoundError` is a direct subclass of `AnkiMinerException`, not of `YouTubeFetchError`, even though only the YouTube fetch path raises it today. `OperationCancelled` is a `SetupError` so a user cancel unwinds through the same pre-flight path a setup failure does, without being reported as one. `NoSourceSubtitlesError` is a language-neutral alias of `NoJapaneseSubtitlesError` (`youtube.py:82`), not a separate class — the original name predates multi-language mining and is kept for callers. One exception lives outside the package: `MediaDownloadError(AnkiMinerException)` is declared in `services/media_downloader.py:73`.
 
 ## Data Storage
 
@@ -426,8 +489,8 @@ All persistent user data under `~/.anki_miner/`:
 | `recent_files.json` | JSON | Most-recent video/subtitle pairs (`gui/utils/recent_files.py`) |
 | `JMdict_e` | XML | Source JMdict XML (~60MB); migrated to SQLite on first launch |
 | `dicts/<dict-id>/index.sqlite` | SQLite | Indexed offline dictionaries (e.g. `jmdict-english/`); queried by `IndexedDictProvider` |
-| `known_words.db` | SQLite | Known word cache with Anki sync |
-| `stats.db` | SQLite | Analytics. Exactly two tables — `mining_sessions` and `series_difficulty`; milestones are derived at query time, not stored |
+| `known_words.db` | SQLite | Known word cache with Anki sync. Japanese only: every other mining language gets a `known_words.<lang>.db` sibling, derived solely by `service_factory.resolve_known_words_db_path` |
+| `stats.db` | SQLite | Analytics. Exactly two tables — `mining_sessions` and `series_difficulty`; milestones are derived at query time, not stored. Both carry a `language TEXT NOT NULL DEFAULT 'ja'` column (`_migrate_language_column`) and reads filter on it |
 | `pitch/<source_id>/index.sqlite` | SQLite | Per-source pitch accent index; the runtime-authoritative first-hit-wins chain (`config.pitch_chain`) |
 | `pitch_accent.csv` | CSV | Legacy single pitch file; auto-imported into `pitch/legacy-pitch/` on first launch, then no longer read (kept on disk for downgrade) |
 | `frequency.csv` | CSV | Legacy single frequency list; no longer read (superseded by the `freqs/` chain — the one-time migration was removed) |
@@ -435,7 +498,7 @@ All persistent user data under `~/.anki_miner/`:
 | `audio_cache/jpod101/` | Files | JapanesePod101 expression audio cache: `jpod101_{mined_form}_{reading}.mp3` + zero-byte `.miss` negative markers |
 | `audio_packs/<pack_id>/index.sqlite` | SQLite | Per-pack expression audio index; audio files stay in their original location |
 | `audio_cache/local_packs/` | Files | Per-hit cache copies from installed packs: `{pack_id}_{mined_form}_{reading}{ext}` |
-| `audio_cache/googletts/` | Files | Google Translate synthetic-TTS cache: `googletts_{mined_form}_{reading}.mp3` (no `.miss` markers — synthetic failures are transient) |
+| `audio_cache/googletts/` | Files | Google Translate synthetic-TTS cache: `googletts_{mined_form}_{reading}.mp3` (no `.miss` markers — synthetic failures are transient). The stem prefix comes from the active language's `AudioDefaults.cache_stem_prefix`, so the filenames above are the Japanese case, not a literal |
 | `audio_cache/custom_*/` | Files | Per-source caches for the `custom` / `custom_json` URL-template audio kinds (`services/custom_audio_fetcher.py`) |
 | `audio_cache/sentence_tts/` | Files | Reading-path sentence TTS: `sentencetts_{provider}_{sha1(sentence)[:16]}.mp3` (content-hash keys, no `.miss` markers) |
 | `runtime_state/downloads/` | Files | Partial-download resume state: `<key>.part` bodies + `<key>.json` manifests (`services/download_resume.py`) |
@@ -443,6 +506,8 @@ All persistent user data under `~/.anki_miner/`:
 | `asr_models/` | Files | Downloaded local Whisper models (Utilities → Generate); `asr_models/ggml/` holds the whisper.cpp weights |
 | `cuda_libs/` | Files | In-app CUDA acceleration pack for ASR |
 | `onnx_pack/` | Files | In-app ONNX/VAD pack for ASR |
+| `language_packs/<code>/` | Files | Per-language engine packs downloaded on demand (`services/language_pack_installer.py`), one extracted top-level package per component; the roots join `sys.path` at boot. Japanese has none — its engine is bundled |
+| `ko_model/` | Files | Read-only legacy tier: the Korean model as fetched before language packs existed. Honoured so nobody re-downloads it, never written to again |
 | `bin/` | Files | In-app-installed external binaries (`alass`, the managed yt-dlp binary + its verification receipt) |
 | `.ytdlp_update_check` | Text | Unix timestamp of the last yt-dlp update check; throttles the next one (`services/ytdlp_updater.py`) |
 | `themes/` | JSON | User-added custom theme files |
@@ -468,3 +533,4 @@ This page maps the pipeline and the boundaries between packages. Several subsyst
 | App bootstrap and restart-to-apply | `gui/launch.py`, `gui/restart.py` |
 | Condensed-audio tagging and artwork | `services/audio_tagger.py` |
 | Custom URL-template audio sources | `services/custom_audio_fetcher.py` |
+| Out-of-process ffsubsync child and its JSON verdict | `services/sync_engines/_ffsubsync_child.py` |

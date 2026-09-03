@@ -477,7 +477,14 @@ def _preload_cuda_libs(cuda_libs_root: Path | None) -> None:
 
 
 def _cuda_device_count() -> int:
-    """Return ctranslate2's reported CUDA device count, or 0 on any failure."""
+    """Return ctranslate2's reported CUDA device count, or 0 on any failure.
+
+    Also 0 once this process recorded a CT2 CUDA failure
+    (:func:`_engine.mark_ct2_cuda_unusable`): re-entering CT2's CUDA setup after
+    it threw hangs the MSVC build, so no later queue may try again.
+    """
+    if _engine.ct2_cuda_unusable() is not None:
+        return 0
     try:
         import ctranslate2  # noqa: PLC0415  (function-local: stays importable without backend)
 
@@ -538,7 +545,10 @@ def _resolve_model(
 
     # requested_device in {"auto", "cuda"}
     if _cuda_device_count() <= 0:
-        if requested_device == "cuda":
+        disabled = _engine.ct2_cuda_unusable()
+        if disabled is not None:
+            logger.info("ASR: CUDA disabled for this session (%s); using CPU.", disabled)
+        elif requested_device == "cuda":
             logger.warning("ASR: device='cuda' requested but no CUDA GPU is available; falling back to CPU.")
         else:
             logger.info("ASR: no CUDA GPU available; using CPU.")
@@ -557,6 +567,9 @@ def _resolve_model(
     except MemoryError:
         raise  # never degrade a real allocation failure to "fall back to CPU" (service_factory.py policy)
     except Exception as exc:  # noqa: BLE001  (CUDA libs may be missing/incompatible)
+        # First CUDA failure of the process: no later queue may retry - the
+        # retry hangs on Windows (see _engine.mark_ct2_cuda_unusable).
+        _engine.mark_ct2_cuda_unusable(str(exc))
         if raise_on_cuda_failure:
             raise _Ct2CudaUnavailable(str(exc)) from exc
         if requested_device == "cuda":
@@ -815,6 +828,9 @@ def _transcribe_cpp(
         # whisper reads an empty registry and GGML_ASSERT(device) aborts on Model().
         _engine.ensure_ggml_backends_loaded()
         model_cls = _engine.get_whisper_cpp_model_cls()
+        # Same receipt as the CT2 branch: the weights upload inside Model() is
+        # silent and is a place a run can stall.
+        log_summary(logger, "ASR model load", backend="whisper.cpp", device="vulkan", model=model_name)
         model = model_cls(str(ggml_model_installer.ggml_model_path(model_name, models_root)))
 
         # Independent Silero speech mask (same helper the CT2 path uses) to (a) clip
@@ -907,6 +923,11 @@ def _transcribe_ct2(
         model = ct2_model_session.model
         device_used = ct2_model_session.device_used or "cpu"
     else:
+        # Construction (weights load, CUDA/cuDNN init) can run for a long time
+        # and emits nothing itself; this line is what makes a hang inside it
+        # attributable in the log. Once per queue: the session branch above
+        # reuses the model.
+        log_summary(logger, "ASR model load", backend="ctranslate2", device=device, model=model_name)
         model, device_used = _resolve_model(
             device,
             cuda_libs_root,
@@ -979,6 +1000,9 @@ def _transcribe_ct2(
                 ct2_model_session.device_used = None
             raise
         except Exception as exc:  # noqa: BLE001  (deferred CUDA runtime failure)
+            # Same rule as the construction failure: the first CUDA failure of
+            # the process is the last attempt (see _engine.mark_ct2_cuda_unusable).
+            _engine.mark_ct2_cuda_unusable(str(exc))
             if raise_on_cuda_failure:
                 # Drop the constructed-but-unusable CUDA model so the caller's
                 # retry (cpp, or CT2 CPU) never reuses it via the session.

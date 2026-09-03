@@ -53,10 +53,6 @@ _YTDLP_FETCH_TIMEOUT_S = 3 * 60 * 60
 # knob (ARC-004: inlined, never surfaced in any panel).
 YOUTUBE_MAX_HEIGHT = 720
 
-# Adjective naming the mining language in the "wrote no <X> subtitle" failure.
-# ja renders the pre-existing wording byte-for-byte.
-_SUB_LABELS = {"ja": "Japanese", "ko": "Korean", "zh": "Chinese"}
-
 
 class YouTubeFetcherService:
     """Probe and download YouTube video+subtitles via yt-dlp.
@@ -640,10 +636,13 @@ class YouTubeFetcherService:
                 "--no-playlist",
                 "--sub-lang",
                 captions.primary,
+                # YouTube serves srt among its caption formats, so ask for it
+                # outright. The old "vtt/best" + "--convert-subs srt" pair predates
+                # that and paid an ffmpeg postprocessor to reach the same bytes.
+                # vtt stays as a middle tier because pysubs2 parses it natively, so
+                # a fall-through still yields a usable subtitle.
                 "--sub-format",
-                "vtt/best",
-                "--convert-subs",
-                "srt",
+                "srt/vtt/best",
                 "--format",
                 fmt,
                 # The "home:" prefix is explicit so a Windows drive letter in the
@@ -782,7 +781,7 @@ class YouTubeFetcherService:
         raise YouTubeFetchError(f"yt-dlp {label} probe failed (exit {returncode}): {chr(10).join(lines)}")
 
     def _resolve_outputs(self, workspace: Path, video_id: str, sub_mode: SubMode) -> FetchedMedia:
-        from anki_miner.languages.registry import config_language
+        from anki_miner.languages.registry import config_language, get_profile
 
         captions = self._captions()
         suffixes = tuple(f".{code}." for code in dict.fromkeys((captions.primary, *captions.codes)))
@@ -790,11 +789,11 @@ class YouTubeFetcherService:
         video_candidates: list[Path] = []
         subtitle_candidates: list[Path] = []
         for c in candidates:
-            # Normally "<id>.ja.srt" (--convert-subs srt). Accept the un-converted
-            # "<id>.ja.vtt" too: --convert-subs runs as an ffmpeg postprocessor, so if
-            # it is skipped or fails the vtt is all that survives — and pysubs2 parses
-            # vtt natively, so refusing it threw away a perfectly usable subtitle and
-            # reported "expected output files are missing" instead.
+            # Normally "<id>.ja.srt" (the first --sub-format tier). Accept
+            # "<id>.ja.vtt" too: the tier list falls through to vtt on a source that
+            # serves no srt — and pysubs2 parses vtt natively, so refusing it threw
+            # away a perfectly usable subtitle and reported "expected output files
+            # are missing" instead.
             #
             # No "ja-orig" handling here on purpose: yt-dlp matches --sub-lang with a
             # regex fullmatch, so "ja" can never select the "ja-orig" track and such a
@@ -809,8 +808,9 @@ class YouTubeFetcherService:
             names = sorted(p.name for p in video_candidates)
             raise YouTubeFetchError(f"Multiple video outputs found in workspace: {names}")
 
-        # Prefer srt when both survive (a kept-original vtt alongside the converted
-        # srt is not an ambiguity), and only complain about a genuine tie.
+        # Prefer srt when both survive — one fetch writes a single subtitle, so a
+        # second one is a leftover from an earlier run in a reused workspace, not an
+        # ambiguity. Only complain about a genuine tie.
         srt_candidates = [p for p in subtitle_candidates if p.name.endswith(".srt")]
         preferred = srt_candidates or subtitle_candidates
         if len(preferred) > 1:
@@ -825,7 +825,7 @@ class YouTubeFetcherService:
             # "There are no subtitles for the requested languages" as an info line
             # while still exiting 0, so we only learn this after paying for the whole
             # download. Deterministic, so the queue worker must not retry it.
-            label = _SUB_LABELS.get(config_language(self._config), "source")
+            label = get_profile(config_language(self._config)).english_name or "source"
             raise NoSourceSubtitlesError(
                 f"yt-dlp downloaded the video but wrote no {label} subtitle "
                 f"(mode={sub_mode}). The track listed at probe time was not available "
