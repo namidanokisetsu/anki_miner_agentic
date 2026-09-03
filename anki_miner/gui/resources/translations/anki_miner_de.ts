@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="de_DE">
-    <context>
+  <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>About Anki Miner</source>
-        <translation type="unfinished">Über Anki Miner</translation>
+        <translation>Über Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -682,13 +682,15 @@
     <name>App</name>
     <message>
         <source>Anki Miner Is Already Running</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner läuft bereits</translation>
     </message>
     <message>
         <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation type="unfinished" />
+        <translation>Es scheint bereits eine weitere Instanz von Anki Miner zu laufen. Der gleichzeitige Betrieb zweier Instanzen kann die Datenbanken für Bekannte Wörter und Statistiken beschädigen.
+
+Trotzdem fortfahren?</translation>
     </message>
     <message>
         <source>Continue anyway</source>
@@ -9767,7 +9769,7 @@ Die Auswahl „Sätze“ bietet eine Option pro Untertitelzeile und listet daher
     <name>app</name>
     <message>
         <source>Anki Miner — Unexpected Error</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner — Unerwarteter Fehler</translation>
     </message>
     <message>
         <source>%1: %2

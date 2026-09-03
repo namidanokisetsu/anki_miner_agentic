@@ -35,7 +35,7 @@ class TestMissingRequiredReason:
         reason = availability.ko_missing_required_reason()
         assert reason is not None
         assert "kiwipiepy" in reason
-        assert "anki-miner[ko]" in reason
+        assert "anki-miner-agentic[ko]" in reason
 
     def test_every_missing_package_is_listed(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(availability, "_installed", lambda _name: False)
@@ -83,7 +83,7 @@ class TestMissingRequiredReason:
 
         reason = availability.ko_missing_required_reason() or ""
 
-        assert 'pip install "anki-miner[ko]"' in reason
+        assert 'pip install "anki-miner-agentic[ko]"' in reason
 
     def test_a_pip_build_also_names_the_download_button(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """The pack ships the engine AND the model, so a source user with

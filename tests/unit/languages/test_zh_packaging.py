@@ -15,11 +15,12 @@ def _pyproject() -> dict:
 
 
 def test_zh_extra_names_every_runtime_package() -> None:
-    extras = _pyproject()["project"]["optional-dependencies"]
+    project = _pyproject()["project"]
+    extras = project["optional-dependencies"]
     declared = " ".join(extras["zh"])
     for package in ZH_PACKAGES:
         assert package in declared, f"{package} missing from the zh extra"
-    assert "anki-miner[zh]" in extras["languages"]
+    assert f"{project['name']}[zh]" in extras["languages"]
 
 
 def test_mypy_ignores_untyped_zh_packages() -> None:
@@ -32,7 +33,7 @@ def test_mypy_ignores_untyped_zh_packages() -> None:
 def test_ci_test_job_installs_the_zh_extra() -> None:
     # Since the ko fixtures landed, the test job installs the `languages`
     # aggregate rather than `zh` alone — the zh engine still arrives, via
-    # `anki-miner[zh]` (pinned by test_zh_extra_names_every_runtime_package),
+    # the project's `[zh]` extra (pinned by test_zh_extra_names_every_runtime_package),
     # and the ko engine arrives with it so no fixture is silently skipped.
     ci = (PROJECT_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     assert 'pip install -e ".[dev,languages]"' in ci

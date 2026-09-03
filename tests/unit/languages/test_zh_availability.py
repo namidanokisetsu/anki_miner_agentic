@@ -23,7 +23,7 @@ class TestUnavailableReason:
         reason = availability.zh_unavailable_reason()
         assert reason is not None
         assert "opencc" in reason
-        assert "anki-miner[zh]" in reason
+        assert "anki-miner-agentic[zh]" in reason
 
     def test_every_missing_package_is_listed(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(availability, "_installed", lambda _name: False)
@@ -46,7 +46,7 @@ class TestUnavailableReason:
         reason = availability.zh_missing_required_reason() or ""
         assert "jieba" in reason
         assert "opencc" not in reason
-        assert "anki-miner[zh]" in reason
+        assert "anki-miner-agentic[zh]" in reason
 
     def test_the_probe_reads_the_real_environment(self) -> None:
         # _installed answers from find_spec, so an installed stdlib module is a
@@ -69,7 +69,7 @@ class TestUnavailableReason:
 
         reason = availability.zh_missing_required_reason() or ""
 
-        assert 'pip install "anki-miner[zh]"' in reason
+        assert 'pip install "anki-miner-agentic[zh]"' in reason
 
     def test_a_pip_build_also_names_the_download_button(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delattr(sys, "frozen", raising=False)
@@ -87,7 +87,7 @@ class TestUnavailableReason:
 
         reason = availability.zh_unavailable_reason() or ""
 
-        assert 'pip install "anki-miner[zh]"' in reason
+        assert 'pip install "anki-miner-agentic[zh]"' in reason
         assert "Settings -> Mining Language" not in reason
 
 

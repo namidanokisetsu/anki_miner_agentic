@@ -64,7 +64,9 @@ def make_run(
         rows,
     )
     published = set(candidate_ids if run_candidate_ids is None else run_candidate_ids)
-    return store.create_run("batch_two_call", [row["public"] for row in rows if row["public"]["candidate_id"] in published])
+    return store.create_run(
+        "batch_two_call", [row["public"] for row in rows if row["public"]["candidate_id"] in published]
+    )
 
 
 class BatchWriter:
@@ -438,13 +440,11 @@ def test_global_writer_failure_stops_remaining_source_groups(tmp_path):
 def test_store_migrates_v1_jobs_with_durable_tag_columns(tmp_path):
     path = tmp_path / "agent.sqlite3"
     with sqlite3.connect(path) as conn:
-        conn.execute(
-            """CREATE TABLE mining_jobs (
+        conn.execute("""CREATE TABLE mining_jobs (
                job_id TEXT PRIMARY KEY, batch_revision TEXT NOT NULL,
                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-               state TEXT NOT NULL, selection_json TEXT NOT NULL, error_json TEXT)"""
-        )
+               state TEXT NOT NULL, selection_json TEXT NOT NULL, error_json TEXT)""")
         conn.execute("PRAGMA user_version=1")
 
     AgentStore(path)

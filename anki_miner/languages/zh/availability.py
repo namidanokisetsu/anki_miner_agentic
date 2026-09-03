@@ -43,7 +43,7 @@ def _reason(missing: list[str], *, pack_hint: bool) -> str | None:
         # No pip in a bundle: name the download button instead of a package
         # the user cannot install.
         return ZH_FROZEN_PACK_REASON
-    line = f"Chinese mining needs {', '.join(missing)}. Install with: pip install \"anki-miner[zh]\""
+    line = f"Chinese mining needs {', '.join(missing)}. Install with: pip install \"anki-miner-agentic[zh]\""
     return f"{line} - {ZH_PACK_DOWNLOAD_HINT}" if pack_hint else line
 
 

@@ -83,6 +83,6 @@ def ko_missing_required_reason() -> str | None:
     # exists if the line names only pip.
     return (
         f"Korean mining needs {', '.join(missing)}. "
-        'Install with: pip install "anki-miner[ko]" - or download the Korean pack '
+        'Install with: pip install "anki-miner-agentic[ko]" - or download the Korean pack '
         "in Settings -> Mining Language."
     )

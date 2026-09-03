@@ -1,6 +1,6 @@
 # Anki Miner Agentic workflow
 
-The normal MCP path is two calls: prepare one durable run, then commit one reviewed batch. Anki Miner owns learner synchronization, source validation, deterministic filtering/ranking, dictionary data, media, note construction, limits, batching, provenance, and retries. The agent only reviews the bounded shortlist and enriches selected candidates; it receives no raw note dumps or database access.
+The normal CLI path is two operations: prepare one durable run, then commit one reviewed batch. Anki Miner owns learner synchronization, source validation, deterministic filtering/ranking, dictionary data, media, note construction, limits, batching, provenance, and retries. The agent only reviews the bounded shortlist and enriches selected candidates; it receives no raw note dumps or database access. MCP remains a compatibility fallback over the same application facade.
 
 This guide documents only the fork's agentic layer. See the [upstream Anki Miner documentation](https://github.com/0xzerolight/anki_miner#readme) for the inherited desktop application. The fork boundary and shared code changes are summarized in the root README.
 
@@ -9,16 +9,17 @@ This guide documents only the fork's agentic layer. See the [upstream Anki Miner
 Give the agent terminal and filesystem access to this checkout, keep Anki open, and paste:
 
 ```text
-Set up Anki Miner Agentic in this checkout. Discover the existing GUI configuration and live Anki schema instead of assuming names, reuse installed local resources, default to Japanese audio, and create no more cards than I request. Use the two-call prepare_mining_run / commit_mining_run workflow, require every configured enrichment on every selected review, and report the terminal receipt and job-tag query.
+Set up Anki Miner Agentic in this checkout. Discover the existing GUI configuration and live Anki schema instead of assuming names, reuse installed local resources, default to Japanese audio, and create no more cards than I request. Use the file-backed two-operation anki_miner mine prepare / mine commit workflow, require every configured enrichment on every selected review, and report the terminal receipt and job-tag query.
 ```
 
-Install the optional stdio server with `python -m pip install -e ".[mcp]"`, then launch it with:
+Install the checkout and expose the CLI with:
 
 ```bash
-anki_miner_agentic_mcp --config "$HOME/.anki_miner/agentic-agent.json"
+python -m pip install -e .
+anki_miner help commands
 ```
 
-It publicly exposes only `prepare_mining_run` and `commit_mining_run`. The CLI's matching `prepare-run` and `commit-run` commands use the same contract. Older low-level `prepare`, `candidates`, `commit`, and `job` commands remain for compatibility and recovery; they are not the supported agent orchestration surface.
+The supported orchestration surface is `mine prepare` and `mine commit`; both use explicit request and output files to keep large payloads out of the terminal transcript. The optional MCP server publicly exposes matching `prepare_mining_run` and `commit_mining_run` calls. Older `prepare-run`/`commit-run` aliases and low-level commands remain for compatibility and recovery.
 
 ## Configuration
 
@@ -52,10 +53,10 @@ Executable paths and deterministic mining policy belong exclusively to the activ
 Compact CLI help is available without a config or Anki connection:
 
 ```bash
-anki_miner_agentic_agent help
-anki_miner_agentic_agent help settings
-anki_miner_agentic_agent help workflow
-anki_miner_agentic_agent help commands
+anki_miner help
+anki_miner help settings
+anki_miner help workflow
+anki_miner help commands
 ```
 
 Deck, note-type, and field names are case-sensitive and must be discovered from live Anki. A missing configured deck is an error, not an empty learner source. `write_target.enabled` is a profile-level safety switch. The user's request to mine up to a stated number is the write authorization; the normal flow has no second approval or public dry-run token.
@@ -63,10 +64,10 @@ Deck, note-type, and field names are case-sensitive and must be discovered from 
 For setup diagnostics, the JSON CLI retains:
 
 ```bash
-anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" profile-validate
-anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" profile-sync
-anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" profile-status
-anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" policy-status
+anki_miner --config "$HOME/.anki_miner/agentic-agent.json" profile validate
+anki_miner --config "$HOME/.anki_miner/agentic-agent.json" profile sync
+anki_miner --config "$HOME/.anki_miner/agentic-agent.json" profile status
+anki_miner --config "$HOME/.anki_miner/agentic-agent.json" policy-status
 ```
 
 `policy-status` is read-only. It shows the next-run GUI-policy fingerprint, setting ownership, and any stale live Anki mappings.
@@ -131,11 +132,13 @@ The timestamp and job tag are persisted at reservation and reused on retry. Dupl
 
 The compact terminal receipt reports reviewed/rejected counts plus selected, created, duplicate-skipped, and failed counts; enrichment coverage; destination; applied tags; job-tag Browser query; and selected-candidate outcomes/note IDs/errors. Media hashes and stored review state remain available in durable job storage instead of being repeated in the agent response. An unchanged retry with the same `run_id` and reviews returns or resumes the same job without duplicate creation. Changed reviews for an already reserved run fail; prepare a new run instead.
 
-The equivalent JSON CLI commands are:
+The file-backed CLI commands are:
 
 ```bash
-anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" prepare-run --request prepare.json
-anki_miner_agentic_agent --config "$HOME/.anki_miner/agentic-agent.json" commit-run --request commit.json --output receipt.json --summary
+env -u PYTHONPATH anki_miner --config "$HOME/.anki_miner/agentic-agent.json" mine prepare --request prepare.json --output prepared.json
+env -u PYTHONPATH anki_miner --config "$HOME/.anki_miner/agentic-agent.json" mine commit --request commit.json --output receipt.json --summary
 ```
 
-`commit-run --request` is the file-backed commit path. `--output` keeps the complete receipt out of the terminal transcript, while `--summary` prints only counts, coverage, destination, failures, and the Browser query. Agent runtimes that inject `PYTHONPATH` should remove it before launching the CLI (`env -u PYTHONPATH …` on macOS/Linux).
+On Windows PowerShell, clear an injected path once with `Remove-Item Env:PYTHONPATH -ErrorAction SilentlyContinue`, then run the same `anki_miner` commands using `$HOME\.anki_miner\agentic-agent.json`.
+
+`--output` keeps the complete prepared batch or receipt out of the terminal transcript, while `--summary` prints only counts, coverage, destination, failures, and the Browser query. Agent runtimes that inject `PYTHONPATH` should remove it before launching the CLI.

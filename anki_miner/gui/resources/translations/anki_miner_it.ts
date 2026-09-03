@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="it_IT">
-    <context>
+  <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>About Anki Miner</source>
-        <translation type="unfinished">Informazioni su Anki Miner</translation>
+        <translation>Informazioni su Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -682,13 +682,15 @@
     <name>App</name>
     <message>
         <source>Anki Miner Is Already Running</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner è già in esecuzione</translation>
     </message>
     <message>
         <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation type="unfinished" />
+        <translation>Un'altra copia di Anki Miner sembra essere in esecuzione. Eseguire due copie contemporaneamente può danneggiare i database delle parole conosciute e delle statistiche.
+
+Continuare comunque?</translation>
     </message>
     <message>
         <source>Continue anyway</source>
@@ -9767,7 +9769,7 @@ Il selettore “Frasi” offre un'opzione per ogni riga di sottotitoli, quindi d
     <name>app</name>
     <message>
         <source>Anki Miner — Unexpected Error</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner — Errore imprevisto</translation>
     </message>
     <message>
         <source>%1: %2

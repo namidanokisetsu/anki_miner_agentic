@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_TW">
-    <context>
+  <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>About Anki Miner</source>
-        <translation type="unfinished">關於 Anki Miner</translation>
+        <translation>關於 Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -681,13 +681,15 @@
     <name>App</name>
     <message>
         <source>Anki Miner Is Already Running</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner 已在執行中</translation>
     </message>
     <message>
         <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation type="unfinished" />
+        <translation>另一個 Anki Miner 似乎正在執行中。同時執行兩個副本可能會損毀已知單字資料庫與統計資料庫。
+
+仍要繼續嗎？</translation>
     </message>
     <message>
         <source>Continue anyway</source>
@@ -9751,7 +9753,7 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
     <name>app</name>
     <message>
         <source>Anki Miner — Unexpected Error</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner — 非預期的錯誤</translation>
     </message>
     <message>
         <source>%1: %2

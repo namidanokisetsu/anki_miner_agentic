@@ -1,6 +1,6 @@
-# MCP contract
+# CLI/MCP mining contract
 
-The normal workflow is exactly two calls. Use returned IDs unchanged and never invent paths, candidates, fields, or run values.
+The normal workflow is exactly two operations. Prefer the file-backed `anki_miner mine prepare` and `anki_miner mine commit` commands; the matching MCP calls are a compatibility fallback. Use returned IDs unchanged and never invent paths, candidates, fields, or run values.
 
 ## 1. Prepare one run
 

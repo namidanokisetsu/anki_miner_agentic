@@ -114,7 +114,7 @@ ko = [
 ]
 # Bundle-all aggregate: the release matrix installs this, pip's default stays
 # JA-lean (same shape as the asr extras).
-languages = ["anki-miner[zh]", "anki-miner[ko]"]
+languages = ["anki-miner-agentic[zh]", "anki-miner-agentic[ko]"]
 dev = [
     "pytest>=9.0.3",
     "pytest-cov>=6.0.0",
@@ -150,6 +150,7 @@ mcp = [
 [project.scripts]
 # Canonical Agentic entry points. The legacy names remain temporarily because
 # the inherited desktop shortcut and release tooling still resolve them.
+anki_miner = "anki_miner.headless.cli:main"
 anki_miner_agentic_gui = "anki_miner.gui.launch:main"
 anki_miner_agentic_agent = "anki_miner.headless.cli:main"
 anki_miner_agentic_mcp = "anki_miner.mcp_server.server:main"

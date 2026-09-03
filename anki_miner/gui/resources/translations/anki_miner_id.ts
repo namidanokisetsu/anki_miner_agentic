@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="id_ID">
-    <context>
+  <context>
     <name>AboutDialog</name>
     <message>
         <source>Switch tabs</source>
@@ -25,7 +25,7 @@
     </message>
     <message>
         <source>About Anki Miner</source>
-        <translation type="unfinished">Tentang Anki Miner</translation>
+        <translation>Tentang Anki Miner</translation>
     </message>
     <message>
         <source>GitHub</source>
@@ -681,13 +681,15 @@
     <name>App</name>
     <message>
         <source>Anki Miner Is Already Running</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner Sudah Berjalan</translation>
     </message>
     <message>
         <source>Another copy of Anki Miner appears to be running. Running two copies at once can corrupt the known-words and statistics databases.
 
 Continue anyway?</source>
-        <translation type="unfinished" />
+        <translation>Salinan lain Anki Miner tampaknya sedang berjalan. Menjalankan dua salinan sekaligus dapat merusak basis data kata yang dikenal dan statistik.
+
+Tetap lanjutkan?</translation>
     </message>
     <message>
         <source>Continue anyway</source>
@@ -9751,7 +9753,7 @@ Pemilih “Kalimat” menyediakan satu opsi per baris subtitel, jadi biasanya da
     <name>app</name>
     <message>
         <source>Anki Miner — Unexpected Error</source>
-        <translation type="unfinished" />
+        <translation>Anki Miner — Kesalahan Tak Terduga</translation>
     </message>
     <message>
         <source>%1: %2

@@ -1029,13 +1029,15 @@ class AnkiService:
             self.last_skipped_duplicates = skipped_duplicates
             self.last_media_store_failures = media_store_failures
             self.last_candidate_outcomes = [
-                outcome
-                if outcome is not None
-                else {
-                    "outcome": "failed",
-                    "note_id": None,
-                    "error": {"code": "not_processed", "message": "Candidate was not processed"},
-                }
+                (
+                    outcome
+                    if outcome is not None
+                    else {
+                        "outcome": "failed",
+                        "note_id": None,
+                        "error": {"code": "not_processed", "message": "Candidate was not processed"},
+                    }
+                )
                 for outcome in candidate_outcomes
             ]
             # Incremental merge: if the cache is already populated, union the
