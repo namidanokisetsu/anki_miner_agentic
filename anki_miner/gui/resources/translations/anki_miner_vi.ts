@@ -290,6 +290,38 @@
 </context><context>
     <name>AnkiSettingsPanel</name>
     <message>
+        <source>Measure Word Field</source>
+        <translation>Trường Lượng từ</translation>
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation>Lưu lượng từ được phân tích từ mục từ điển. Để trống = bỏ qua.</translation>
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation>Trường Pinyin</translation>
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation>Lưu cách đọc pinyin của từ, được tô màu theo thanh điệu khi tùy chọn đó bật. Để trống = bỏ qua.</translation>
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation>Trường Phồn thể</translation>
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation>Lưu từ ở biến thể chữ viết còn lại, khi có khác biệt. Để trống = bỏ qua.</translation>
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation>Trường Hanja</translation>
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation>Lưu các ký tự hanja có trong từ. Để trống = bỏ qua.</translation>
+    </message>
+    <message>
         <source>Not in Anki — mining will fail until you pick a real one or create it in Anki.</source>
         <translation>Không có trong Anki — việc khai thác sẽ thất bại cho đến khi chọn một mục thực hoặc tạo nó trong Anki.</translation>
     </message>
@@ -456,38 +488,6 @@
     <message>
         <source>Stores the sentence as plain kana.</source>
         <translation>Lưu câu dưới dạng kana thuần túy.</translation>
-    </message>
-    <message>
-        <source>Measure Word Field</source>
-        <translation>Trường Lượng từ</translation>
-    </message>
-    <message>
-        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
-        <translation>Lưu lượng từ được phân tích từ mục từ điển. Để trống = bỏ qua.</translation>
-    </message>
-    <message>
-        <source>Pinyin Field</source>
-        <translation>Trường Pinyin</translation>
-    </message>
-    <message>
-        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
-        <translation>Lưu cách đọc pinyin của từ, được tô màu theo thanh điệu khi tùy chọn đó bật. Để trống = bỏ qua.</translation>
-    </message>
-    <message>
-        <source>Traditional Field</source>
-        <translation>Trường Phồn thể</translation>
-    </message>
-    <message>
-        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
-        <translation>Lưu từ ở biến thể chữ viết còn lại, khi có khác biệt. Để trống = bỏ qua.</translation>
-    </message>
-    <message>
-        <source>Hanja Field</source>
-        <translation>Trường Hanja</translation>
-    </message>
-    <message>
-        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
-        <translation>Lưu các ký tự hanja có trong từ. Để trống = bỏ qua.</translation>
     </message>
     <message>
         <source>Auxiliary Data Fields</source>
@@ -697,6 +697,10 @@ Continue anyway?</source>
         <source>Quit</source>
         <translation>Thoát</translation>
     </message>
+    <message>
+        <source>Open Settings</source>
+        <translation>Mở Cài đặt</translation>
+    </message>
 </context><context>
     <name>AsrModelDownloadWorker</name>
     <message>
@@ -729,7 +733,7 @@ Continue anyway?</source>
     <name>AudioPackImportFlow</name>
     <message>
         <source>Scanning folder for audio packs…</source>
-        <translation type="unfinished" />
+        <translation>Đang quét thư mục để tìm gói âm thanh…</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -737,7 +741,7 @@ Continue anyway?</source>
     </message>
     <message>
         <source>Scanning %1 …</source>
-        <translation type="unfinished" />
+        <translation>Đang quét %1 …</translation>
     </message>
     <message>
         <source>That folder could not be scanned.</source>
@@ -1715,11 +1719,11 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     </message>
     <message>
         <source>Mine Japanese, Korean or Chinese</source>
-        <translation type="unfinished" />
+        <translation>Khai thác tiếng Nhật, Hàn hoặc Trung</translation>
     </message>
     <message>
         <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
-        <translation type="unfinished" />
+        <translation>Chuyển đổi ngôn ngữ khai thác; mỗi ngôn ngữ có từ điển, bộ lọc, bộ thẻ và trường thẻ riêng.</translation>
     </message>
     <message>
         <source>i+1 sentence mining</source>
@@ -3210,8 +3214,8 @@ Thao tác này sẽ sửa đổi {notes} ghi chú ({fields} trường) và gắn
         <translation>trường từ trống</translation>
     </message>
     <message>
-        <source>not Japanese</source>
-        <translation>không phải tiếng Nhật</translation>
+        <source>not the mining language</source>
+        <translation>không phải ngôn ngữ khai thác</translation>
     </message>
     <message>
         <source>duplicate within the deck</source>
@@ -3950,8 +3954,12 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Audio pack '%1' is slow to read — audio skipped for those words. Its folder is probably on a cloud-synced, network or external drive: move it to a local drive, then re-import the pack (Settings -&gt; Audio -&gt; Re-import…).</source>
+        <translation>Gói âm thanh '%1' đọc chậm — bỏ qua âm thanh cho các từ đó. Thư mục của gói này có thể nằm trên ổ đĩa đồng bộ đám mây, mạng hoặc ổ ngoài: hãy chuyển sang ổ đĩa cục bộ, rồi nhập lại gói (Cài đặt -&gt; Âm thanh -&gt; Nhập lại…).</translation>
+    </message>
+    <message>
         <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
-        <translation type="unfinished" />
+        <translation>Nguồn âm thanh từ vựng phản hồi quá chậm — bỏ qua âm thanh cho các từ đó. Hãy sắp xếp lại hoặc tắt nguồn này trong Cài đặt -&gt; Âm thanh nếu tình trạng này tiếp diễn.</translation>
     </message>
     <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
@@ -4000,6 +4008,14 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
     <message>
         <source>Sentence audio: %1/%2 sentences</source>
         <translation>Âm thanh câu: %1/%2 câu</translation>
+    </message>
+    <message>
+        <source>Subtitles contain no %1 text</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No words found in subtitles</source>
+        <translation>Không tìm thấy từ nào trong phụ đề</translation>
     </message>
     <message>
         <source>All %1 new word(s) were removed by active filters — no cards created</source>
@@ -4174,10 +4190,6 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
         <translation>
             <numerusform>Đang khai thác %n từ đã chọn</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>No words found in subtitles</source>
-        <translation>Không tìm thấy từ nào trong phụ đề</translation>
     </message>
     <message>
         <source>No media extracted successfully</source>
@@ -4736,6 +4748,18 @@ Các tệp trên đĩa sẽ được giữ nguyên vì không thể xác minh th
         <translation>Số lần tối thiểu một từ phải xuất hiện trong một cuốn sách hoặc tập để được khai thác. 1 = không có tối thiểu (tắt bộ lọc).</translation>
     </message>
     <message>
+        <source>Card Order</source>
+        <translation>Thứ tự thẻ</translation>
+    </message>
+    <message>
+        <source>Create cards in order of appearance</source>
+        <translation>Tạo thẻ theo thứ tự xuất hiện</translation>
+    </message>
+    <message>
+        <source>Adds cards to Anki in the order the words appear in the media, instead of the order their media finished extracting. Overrides the whitelist's force-include ordering and any column sort in the Word Curator.</source>
+        <translation>Thêm thẻ vào Anki theo thứ tự các từ xuất hiện trong phương tiện, thay vì theo thứ tự phương tiện của chúng được trích xuất xong. Ghi đè thứ tự buộc bao gồm của danh sách trắng và mọi cách sắp xếp cột trong Word Curator.</translation>
+    </message>
+    <message>
         <source>Card Formatting</source>
         <translation>Định dạng thẻ</translation>
     </message>
@@ -4940,14 +4964,6 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
         <translation>Hồ sơ cài đặt đang hoạt động. Việc chuyển đổi thay mọi cài đặt; chọn 'Quản lý hồ sơ…' để thêm, đổi tên hoặc xóa.</translation>
     </message>
     <message>
-        <source>Mining language:</source>
-        <translation>Ngôn ngữ khai thác:</translation>
-    </message>
-    <message>
-        <source>Mining language</source>
-        <translation>Ngôn ngữ khai thác</translation>
-    </message>
-    <message>
         <source>Theme:</source>
         <translation>Giao diện:</translation>
     </message>
@@ -4966,10 +4982,6 @@ Các tệp chỉ mục trên đĩa sẽ được giữ nguyên vì không thể 
     <message>
         <source>Manage profiles…</source>
         <translation>Quản lý hồ sơ…</translation>
-    </message>
-    <message>
-        <source>Mining language: %1. Opens the selector in Settings.</source>
-        <translation>Ngôn ngữ khai thác: %1. Mở trình chọn trong Cài đặt.</translation>
     </message>
 </context><context>
     <name>InlineReceipt</name>
@@ -5126,14 +5138,14 @@ Thêm %3 từ vào danh sách từ đã biết?</translation>
         <translation>Gỡ bỏ TẤT CẢ các từ bạn đã thêm vào danh sách từ đã biết cục bộ? Không thể hoàn tác. Bộ nhớ đệm đồng bộ với Anki không bị ảnh hưởng.</translation>
     </message>
 </context><context>
-    <name>KoModelDownloadWorker</name>
+    <name>LanguagePackDownloadWorker</name>
     <message>
-        <source>Downloading the Korean model…</source>
-        <translation>Đang tải mô hình tiếng Hàn…</translation>
+        <source>Downloading the %1 pack…</source>
+        <translation>Đang tải gói %1…</translation>
     </message>
     <message>
-        <source>Korean model installed successfully.</source>
-        <translation>Đã cài đặt mô hình tiếng Hàn thành công.</translation>
+        <source>%1 pack installed successfully.</source>
+        <translation>Đã cài đặt gói %1 thành công.</translation>
     </message>
 </context><context>
     <name>LanguageSwitch</name>
@@ -5874,24 +5886,20 @@ Tiếp tục?</translation>
         <translation>Ngôn ngữ được khai thác. Tách biệt với ngôn ngữ giao diện (Cài đặt -&gt; Diện mạo &amp; Ngôn ngữ). Khi chuyển đổi, từ điển, bộ lọc, bộ thẻ và các trường thẻ sẽ đổi sang cài đặt riêng của ngôn ngữ đó.</translation>
     </message>
     <message>
-        <source>Download Korean model</source>
-        <translation>Tải mô hình tiếng Hàn</translation>
+        <source>Download %1 pack</source>
+        <translation>Tải gói %1</translation>
     </message>
     <message>
-        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
-        <translation>Tải mô hình ngôn ngữ tiếng Hàn vào thư mục của Anki Miner. Bản cài đóng gói có sẵn công cụ tiếng Hàn nhưng không kèm mô hình.</translation>
-    </message>
-    <message>
-        <source>Korean model</source>
-        <translation>Mô hình tiếng Hàn</translation>
+        <source>Download the engine and data Anki Miner needs to mine %1, into its own folder.</source>
+        <translation>Tải công cụ và dữ liệu Anki Miner cần để khai thác %1, vào thư mục riêng của nó.</translation>
     </message>
     <message>
         <source>Installed</source>
         <translation>Đã cài đặt</translation>
     </message>
     <message>
-        <source>Not installed</source>
-        <translation>Chưa cài đặt</translation>
+        <source>Not installed - about %1 MB download</source>
+        <translation>Chưa cài đặt - khoảng %1 MB tải xuống</translation>
     </message>
 </context><context>
     <name>MiningTabBase</name>
@@ -9344,12 +9352,12 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
 Khung chọn “Câu” đưa ra một lựa chọn cho mỗi dòng phụ đề nên thường liệt kê ít hơn: các lần lặp trong cùng một dòng chỉ được tính một lần ở đây, và những dòng mà từ mang dạng làm thay đổi “Từ (đã khai thác)” của thẻ sẽ bị bỏ qua.</translation>
     </message>
     <message>
-        <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S bao gồm/loại trừ · Phím cách phát/tạm dừng · Ctrl+A bao gồm phần hiển thị · Ctrl+D loại trừ phần hiển thị · Ctrl+Enter xác nhận</translation>
+        <source>S include/exclude · Space play/pause · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S bao gồm/loại trừ · Phím cách phát/tạm dừng · K đánh dấu đã biết · Ctrl+A bao gồm phần hiển thị · Ctrl+D loại trừ phần hiển thị · Ctrl+Enter xác nhận</translation>
     </message>
     <message>
-        <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S bao gồm/loại trừ · Ctrl+A bao gồm phần hiển thị · Ctrl+D loại trừ phần hiển thị · Ctrl+Enter xác nhận</translation>
+        <source>S include/exclude · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S bao gồm/loại trừ · K đánh dấu đã biết · Ctrl+A bao gồm phần hiển thị · Ctrl+D loại trừ phần hiển thị · Ctrl+Enter xác nhận</translation>
     </message>
     <message>
         <source>+ Previous line</source>

@@ -291,6 +291,38 @@
 </context><context>
     <name>AnkiSettingsPanel</name>
     <message>
+        <source>Measure Word Field</source>
+        <translation>Campo de clasificador</translation>
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation>Almacena el clasificador extraído de la entrada del diccionario. En blanco = omitir.</translation>
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation>Campo de pinyin</translation>
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation>Almacena la lectura en pinyin de la palabra, coloreada por tono si esa opción está activada. En blanco = omitir.</translation>
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation>Campo de caracteres tradicionales</translation>
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation>Almacena la palabra en la otra variante de escritura, cuando difiere. En blanco = omitir.</translation>
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation>Campo de hanja</translation>
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation>Almacena los caracteres hanja contenidos en la palabra. En blanco = omitir.</translation>
+    </message>
+    <message>
         <source>Not in Anki — mining will fail until you pick a real one or create it in Anki.</source>
         <translation>No está en Anki; la minería fallará hasta que elija uno real o lo cree en Anki.</translation>
     </message>
@@ -457,38 +489,6 @@
     <message>
         <source>Stores the sentence as plain kana.</source>
         <translation>Almacena la oración como kana simple.</translation>
-    </message>
-    <message>
-        <source>Measure Word Field</source>
-        <translation>Campo de clasificador</translation>
-    </message>
-    <message>
-        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
-        <translation>Almacena el clasificador extraído de la entrada del diccionario. En blanco = omitir.</translation>
-    </message>
-    <message>
-        <source>Pinyin Field</source>
-        <translation>Campo de pinyin</translation>
-    </message>
-    <message>
-        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
-        <translation>Almacena la lectura en pinyin de la palabra, coloreada por tono si esa opción está activada. En blanco = omitir.</translation>
-    </message>
-    <message>
-        <source>Traditional Field</source>
-        <translation>Campo de caracteres tradicionales</translation>
-    </message>
-    <message>
-        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
-        <translation>Almacena la palabra en la otra variante de escritura, cuando difiere. En blanco = omitir.</translation>
-    </message>
-    <message>
-        <source>Hanja Field</source>
-        <translation>Campo de hanja</translation>
-    </message>
-    <message>
-        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
-        <translation>Almacena los caracteres hanja contenidos en la palabra. En blanco = omitir.</translation>
     </message>
     <message>
         <source>Auxiliary Data Fields</source>
@@ -698,6 +698,10 @@ Continue anyway?</source>
         <source>Quit</source>
         <translation>Salir</translation>
     </message>
+    <message>
+        <source>Open Settings</source>
+        <translation>Abrir Ajustes</translation>
+    </message>
 </context><context>
     <name>AsrModelDownloadWorker</name>
     <message>
@@ -730,7 +734,7 @@ Continue anyway?</source>
     <name>AudioPackImportFlow</name>
     <message>
         <source>Scanning folder for audio packs…</source>
-        <translation type="unfinished" />
+        <translation>Analizando carpeta en busca de paquetes de audio…</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -738,7 +742,7 @@ Continue anyway?</source>
     </message>
     <message>
         <source>Scanning %1 …</source>
-        <translation type="unfinished" />
+        <translation>Analizando %1 …</translation>
     </message>
     <message>
         <source>That folder could not be scanned.</source>
@@ -1717,11 +1721,11 @@ Los archivos de índice en el disco quedarán sin modificar porque no se pudo co
     </message>
     <message>
         <source>Mine Japanese, Korean or Chinese</source>
-        <translation type="unfinished" />
+        <translation>Minar japonés, coreano o chino</translation>
     </message>
     <message>
         <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
-        <translation type="unfinished" />
+        <translation>Cambie el idioma que mina; cada uno conserva sus propios diccionarios, filtros, mazo y campos de tarjeta.</translation>
     </message>
     <message>
         <source>i+1 sentence mining</source>
@@ -3212,8 +3216,8 @@ Número de notas que se modificarán: {notes}. Número de campos que se modifica
         <translation>campo de palabra vacío</translation>
     </message>
     <message>
-        <source>not Japanese</source>
-        <translation>no es japonés</translation>
+        <source>not the mining language</source>
+        <translation>no es el idioma de minería</translation>
     </message>
     <message>
         <source>duplicate within the deck</source>
@@ -3952,8 +3956,12 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Audio pack '%1' is slow to read — audio skipped for those words. Its folder is probably on a cloud-synced, network or external drive: move it to a local drive, then re-import the pack (Settings -&gt; Audio -&gt; Re-import…).</source>
+        <translation>El paquete de audio '%1' tarda demasiado en leerse — se omitió el audio de esas palabras. Es probable que su carpeta esté en una unidad sincronizada en la nube, de red o externa: muévala a una unidad local y luego reimporte el paquete (Configuración -&gt; Audio -&gt; Reimportar…).</translation>
+    </message>
+    <message>
         <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
-        <translation type="unfinished" />
+        <translation>La fuente de audio de palabra responde demasiado lento — se omitió el audio de esas palabras. Reordénela o desactívela en Configuración -&gt; Audio si esto sigue ocurriendo.</translation>
     </message>
     <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
@@ -4002,6 +4010,14 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
     <message>
         <source>Sentence audio: %1/%2 sentences</source>
         <translation>Audio de oración: %1/%2 oraciones</translation>
+    </message>
+    <message>
+        <source>Subtitles contain no %1 text</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No words found in subtitles</source>
+        <translation>No se encontraron palabras en los subtítulos</translation>
     </message>
     <message>
         <source>All %1 new word(s) were removed by active filters — no cards created</source>
@@ -4185,10 +4201,6 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
             <numerusform>Minando %n palabra seleccionada</numerusform>
             <numerusform>Minando %n palabras seleccionadas</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>No words found in subtitles</source>
-        <translation>No se encontraron palabras en los subtítulos</translation>
     </message>
     <message>
         <source>No media extracted successfully</source>
@@ -4749,6 +4761,18 @@ Los archivos en el disco quedarán sin modificar porque no se pudo comprobar que
         <translation>Número mínimo de veces que una palabra debe aparecer en un libro o volumen para ser minada. 1 = sin mínimo (filtro desactivado).</translation>
     </message>
     <message>
+        <source>Card Order</source>
+        <translation>Orden de las tarjetas</translation>
+    </message>
+    <message>
+        <source>Create cards in order of appearance</source>
+        <translation>Crear tarjetas en el orden de aparición</translation>
+    </message>
+    <message>
+        <source>Adds cards to Anki in the order the words appear in the media, instead of the order their media finished extracting. Overrides the whitelist's force-include ordering and any column sort in the Word Curator.</source>
+        <translation>Añade tarjetas a Anki en el orden en que las palabras aparecen en el medio, en lugar del orden en que su medio terminó de extraerse. Anula el orden de inclusión forzada de la lista blanca y cualquier orden de columna en el Curador de palabras.</translation>
+    </message>
+    <message>
         <source>Card Formatting</source>
         <translation>Formato de tarjeta</translation>
     </message>
@@ -4953,14 +4977,6 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
         <translation>Perfil de ajustes activo. Al cambiar se intercambian todos los ajustes; elija 'Gestionar perfiles…' para añadirlos, renombrarlos o eliminarlos.</translation>
     </message>
     <message>
-        <source>Mining language:</source>
-        <translation>Idioma de minería:</translation>
-    </message>
-    <message>
-        <source>Mining language</source>
-        <translation>Idioma de minería</translation>
-    </message>
-    <message>
         <source>Theme:</source>
         <translation>Tema:</translation>
     </message>
@@ -4979,10 +4995,6 @@ Los archivos de índice en disco quedarán intactos porque no se pudo comprobar 
     <message>
         <source>Manage profiles…</source>
         <translation>Gestionar perfiles…</translation>
-    </message>
-    <message>
-        <source>Mining language: %1. Opens the selector in Settings.</source>
-        <translation>Idioma de minería: %1. Abre el selector en Ajustes.</translation>
     </message>
 </context><context>
     <name>InlineReceipt</name>
@@ -5139,14 +5151,14 @@ Add %3 word(s) to your known list?</source>
         <translation>¿Eliminar TODAS las palabras que añadió a la lista local de palabras conocidas? Esto no se puede deshacer. La caché sincronizada con Anki no se ve afectada.</translation>
     </message>
 </context><context>
-    <name>KoModelDownloadWorker</name>
+    <name>LanguagePackDownloadWorker</name>
     <message>
-        <source>Downloading the Korean model…</source>
-        <translation>Descargando modelo coreano…</translation>
+        <source>Downloading the %1 pack…</source>
+        <translation>Descargando el paquete de %1…</translation>
     </message>
     <message>
-        <source>Korean model installed successfully.</source>
-        <translation>Modelo coreano instalado correctamente.</translation>
+        <source>%1 pack installed successfully.</source>
+        <translation>El paquete de %1 se instaló correctamente.</translation>
     </message>
 </context><context>
     <name>LanguageSwitch</name>
@@ -5888,24 +5900,20 @@ Cierre primero el explorador de tarjetas de Anki y cualquier editor de notas abi
         <translation>El idioma que mina. Es independiente del idioma de la interfaz (Ajustes -&gt; Apariencia e idioma). Al cambiarlo, los diccionarios, los filtros, el mazo y los campos de la tarjeta pasan a los ajustes propios de ese idioma.</translation>
     </message>
     <message>
-        <source>Download Korean model</source>
-        <translation>Descargar modelo coreano</translation>
+        <source>Download %1 pack</source>
+        <translation>Descargar el paquete de %1</translation>
     </message>
     <message>
-        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
-        <translation>Descarga el modelo de idioma coreano en la carpeta de Anki Miner. Las instalaciones empaquetadas incluyen el motor coreano sin su modelo.</translation>
-    </message>
-    <message>
-        <source>Korean model</source>
-        <translation>Modelo coreano</translation>
+        <source>Download the engine and data Anki Miner needs to mine %1, into its own folder.</source>
+        <translation>Descargue el motor y los datos que Anki Miner necesita para minar %1, en su propia carpeta.</translation>
     </message>
     <message>
         <source>Installed</source>
         <translation>Instalado</translation>
     </message>
     <message>
-        <source>Not installed</source>
-        <translation>No instalado</translation>
+        <source>Not installed - about %1 MB download</source>
+        <translation>No instalado - descarga de unos %1 MB</translation>
     </message>
 </context><context>
     <name>MiningTabBase</name>
@@ -9360,12 +9368,12 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
 El selector «Frases» ofrece una opción por línea de subtítulos, así que suele listar menos: las repeticiones en la misma línea cuentan una sola vez aquí, y se omiten las líneas donde la palabra adopta una forma que cambiaría la «Palabra (minada)» de la tarjeta.</translation>
     </message>
     <message>
-        <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S incluir/excluir · Espacio reproducir/pausar · Ctrl+A incluir visibles · Ctrl+D excluir visibles · Ctrl+Intro confirmar</translation>
+        <source>S include/exclude · Space play/pause · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S incluir/excluir · Espacio reproducir/pausar · K marcar como conocida · Ctrl+A incluir visibles · Ctrl+D excluir visibles · Ctrl+Intro confirmar</translation>
     </message>
     <message>
-        <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S incluir/excluir · Ctrl+A incluir visibles · Ctrl+D excluir visibles · Ctrl+Intro confirmar</translation>
+        <source>S include/exclude · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S incluir/excluir · K marcar como conocida · Ctrl+A incluir visibles · Ctrl+D excluir visibles · Ctrl+Intro confirmar</translation>
     </message>
     <message>
         <source>+ Previous line</source>

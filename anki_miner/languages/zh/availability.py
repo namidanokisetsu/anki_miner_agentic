@@ -8,6 +8,7 @@ costs nothing on a machine that has none of them.
 
 from __future__ import annotations
 
+import sys
 from importlib.util import find_spec
 
 # Hard requirements: without a tokenizer or readings there is no zh mining.
@@ -18,6 +19,15 @@ ZH_REQUIRED_PACKAGES: tuple[str, ...] = ("jieba", "pypinyin")
 # simplified subtitle needs to be told why.
 ZH_OPTIONAL_PACKAGES: tuple[str, ...] = ("opencc",)
 
+#: A frozen bundle has no pip, so naming a package is dead advice — this names
+#: the download button directly instead.
+ZH_FROZEN_PACK_REASON = "Chinese mining needs the Chinese language pack. Download it in Settings -> Mining Language."
+
+#: The sentence naming the in-app download for a pip build. Required tier only:
+#: OpenCC pins one ABI, so the pack cannot satisfy the optional tier and the
+#: hint would send a user to a button that will not fix their install.
+ZH_PACK_DOWNLOAD_HINT = "or download the Chinese pack in Settings -> Mining Language."
+
 
 def _installed(name: str) -> bool:
     try:
@@ -26,15 +36,21 @@ def _installed(name: str) -> bool:
         return False
 
 
-def _reason(missing: list[str]) -> str | None:
+def _reason(missing: list[str], *, pack_hint: bool) -> str | None:
     if not missing:
         return None
-    return f"Chinese mining needs {', '.join(missing)}. Install with: pip install \"anki-miner[zh]\""
+    if getattr(sys, "frozen", False):
+        # No pip in a bundle: name the download button instead of a package
+        # the user cannot install.
+        return ZH_FROZEN_PACK_REASON
+    line = f"Chinese mining needs {', '.join(missing)}. Install with: pip install \"anki-miner[zh]\""
+    return f"{line} - {ZH_PACK_DOWNLOAD_HINT}" if pack_hint else line
 
 
 def zh_unavailable_reason() -> str | None:
     """Names every missing zh package, or ``None`` when the stack is complete."""
-    return _reason([name for name in ZH_REQUIRED_PACKAGES + ZH_OPTIONAL_PACKAGES if not _installed(name)])
+    missing = [name for name in ZH_REQUIRED_PACKAGES + ZH_OPTIONAL_PACKAGES if not _installed(name)]
+    return _reason(missing, pack_hint=False)
 
 
 def zh_missing_required_reason() -> str | None:
@@ -45,4 +61,4 @@ def zh_missing_required_reason() -> str | None:
     back empty), so gating on the full set would take the language out of the
     selector and refuse the switch over a degraded feature.
     """
-    return _reason([name for name in ZH_REQUIRED_PACKAGES if not _installed(name)])
+    return _reason([name for name in ZH_REQUIRED_PACKAGES if not _installed(name)], pack_hint=True)

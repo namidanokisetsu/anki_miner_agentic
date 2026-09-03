@@ -3,17 +3,23 @@
 from __future__ import annotations
 
 import dataclasses
+import logging
 import re
+from unittest.mock import MagicMock
 
 import pysubs2
 import pytest
 
 from anki_miner.config import ChainEntry
-from anki_miner.gui.utils.service_factory import resolve_known_words_db_path
+from anki_miner.exceptions import SetupError
+from anki_miner.gui.utils.service_factory import _create_subtitle_parser, resolve_known_words_db_path
+from anki_miner.gui.widgets.youtube_playlist_flow import _classify_probe_result
+from anki_miner.languages import registry
 from anki_miner.languages.registry import get_profile
 from anki_miner.languages.switching import switch_language
 from anki_miner.models.card_payload import CardPayload
 from anki_miner.models.media import MediaData
+from anki_miner.models.youtube import VideoInfo
 from anki_miner.services.anki_note_builder import build_note
 from anki_miner.services.anki_service import AnkiService
 from anki_miner.services.dictionary.providers.indexed_provider import IndexedDictProvider
@@ -27,6 +33,7 @@ from anki_miner.services.dictionary.storage import (
 )
 from anki_miner.services.known_word_db import KnownWordDB
 from anki_miner.utils.subtitle_encoding import load_with_fallback_encoding
+from tests.conftest import build_processor
 
 _SRT = "1\n00:00:01,000 --> 00:00:03,000\n{}\n"
 
@@ -208,3 +215,109 @@ def test_a_zh_card_carries_its_hook_fields_end_to_end(test_config, tmp_path, mak
     assert fields["Traditional"] == "銀行"
     assert fields["Pinyin"].startswith('<span style="color:')
     assert "ExpressionFurigana" not in fields  # ja-only key blanked by the zh defaults
+
+
+def _srt_file(tmp_path, name, *lines):
+    path = tmp_path / name
+    cues = "".join(f"{i}\n00:00:0{i},000 --> 00:00:0{i},900\n{line}\n\n" for i, line in enumerate(lines, 1))
+    path.write_text(cues, encoding="utf-8")
+    return path
+
+
+def test_a_switched_zh_config_mines_words_from_a_simplified_srt(test_config, tmp_path, caplog):
+    """The composition root's parser seam, on the profile's own POS defaults.
+
+    The release-bundle smoke is the only other real zh parse and no pytest run
+    sees it. A config built without ``switch_language`` keeps the JA POS names,
+    which reject every jieba flag and mine exactly nothing - silently.
+    """
+    parser = _create_subtitle_parser(switch_language(test_config, "zh"))
+    path = _srt_file(tmp_path, "zh.srt", "今天我们来学习中文", "我觉得这个视频非常好看")
+    with caplog.at_level(logging.WARNING, logger="anki_miner.services.subtitle_parser"):
+        words = parser.parse_subtitle_file(path)
+    assert {"今天", "学习", "中文", "视频"} <= {w.mined_form for w in words}
+    assert not [r for r in caplog.records if "mined no words" in r.getMessage()]
+
+
+def test_non_han_cue_text_mines_nothing_and_the_log_names_why(test_config, tmp_path, caplog):
+    """English cues under a Chinese caption code mine nothing - the shape of the
+    first zh YouTube report - and the GUI's "No words found in subtitles" carries
+    no cause. The parser's one WARNING has to carry what tells a wrong-language
+    subtitle apart from a wrong-language POS whitelist: the mining language, the
+    language whose tagger ran, that whitelist, and the tags the tagger emitted.
+    """
+    parser = _create_subtitle_parser(switch_language(test_config, "zh"))
+    path = _srt_file(tmp_path, "en.srt", "Today we are going to learn Chinese", "He went to Beijing yesterday")
+    with caplog.at_level(logging.WARNING, logger="anki_miner.services.subtitle_parser"):
+        words = parser.parse_subtitle_file(path)
+    assert words == []
+    [record] = [r for r in caplog.records if r.levelno == logging.WARNING and "mined no words" in r.getMessage()]
+    message = record.getMessage()
+    assert "language=zh" in message
+    assert "tagger_language=zh" in message
+    assert "allowed_pos=" in message
+    assert "lines=2" in message
+    assert "raw_tokens=0" not in message and "raw_tokens=" in message
+    assert "top_pos=" in message
+
+
+def test_a_config_whose_language_degraded_refuses_to_mine(test_config, tmp_path, monkeypatch):
+    """``config_language`` maps a code with no registered profile to ja so that
+    Settings still loads. Mining that config ran the Japanese tagger over
+    Chinese text and reported "No words found in subtitles" - the zh POS
+    whitelist rejects every unidic tag. The tokenizing entry points refuse
+    instead, naming the language; ``parse_raw_entries`` previews keep working.
+    """
+    config = switch_language(test_config, "zh")
+    monkeypatch.delitem(registry._BUILDERS, "zh")
+    parser = _create_subtitle_parser(config)
+    path = _srt_file(tmp_path, "zh.srt", "今天我们来学习中文")
+    assert parser.parse_raw_entries(path)
+    with pytest.raises(SetupError, match="'zh'"):
+        parser.parse_subtitle_file(path)
+    with pytest.raises(SetupError, match="'zh'"):
+        parser.parse_subtitle_file_with_index(path)
+    with pytest.raises(SetupError, match="'zh'"):
+        parser.count_lemmas(path)
+
+
+def _zero_word_run(test_config, tmp_path, language, cue_texts):
+    """Drive process_episode with a parser that mines nothing; return the warnings."""
+    presenter = MagicMock()
+    parser = MagicMock()
+    parser.parse_subtitle_file.return_value = []
+    parser.parse_raw_entries.return_value = [(float(i), float(i) + 1.0, text) for i, text in enumerate(cue_texts)]
+    config = test_config if language == "ja" else switch_language(test_config, language)
+    processor = build_processor(config, presenter=presenter, subtitle_parser=parser)
+    result = processor.process_episode(tmp_path / "v.mkv", tmp_path / "s.srt")
+    assert result.total_words_found == 0
+    return [call.args[0] for call in presenter.show_warning.call_args_list]
+
+
+def test_a_subtitle_without_the_mining_script_is_named_as_such(test_config, tmp_path):
+    """English cues under a Chinese caption code: the one zero-word case the
+    user can act on, so the warning names the track, not "no words"."""
+    warnings = _zero_word_run(test_config, tmp_path, "zh", ["Today we learn Chinese", "It is fun"])
+    assert any(f"no {get_profile('zh').display_name} text" in w for w in warnings)
+    assert not any("No words found" in w for w in warnings)
+
+
+def test_a_subtitle_in_the_mining_script_keeps_the_generic_message(test_config, tmp_path):
+    warnings = _zero_word_run(test_config, tmp_path, "zh", ["今天我们来学习中文"])
+    assert any("No words found in subtitles" in w for w in warnings)
+
+
+def test_the_probe_rejection_names_the_mining_language(test_config):
+    """A zh run used to be refused with "No Japanese subtitles available"."""
+    info = VideoInfo(
+        video_id="x",
+        title="t",
+        duration_s=60,
+        has_manual_ja_subs=False,
+        has_auto_ja_subs=False,
+        is_live=False,
+        is_age_restricted=False,
+    )
+    mineable, message, mode = _classify_probe_result(info, switch_language(test_config, "zh"))
+    assert (mineable, mode) == (False, None)
+    assert message == "No Chinese subtitles available for this video."

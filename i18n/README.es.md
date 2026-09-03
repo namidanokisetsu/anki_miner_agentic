@@ -1,4 +1,4 @@
-<!-- i18n-source: README.md sha256:3faba83f26c9d1af -->
+<!-- i18n-source: README.md sha256:3bd1e330de2efafb -->
 
 <h1 align="center">
   <img src="https://raw.githubusercontent.com/0xzerolight/anki_miner/main/anki_miner/gui/resources/icons/anki_miner.svg" height="76" align="absmiddle" alt=""> Anki Miner
@@ -67,8 +67,8 @@ Descarga la versión para tu plataforma desde el [último lanzamiento](https://g
 | Plataforma | Descarga |
 |----------|----------|
 | Windows | `AnkiMiner-*-Setup.exe` |
-| macOS (Apple Silicon / M1-M4) | `AnkiMiner-macOS-arm64.tar.gz` |
-| macOS (Intel) | `AnkiMiner-macOS-x86_64.tar.gz` ¹ |
+| macOS (Apple Silicon / M1-M4) | `AnkiMiner-*-macOS-arm64.tar.gz` |
+| macOS (Intel) | `AnkiMiner-*-macOS-x86_64.tar.gz` ¹ |
 | Linux (Debian/Ubuntu) | `anki-miner_*_amd64.deb` |
 | Linux (otros) | `AnkiMiner-*-Linux-x86_64.AppImage` |
 
@@ -87,6 +87,14 @@ Descarga la versión para tu plataforma desde el [último lanzamiento](https://g
 pipx install anki-miner   # or: pip install anki-miner
 anki_miner_gui
 ```
+
+El japonés no necesita nada más. Para minar chino o coreano, añade el motor:
+
+```bash
+pipx install "anki-miner[languages]"   # both; or [zh] / [ko] for one
+```
+
+Las descargas de arriba los obtienen dentro de la app, en Configuración -> Idioma de minería.
 
 </details>
 
@@ -111,7 +119,7 @@ Para la configuración completa de desarrollo, consulta [CONTRIBUTING.md](../CON
 - **Audiolibros** - minera audiolibros, pódcasts, radio, canciones (pares de audio + subtítulo/transcripción).
 - **Lectura** - minera manga (mokuro), novelas (`.epub`, `.txt`; un libro individual o una carpeta completa), archivos de subtítulos independientes o texto pegado.
 - **Analíticas** - historial de minería, clasificaciones de dificultad, hitos.
-- **Utilidades** - genera subtítulos (Whisper local), ajusta el tiempo de los subtítulos (ffsubsync/alass), condensa medios a audio solo de diálogos, copia la parte que vale la pena aprender de un mazo prediseñado a uno nuevo, y rellena campos en tarjetas existentes.
+- **Utilidades** - genera subtítulos (Whisper local), ajusta el tiempo de los subtítulos (ffsubsync/alass), condensa medios a audio solo de diálogos, descarga vídeo/audio/subtítulos de cualquier sitio compatible con yt-dlp, copia la parte que vale la pena aprender de un mazo prediseñado a uno nuevo, y rellena campos en tarjetas existentes.
 - **Configuración** - todo lo configurable.
 
 ## Otras Características
@@ -162,6 +170,8 @@ Licencias de temas: [LICENSE-THEMES.md](../LICENSE-THEMES.md).
 
 ## Recursos Recomendados
 
+Japonés salvo que se indique otra cosa. El asistente de configuración ofrece el conjunto adecuado para tu idioma de minería.
+
 | Tipo | Recurso | Descarga | Añadir vía |
 |------|----------|----------|---------|
 | Diccionario | [JMdict](https://github.com/yomidevs/jmdict-yomitan) | [Yomitan zip](https://github.com/yomidevs/jmdict-yomitan/releases/latest/download/JMdict_english.zip) | Añadir diccionario… |
@@ -172,6 +182,8 @@ Licencias de temas: [LICENSE-THEMES.md](../LICENSE-THEMES.md).
 | Frecuencia | [JPDB v2.2 Kana](https://github.com/Kuuuube/yomitan-dictionaries) | [Yomitan zip](https://github.com/Kuuuube/yomitan-dictionaries/raw/main/dictionaries/JPDB_v2.2_Frequency_Kana_2024-10-13.zip) | Frecuencia -> Añadir fuente de frecuencia… |
 | Frecuencia | [BCCWJ SUW+LUW](https://github.com/Kuuuube/yomitan-dictionaries) | [Yomitan zip](https://github.com/Kuuuube/yomitan-dictionaries/raw/main/dictionaries/BCCWJ_SUW_LUW_combined.zip) | Frecuencia -> Añadir fuente de frecuencia… |
 | Audio de palabras | [local-audio-yomichan](https://github.com/yomidevs/local-audio-yomichan) | Torrent de la colección o `android.db` generado | Audio -> Añadir fuente de audio… |
+| Diccionario (chino) | [CC-CEDICT](https://github.com/MarvNC/cc-cedict-yomitan) | [Yomitan zip](https://github.com/MarvNC/cc-cedict-yomitan/releases/latest/download/CC-CEDICT.zip) | Añadir diccionario… |
+| Diccionario (coreano) | [KRDICT](https://github.com/Lyroxide/yomitan-ko-dic) | [Yomitan zip](https://github.com/Lyroxide/yomitan-ko-dic/releases/latest/download/KO-EN.KRDICT.No.Examples.zip) | Añadir diccionario… |
 
 
 <details>

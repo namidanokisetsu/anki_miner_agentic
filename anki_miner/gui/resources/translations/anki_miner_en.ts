@@ -290,6 +290,38 @@
 </context><context>
     <name>AnkiSettingsPanel</name>
     <message>
+        <source>Measure Word Field</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Not in Anki — mining will fail until you pick a real one or create it in Anki.</source>
         <translation type="unfinished" />
     </message>
@@ -455,38 +487,6 @@
     </message>
     <message>
         <source>Stores the sentence as plain kana.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Measure Word Field</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Pinyin Field</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Traditional Field</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Hanja Field</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -695,6 +695,10 @@ Continue anyway?</source>
     </message>
     <message>
         <source>Quit</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Open Settings</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -3197,7 +3201,7 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation type="unfinished" />
     </message>
     <message>
-        <source>not Japanese</source>
+        <source>not the mining language</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -3928,6 +3932,10 @@ Files on disk will be left untouched because the folder could not be proven to b
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Audio pack '%1' is slow to read — audio skipped for those words. Its folder is probably on a cloud-synced, network or external drive: move it to a local drive, then re-import the pack (Settings -&gt; Audio -&gt; Re-import…).</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
         <translation type="unfinished" />
     </message>
@@ -3977,6 +3985,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     </message>
     <message>
         <source>Sentence audio: %1/%2 sentences</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Subtitles contain no %1 text</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No words found in subtitles</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -4152,10 +4168,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation type="unfinished">
             <numerusform />
         </translation>
-    </message>
-    <message>
-        <source>No words found in subtitles</source>
-        <translation type="unfinished" />
     </message>
     <message>
         <source>No media extracted successfully</source>
@@ -4713,6 +4725,18 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation type="unfinished" />
     </message>
     <message>
+        <source>Card Order</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Create cards in order of appearance</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>Adds cards to Anki in the order the words appear in the media, instead of the order their media finished extracting. Overrides the whitelist's force-include ordering and any column sort in the Word Curator.</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
         <source>Card Formatting</source>
         <translation type="unfinished" />
     </message>
@@ -4912,14 +4936,6 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Mining language:</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Mining language</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
         <source>Theme:</source>
         <translation type="unfinished" />
     </message>
@@ -4937,10 +4953,6 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Manage profiles…</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Mining language: %1. Opens the selector in Settings.</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -5093,13 +5105,13 @@ Add %3 word(s) to your known list?</source>
         <translation type="unfinished" />
     </message>
 </context><context>
-    <name>KoModelDownloadWorker</name>
+    <name>LanguagePackDownloadWorker</name>
     <message>
-        <source>Downloading the Korean model…</source>
+        <source>Downloading the %1 pack…</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Korean model installed successfully.</source>
+        <source>%1 pack installed successfully.</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -5837,15 +5849,11 @@ Continue?</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Download Korean model</source>
+        <source>Download %1 pack</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
-        <translation type="unfinished" />
-    </message>
-    <message>
-        <source>Korean model</source>
+        <source>Download the engine and data Anki Miner needs to mine %1, into its own folder.</source>
         <translation type="unfinished" />
     </message>
     <message>
@@ -5853,7 +5861,7 @@ Continue?</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>Not installed</source>
+        <source>Not installed - about %1 MB download</source>
         <translation type="unfinished" />
     </message>
 </context><context>
@@ -9288,11 +9296,11 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
         <translation type="unfinished" />
     </message>
     <message>
-        <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <source>S include/exclude · Space play/pause · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation type="unfinished" />
     </message>
     <message>
-        <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <source>S include/exclude · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
         <translation type="unfinished" />
     </message>
     <message>

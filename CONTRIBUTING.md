@@ -21,9 +21,11 @@ python -m venv .venv
 source .venv/bin/activate          # Linux/macOS
 # or: .venv\Scripts\activate       # Windows
 
-pip install -e ".[dev,mcp]"
+pip install -e ".[dev,mcp,languages]"
 pre-commit install
 ```
+
+The `languages` extra installs the Chinese and Korean engines. Plain `.[dev,mcp]` remains sufficient for Japanese-only development.
 
 External runtime dependencies:
 

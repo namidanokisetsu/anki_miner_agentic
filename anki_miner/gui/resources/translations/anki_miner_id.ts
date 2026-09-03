@@ -290,6 +290,38 @@
 </context><context>
     <name>AnkiSettingsPanel</name>
     <message>
+        <source>Measure Word Field</source>
+        <translation>Bidang Kata Penggolong</translation>
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation>Menyimpan kata penggolong yang diuraikan dari entri kamus. Kosong = lewati.</translation>
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation>Bidang Pinyin</translation>
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation>Menyimpan bacaan pinyin dari kata, diwarnai berdasarkan nada bila opsi itu aktif. Kosong = lewati.</translation>
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation>Bidang Aksara Tradisional</translation>
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation>Menyimpan kata dalam varian aksara lainnya, bila berbeda. Kosong = lewati.</translation>
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation>Bidang Hanja</translation>
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation>Menyimpan karakter hanja yang terkandung dalam kata. Kosong = lewati.</translation>
+    </message>
+    <message>
         <source>Not in Anki — mining will fail until you pick a real one or create it in Anki.</source>
         <translation>Tidak ada di Anki — mining akan gagal sampai Anda memilih yang benar atau membuatnya di Anki.</translation>
     </message>
@@ -456,38 +488,6 @@
     <message>
         <source>Stores the sentence as plain kana.</source>
         <translation>Menyimpan kalimat sebagai kana polos.</translation>
-    </message>
-    <message>
-        <source>Measure Word Field</source>
-        <translation>Bidang Kata Penggolong</translation>
-    </message>
-    <message>
-        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
-        <translation>Menyimpan kata penggolong yang diuraikan dari entri kamus. Kosong = lewati.</translation>
-    </message>
-    <message>
-        <source>Pinyin Field</source>
-        <translation>Bidang Pinyin</translation>
-    </message>
-    <message>
-        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
-        <translation>Menyimpan bacaan pinyin dari kata, diwarnai berdasarkan nada bila opsi itu aktif. Kosong = lewati.</translation>
-    </message>
-    <message>
-        <source>Traditional Field</source>
-        <translation>Bidang Aksara Tradisional</translation>
-    </message>
-    <message>
-        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
-        <translation>Menyimpan kata dalam varian aksara lainnya, bila berbeda. Kosong = lewati.</translation>
-    </message>
-    <message>
-        <source>Hanja Field</source>
-        <translation>Bidang Hanja</translation>
-    </message>
-    <message>
-        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
-        <translation>Menyimpan karakter hanja yang terkandung dalam kata. Kosong = lewati.</translation>
     </message>
     <message>
         <source>Auxiliary Data Fields</source>
@@ -697,6 +697,10 @@ Continue anyway?</source>
         <source>Quit</source>
         <translation>Keluar</translation>
     </message>
+    <message>
+        <source>Open Settings</source>
+        <translation>Buka Pengaturan</translation>
+    </message>
 </context><context>
     <name>AsrModelDownloadWorker</name>
     <message>
@@ -729,7 +733,7 @@ Continue anyway?</source>
     <name>AudioPackImportFlow</name>
     <message>
         <source>Scanning folder for audio packs…</source>
-        <translation type="unfinished" />
+        <translation>Memindai folder untuk paket audio…</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -737,7 +741,7 @@ Continue anyway?</source>
     </message>
     <message>
         <source>Scanning %1 …</source>
-        <translation type="unfinished" />
+        <translation>Memindai %1 …</translation>
     </message>
     <message>
         <source>That folder could not be scanned.</source>
@@ -1715,11 +1719,11 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     </message>
     <message>
         <source>Mine Japanese, Korean or Chinese</source>
-        <translation type="unfinished" />
+        <translation>Mining bahasa Jepang, Korea, atau Mandarin</translation>
     </message>
     <message>
         <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
-        <translation type="unfinished" />
+        <translation>Ganti bahasa yang Anda mining; masing-masing memiliki kamus, filter, dek, dan bidang kartu sendiri.</translation>
     </message>
     <message>
         <source>i+1 sentence mining</source>
@@ -3210,8 +3214,8 @@ Tindakan ini akan mengubah {notes} catatan ({fields} bidang) dan menandainya den
         <translation>bidang kata kosong</translation>
     </message>
     <message>
-        <source>not Japanese</source>
-        <translation>bukan bahasa Jepang</translation>
+        <source>not the mining language</source>
+        <translation>bukan bahasa mining</translation>
     </message>
     <message>
         <source>duplicate within the deck</source>
@@ -3950,8 +3954,12 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Audio pack '%1' is slow to read — audio skipped for those words. Its folder is probably on a cloud-synced, network or external drive: move it to a local drive, then re-import the pack (Settings -&gt; Audio -&gt; Re-import…).</source>
+        <translation>Paket audio '%1' lambat dibaca — audio dilewati untuk kata-kata tersebut. Foldernya kemungkinan berada di drive yang tersinkron cloud, jaringan, atau eksternal: pindahkan ke drive lokal, lalu impor ulang paket (Pengaturan -&gt; Audio -&gt; Impor ulang…).</translation>
+    </message>
+    <message>
         <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
-        <translation type="unfinished" />
+        <translation>Sumber audio kata merespons terlalu lambat — audio dilewati untuk kata-kata tersebut. Urutkan ulang atau nonaktifkan di Pengaturan -&gt; Audio jika ini terus terjadi.</translation>
     </message>
     <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
@@ -4000,6 +4008,14 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
     <message>
         <source>Sentence audio: %1/%2 sentences</source>
         <translation>Audio kalimat: %1/%2 kalimat</translation>
+    </message>
+    <message>
+        <source>Subtitles contain no %1 text</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No words found in subtitles</source>
+        <translation>Tidak ada kata yang ditemukan di subtitel</translation>
     </message>
     <message>
         <source>All %1 new word(s) were removed by active filters — no cards created</source>
@@ -4174,10 +4190,6 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
         <translation>
             <numerusform>Mining %n kata yang dipilih</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>No words found in subtitles</source>
-        <translation>Tidak ada kata yang ditemukan di subtitel</translation>
     </message>
     <message>
         <source>No media extracted successfully</source>
@@ -4736,6 +4748,18 @@ Berkas di disk tidak akan disentuh karena folder tersebut tidak dapat dipastikan
         <translation>Jumlah minimum kemunculan kata dalam buku atau volume agar bisa di-mining. 1 = tanpa minimum (filter mati).</translation>
     </message>
     <message>
+        <source>Card Order</source>
+        <translation>Urutan Kartu</translation>
+    </message>
+    <message>
+        <source>Create cards in order of appearance</source>
+        <translation>Buat kartu sesuai urutan kemunculan</translation>
+    </message>
+    <message>
+        <source>Adds cards to Anki in the order the words appear in the media, instead of the order their media finished extracting. Overrides the whitelist's force-include ordering and any column sort in the Word Curator.</source>
+        <translation>Menambahkan kartu ke Anki sesuai urutan kemunculan kata dalam media, bukan urutan selesainya ekstraksi media. Mengesampingkan urutan paksa-sertakan daftar putih dan pengurutan kolom apa pun di Word Curator.</translation>
+    </message>
+    <message>
         <source>Card Formatting</source>
         <translation>Pemformatan Kartu</translation>
     </message>
@@ -4940,14 +4964,6 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
         <translation>Profil pengaturan aktif. Beralih akan menukar setiap pengaturan; pilih 'Kelola profil…' untuk menambah, mengganti nama, atau menghapusnya.</translation>
     </message>
     <message>
-        <source>Mining language:</source>
-        <translation>Bahasa mining:</translation>
-    </message>
-    <message>
-        <source>Mining language</source>
-        <translation>Bahasa mining</translation>
-    </message>
-    <message>
         <source>Theme:</source>
         <translation>Tema:</translation>
     </message>
@@ -4966,10 +4982,6 @@ Berkas indeks di disk tidak akan disentuh karena folder tersebut tidak dapat dip
     <message>
         <source>Manage profiles…</source>
         <translation>Kelola profil…</translation>
-    </message>
-    <message>
-        <source>Mining language: %1. Opens the selector in Settings.</source>
-        <translation>Bahasa mining: %1. Membuka pemilihnya di Pengaturan.</translation>
     </message>
 </context><context>
     <name>InlineReceipt</name>
@@ -5126,14 +5138,14 @@ Tambahkan %3 kata ke daftar kata yang dikenal Anda?</translation>
         <translation>Hapus SEMUA kata yang Anda tambahkan ke daftar kata yang dikenal lokal? Ini tidak dapat dibatalkan. Cache yang tersinkron dengan Anki tidak terpengaruh.</translation>
     </message>
 </context><context>
-    <name>KoModelDownloadWorker</name>
+    <name>LanguagePackDownloadWorker</name>
     <message>
-        <source>Downloading the Korean model…</source>
-        <translation>Mengunduh model Korea…</translation>
+        <source>Downloading the %1 pack…</source>
+        <translation>Mengunduh paket %1…</translation>
     </message>
     <message>
-        <source>Korean model installed successfully.</source>
-        <translation>Model Korea berhasil dipasang.</translation>
+        <source>%1 pack installed successfully.</source>
+        <translation>Paket %1 berhasil dipasang.</translation>
     </message>
 </context><context>
     <name>LanguageSwitch</name>
@@ -5874,24 +5886,20 @@ Lanjutkan?</translation>
         <translation>Bahasa yang di-mining. Terpisah dari bahasa antarmuka (Pengaturan -&gt; Tampilan &amp; Bahasa). Beralih akan mengganti kamus, filter, dek, dan bidang kartu ke pengaturan milik bahasa tersebut.</translation>
     </message>
     <message>
-        <source>Download Korean model</source>
-        <translation>Unduh model Korea</translation>
+        <source>Download %1 pack</source>
+        <translation>Unduh paket %1</translation>
     </message>
     <message>
-        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
-        <translation>Unduh model bahasa Korea ke folder Anki Miner. Instalasi bundel menyertakan mesin Korea tanpa modelnya.</translation>
-    </message>
-    <message>
-        <source>Korean model</source>
-        <translation>Model Korea</translation>
+        <source>Download the engine and data Anki Miner needs to mine %1, into its own folder.</source>
+        <translation>Unduh mesin dan data yang diperlukan Anki Miner untuk mining %1, ke dalam foldernya sendiri.</translation>
     </message>
     <message>
         <source>Installed</source>
         <translation>Terpasang</translation>
     </message>
     <message>
-        <source>Not installed</source>
-        <translation>Tidak terpasang</translation>
+        <source>Not installed - about %1 MB download</source>
+        <translation>Tidak terpasang - sekitar %1 MB unduhan</translation>
     </message>
 </context><context>
     <name>MiningTabBase</name>
@@ -9344,12 +9352,12 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
 Pemilih “Kalimat” menyediakan satu opsi per baris subtitel, jadi biasanya daftarnya lebih sedikit: pengulangan pada baris yang sama dihitung sekali di sini, dan baris yang membuat kata muncul dalam bentuk yang akan mengubah “Kata (di-mining)” pada kartu akan dilewati.</translation>
     </message>
     <message>
-        <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S sertakan/kecualikan · Spasi putar/jeda · Ctrl+A sertakan yang terlihat · Ctrl+D kecualikan yang terlihat · Ctrl+Enter konfirmasi</translation>
+        <source>S include/exclude · Space play/pause · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S sertakan/kecualikan · Spasi putar/jeda · K tandai sebagai dikenal · Ctrl+A sertakan yang terlihat · Ctrl+D kecualikan yang terlihat · Ctrl+Enter konfirmasi</translation>
     </message>
     <message>
-        <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S sertakan/kecualikan · Ctrl+A sertakan yang terlihat · Ctrl+D kecualikan yang terlihat · Ctrl+Enter konfirmasi</translation>
+        <source>S include/exclude · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S sertakan/kecualikan · K tandai sebagai dikenal · Ctrl+A sertakan yang terlihat · Ctrl+D kecualikan yang terlihat · Ctrl+Enter konfirmasi</translation>
     </message>
     <message>
         <source>+ Previous line</source>

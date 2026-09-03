@@ -18,7 +18,7 @@ git clone https://github.com/namidanokisetsu/anki_miner_agentic.git
 cd anki_miner_agentic
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-python -m pip install -e ".[mcp]"
+python -m pip install -e ".[mcp,languages]"
 anki_miner_agentic_gui
 ```
 
@@ -31,14 +31,14 @@ When an agent is working in an existing checkout: **Reuse the active virtual env
 Give your agent access to this checkout, then paste:
 
 ```text
-Configure Anki Miner Agentic in this checkout. Read agentic-docs/agent-mining.md and skills/anki-miner-agent/SKILL.md. Reuse the active virtual environment and the GUI settings. Read deck, note-type, and field names from Anki instead of guessing them. Keep write_target.enabled false during setup. Validate and sync the learner profile, then register the two-tool MCP server.
+Configure Anki Miner Agentic in this checkout. Read agentic-docs/agent-mining.md and skills/anki-miner-agent/SKILL.md. Reuse the active virtual environment and the GUI settings. Read deck, note-type, and field names from Anki instead of guessing them. Keep write_target.enabled false during setup. Validate and sync the learner profile, then use the file-backed anki_miner CLI workflow.
 ```
 
 `~/.anki_miner/agentic-agent.json` stores only learner mappings, the write target and enable switch, learner maturity, audio policy, storage path, and allowlisted enrichment-field mappings. Card count belongs to each request; mining policy and executable paths remain owned by the active GUI profile.
 
-Use MCP for normal conversations with an agent (`prepare_mining_run`, then `commit_mining_run`). The JSON CLI's `prepare-run` and `commit-run` commands expose that same workflow for terminal use, scripts, or clients without MCP. Older low-level CLI commands remain only as a compatibility and recovery surface.
+Use the JSON CLI for normal conversations with an agent (`mine prepare`, then `mine commit`). The optional MCP server exposes the same two-operation contract as a compatibility fallback. Older low-level CLI commands remain only as a compatibility and recovery surface.
 
-For manual setup, read the [agent mining guide](agentic-docs/agent-mining.md). Exact tool payloads are in the [MCP contract](skills/anki-miner-agent/references/mcp-contract.md).
+For manual setup, read the [agent mining guide](agentic-docs/agent-mining.md). Exact payloads are in the [CLI/MCP contract](skills/anki-miner-agent/references/mcp-contract.md).
 
 ## Tabs
 

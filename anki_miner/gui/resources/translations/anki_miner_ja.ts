@@ -290,6 +290,38 @@
 </context><context>
     <name>AnkiSettingsPanel</name>
     <message>
+        <source>Measure Word Field</source>
+        <translation>量詞フィールド</translation>
+    </message>
+    <message>
+        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
+        <translation>辞書項目から解析した量詞を格納します。空欄 = スキップ。</translation>
+    </message>
+    <message>
+        <source>Pinyin Field</source>
+        <translation>ピンインフィールド</translation>
+    </message>
+    <message>
+        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
+        <translation>単語のピンイン読みを格納します。声調による色分けが有効な場合は色付きになります。空欄 = スキップ。</translation>
+    </message>
+    <message>
+        <source>Traditional Field</source>
+        <translation>繁体字フィールド</translation>
+    </message>
+    <message>
+        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
+        <translation>字体バリエーションが異なる場合に、もう一方の字体で単語を格納します。空欄 = スキップ。</translation>
+    </message>
+    <message>
+        <source>Hanja Field</source>
+        <translation>韓国漢字フィールド</translation>
+    </message>
+    <message>
+        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
+        <translation>単語に含まれる韓国漢字を格納します。空欄 = スキップ。</translation>
+    </message>
+    <message>
         <source>Not in Anki — mining will fail until you pick a real one or create it in Anki.</source>
         <translation>Anki にありません — 実在するものを選択するか Anki で作成するまで、マイニングは失敗します。</translation>
     </message>
@@ -456,38 +488,6 @@
     <message>
         <source>Stores the sentence as plain kana.</source>
         <translation>例文をかなのみで格納します。</translation>
-    </message>
-    <message>
-        <source>Measure Word Field</source>
-        <translation>量詞フィールド</translation>
-    </message>
-    <message>
-        <source>Stores the classifier parsed from the dictionary entry. Blank = skip.</source>
-        <translation>辞書項目から解析した量詞を格納します。空欄 = スキップ。</translation>
-    </message>
-    <message>
-        <source>Pinyin Field</source>
-        <translation>ピンインフィールド</translation>
-    </message>
-    <message>
-        <source>Stores the word's pinyin reading, tone-coloured when that is on. Blank = skip.</source>
-        <translation>単語のピンイン読みを格納します。声調による色分けが有効な場合は色付きになります。空欄 = スキップ。</translation>
-    </message>
-    <message>
-        <source>Traditional Field</source>
-        <translation>繁体字フィールド</translation>
-    </message>
-    <message>
-        <source>Stores the word in the other script variant, when it differs. Blank = skip.</source>
-        <translation>字体バリエーションが異なる場合に、もう一方の字体で単語を格納します。空欄 = スキップ。</translation>
-    </message>
-    <message>
-        <source>Hanja Field</source>
-        <translation>韓国漢字フィールド</translation>
-    </message>
-    <message>
-        <source>Stores the hanja characters contained in the word. Blank = skip.</source>
-        <translation>単語に含まれる韓国漢字を格納します。空欄 = スキップ。</translation>
     </message>
     <message>
         <source>Auxiliary Data Fields</source>
@@ -697,6 +697,10 @@ Continue anyway?</source>
         <source>Quit</source>
         <translation>終了</translation>
     </message>
+    <message>
+        <source>Open Settings</source>
+        <translation>設定を開く</translation>
+    </message>
 </context><context>
     <name>AsrModelDownloadWorker</name>
     <message>
@@ -729,7 +733,7 @@ Continue anyway?</source>
     <name>AudioPackImportFlow</name>
     <message>
         <source>Scanning folder for audio packs…</source>
-        <translation type="unfinished" />
+        <translation>音声パックのフォルダをスキャン中…</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -737,7 +741,7 @@ Continue anyway?</source>
     </message>
     <message>
         <source>Scanning %1 …</source>
-        <translation type="unfinished" />
+        <translation>%1 をスキャン中 …</translation>
     </message>
     <message>
         <source>That folder could not be scanned.</source>
@@ -1715,11 +1719,11 @@ Index files on disk will be left untouched because the folder could not be prove
     </message>
     <message>
         <source>Mine Japanese, Korean or Chinese</source>
-        <translation type="unfinished" />
+        <translation>日本語・韓国語・中国語のマイニング</translation>
     </message>
     <message>
         <source>Switch the language you mine; each keeps its own dictionaries, filters, deck and card fields.</source>
-        <translation type="unfinished" />
+        <translation>マイニングする言語を切り替えます。言語ごとに辞書、フィルター、デッキ、カードのフィールドを個別に保持します。</translation>
     </message>
     <message>
         <source>i+1 sentence mining</source>
@@ -3210,8 +3214,8 @@ This will modify {notes} note(s) ({fields} field(s)) and tag them {tag}. Continu
         <translation>単語フィールドが空</translation>
     </message>
     <message>
-        <source>not Japanese</source>
-        <translation>日本語ではない</translation>
+        <source>not the mining language</source>
+        <translation>マイニング言語ではない</translation>
     </message>
     <message>
         <source>duplicate within the deck</source>
@@ -3950,8 +3954,12 @@ Files on disk will be left untouched because the folder could not be proven to b
 </context><context>
     <name>EpisodeProcessor</name>
     <message>
+        <source>Audio pack '%1' is slow to read — audio skipped for those words. Its folder is probably on a cloud-synced, network or external drive: move it to a local drive, then re-import the pack (Settings -&gt; Audio -&gt; Re-import…).</source>
+        <translation>音声パック '%1' の読み込みが遅すぎます — 該当する単語の音声をスキップしました。フォルダーはおそらくクラウド同期・ネットワーク・外付けドライブ上にあります。ローカルドライブに移動してから、パックを再インポートしてください（設定 -&gt; 音声 -&gt; 再インポート…）。</translation>
+    </message>
+    <message>
         <source>Word-audio source is responding too slowly — audio skipped for those words. Reorder or disable it in Settings -&gt; Audio if this keeps happening.</source>
-        <translation type="unfinished" />
+        <translation>単語音声ソースの応答が遅すぎます — 該当する単語の音声をスキップしました。頻発する場合は設定 -&gt; 音声で順序を変更するか無効にしてください。</translation>
     </message>
     <message>
         <source>Word-audio source connection/certificate failure — audio skipped this run, will retry next run</source>
@@ -4000,6 +4008,14 @@ Files on disk will be left untouched because the folder could not be proven to b
     <message>
         <source>Sentence audio: %1/%2 sentences</source>
         <translation>文章音声: %1/%2 文</translation>
+    </message>
+    <message>
+        <source>Subtitles contain no %1 text</source>
+        <translation type="unfinished" />
+    </message>
+    <message>
+        <source>No words found in subtitles</source>
+        <translation>字幕に単語が見つかりませんでした</translation>
     </message>
     <message>
         <source>All %1 new word(s) were removed by active filters — no cards created</source>
@@ -4174,10 +4190,6 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>
             <numerusform>選択した %n 語をマイニング中</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>No words found in subtitles</source>
-        <translation>字幕に単語が見つかりませんでした</translation>
     </message>
     <message>
         <source>No media extracted successfully</source>
@@ -4736,6 +4748,18 @@ Files on disk will be left untouched because the folder could not be proven to b
         <translation>単語がマイニング対象となるために書籍または巻の中で出現しなければならない最小回数です。1 = 最小回数なし（フィルターオフ）。</translation>
     </message>
     <message>
+        <source>Card Order</source>
+        <translation>カードの順序</translation>
+    </message>
+    <message>
+        <source>Create cards in order of appearance</source>
+        <translation>登場順にカードを作成</translation>
+    </message>
+    <message>
+        <source>Adds cards to Anki in the order the words appear in the media, instead of the order their media finished extracting. Overrides the whitelist's force-include ordering and any column sort in the Word Curator.</source>
+        <translation>単語がメディア内に登場する順にカードを Anki に追加します。メディアの抽出が完了した順ではありません。ホワイトリストの強制的に含める順序や、単語キュレーターでの列の並べ替えより優先されます。</translation>
+    </message>
+    <message>
         <source>Card Formatting</source>
         <translation>カードの書式</translation>
     </message>
@@ -4940,14 +4964,6 @@ Index files on disk will be left untouched because the folder could not be prove
         <translation>アクティブな設定プロファイル。切り替えるとすべての設定が入れ替わります。追加、名前変更、削除するには「プロファイルを管理…」を選択してください。</translation>
     </message>
     <message>
-        <source>Mining language:</source>
-        <translation>マイニング言語：</translation>
-    </message>
-    <message>
-        <source>Mining language</source>
-        <translation>マイニング言語</translation>
-    </message>
-    <message>
         <source>Theme:</source>
         <translation>テーマ:</translation>
     </message>
@@ -4966,10 +4982,6 @@ Index files on disk will be left untouched because the folder could not be prove
     <message>
         <source>Manage profiles…</source>
         <translation>プロファイルを管理…</translation>
-    </message>
-    <message>
-        <source>Mining language: %1. Opens the selector in Settings.</source>
-        <translation>マイニング言語: %1。設定の選択画面を開きます。</translation>
     </message>
 </context><context>
     <name>InlineReceipt</name>
@@ -5126,14 +5138,14 @@ Add %3 word(s) to your known list?</source>
         <translation>ローカルの既知単語リストに追加したすべての単語を削除しますか？この操作は元に戻せません。Anki と同期されたキャッシュには影響しません。</translation>
     </message>
 </context><context>
-    <name>KoModelDownloadWorker</name>
+    <name>LanguagePackDownloadWorker</name>
     <message>
-        <source>Downloading the Korean model…</source>
-        <translation>韓国語モデルをダウンロードしています…</translation>
+        <source>Downloading the %1 pack…</source>
+        <translation>%1 パックをダウンロード中…</translation>
     </message>
     <message>
-        <source>Korean model installed successfully.</source>
-        <translation>韓国語モデルのインストールが完了しました。</translation>
+        <source>%1 pack installed successfully.</source>
+        <translation>%1 パックのインストールが完了しました。</translation>
     </message>
 </context><context>
     <name>LanguageSwitch</name>
@@ -5874,24 +5886,20 @@ Continue?</source>
         <translation>マイニングする言語です。インターフェース言語（設定 -&gt; 外観と言語）とは別の設定です。切り替えると、辞書、フィルター、デッキ、カードのフィールドがその言語専用の設定に入れ替わります。</translation>
     </message>
     <message>
-        <source>Download Korean model</source>
-        <translation>韓国語モデルをダウンロード</translation>
+        <source>Download %1 pack</source>
+        <translation>%1 パックをダウンロード</translation>
     </message>
     <message>
-        <source>Download the Korean language model into Anki Miner's folder. Bundled installs ship the Korean engine without its model.</source>
-        <translation>韓国語の言語モデルを Anki Miner のフォルダにダウンロードします。バンドル版インストールには韓国語エンジンのみが含まれ、モデルは含まれていません。</translation>
-    </message>
-    <message>
-        <source>Korean model</source>
-        <translation>韓国語モデル</translation>
+        <source>Download the engine and data Anki Miner needs to mine %1, into its own folder.</source>
+        <translation>%1 のマイニングに Anki Miner が必要とするエンジンとデータを、専用フォルダにダウンロードします。</translation>
     </message>
     <message>
         <source>Installed</source>
         <translation>インストール済み</translation>
     </message>
     <message>
-        <source>Not installed</source>
-        <translation>未インストール</translation>
+        <source>Not installed - about %1 MB download</source>
+        <translation>未インストール - 約 %1 MB のダウンロード</translation>
     </message>
 </context><context>
     <name>MiningTabBase</name>
@@ -9344,12 +9352,12 @@ The “Sentences” picker offers one option per subtitle line, so it usually li
 「文」の選択欄は字幕1行につき1つの候補を表示するため、通常はこれより少なくなります。同じ行での繰り返しはここでは1回として数えられ、カードの「単語（マイニング済み）」が変わってしまう形で出現する行は除外されます。</translation>
     </message>
     <message>
-        <source>S include/exclude · Space play/pause · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S：含める／除外　Space：再生／一時停止　Ctrl+A：表示中を含める　Ctrl+D：表示中を除外　Ctrl+Enter：確認</translation>
+        <source>S include/exclude · Space play/pause · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S：含める／除外　Space：再生／一時停止　K：既知にする　Ctrl+A：表示中を含める　Ctrl+D：表示中を除外　Ctrl+Enter：確認</translation>
     </message>
     <message>
-        <source>S include/exclude · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
-        <translation>S：含める／除外　Ctrl+A：表示中を含める　Ctrl+D：表示中を除外　Ctrl+Enter：確認</translation>
+        <source>S include/exclude · K mark known · Ctrl+A include visible · Ctrl+D exclude visible · Ctrl+Enter confirm</source>
+        <translation>S：含める／除外　K：既知にする　Ctrl+A：表示中を含める　Ctrl+D：表示中を除外　Ctrl+Enter：確認</translation>
     </message>
     <message>
         <source>+ Previous line</source>
