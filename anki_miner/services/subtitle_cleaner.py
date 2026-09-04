@@ -258,8 +258,8 @@ def map_deltas_back(
 
     *synced_clean* is the aligner's output for the cleaned copy; its i-th cue
     corresponds to original event ``kept_indices[i]``. Kept cues take their
-    exact new timings. Dropped cues take the start/end delta of the nearest
-    kept cue by original start time — aligners shift in per-block constants,
+    dropped cues take the start delta of the nearest kept cue by original
+    start time while retaining their original duration — aligners shift in per-block constants,
     so the nearest anchor's shift is the block-correct one, where linear
     interpolation across a block boundary would land between blocks.
 
@@ -290,7 +290,6 @@ def map_deltas_back(
         (
             subs.events[orig_i].start,
             synced_event.start - subs.events[orig_i].start,
-            synced_event.end - subs.events[orig_i].end,
         )
         for orig_i, synced_event in zip(kept_indices, synced.events, strict=True)
     )
@@ -305,19 +304,46 @@ def map_deltas_back(
             continue
         pos = bisect_left(starts, event.start)
         if pos <= 0:
-            _, delta_start, delta_end = anchors[0]
+            _, delta_start = anchors[0]
         elif pos >= len(anchors):
-            _, delta_start, delta_end = anchors[-1]
+            _, delta_start = anchors[-1]
         else:
             before, after = anchors[pos - 1], anchors[pos]
             nearest = before if event.start - before[0] <= after[0] - event.start else after
-            _, delta_start, delta_end = nearest
+            _, delta_start = nearest
+        duration = max(0, event.end - event.start)
         event.start = max(0, event.start + delta_start)
-        event.end = max(0, event.end + delta_end)
+        event.end = event.start + duration
 
     try:
-        subs.save(str(out), encoding="utf-8")
+        if original.suffix.lower() == ".srt":
+            _save_srt_preserving_event_text(subs, out)
+        else:
+            subs.save(str(out), encoding="utf-8")
     except Exception:  # noqa: BLE001 — write failure means the candidate is unusable
         logger.warning("subtitle cleaner: could not write %s", out, exc_info=True)
         return False
     return True
+
+
+def _save_srt_preserving_event_text(subs: pysubs2.SSAFile, out: Path) -> None:
+    """Write SRT timings without treating brace text as disposable ASS tags.
+
+    pysubs2's SRT writer intentionally strips ASS override blocks such as
+    ``{\\an8}`` and any literal text enclosed in braces. Those bytes belong to
+    the user's cue payload here; retiming must change timestamps only.
+    """
+
+    blocks = []
+    for index, event in enumerate(subs.events, start=1):
+        text = event.text.replace(r"\N", "\n").replace(r"\n", "\n")
+        blocks.append(f"{index}\n{_srt_timestamp(event.start)} --> {_srt_timestamp(event.end)}\n{text}")
+    out.write_text("\n\n".join(blocks) + "\n", encoding="utf-8", newline="\n")
+
+
+def _srt_timestamp(milliseconds: int) -> str:
+    milliseconds = max(0, int(milliseconds))
+    hours, remainder = divmod(milliseconds, 3_600_000)
+    minutes, remainder = divmod(remainder, 60_000)
+    seconds, millis = divmod(remainder, 1_000)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"

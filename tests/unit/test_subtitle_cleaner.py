@@ -146,6 +146,22 @@ class TestMapDeltasBack:
         assert out.events[0].start == events[0].start + 700
         assert out.events[11].start == events[11].start + 700
 
+    def test_dropped_cue_keeps_its_duration_when_anchor_duration_changes(self, tmp_path):
+        events = _make_dialogue(12)
+        events.insert(5, _dialogue(9300, 9400, "sign text", style="Signs"))
+        original = _save(tmp_path / "orig.ass", events)
+        kept = [i for i in range(13) if i != 5]
+        synced_events = [events[i].copy() for i in kept]
+        for event in synced_events:
+            event.start += 1000
+            event.end -= 1000
+        synced = _save(tmp_path / "synced.srt", synced_events)
+        out_path = tmp_path / "out.ass"
+
+        assert map_deltas_back(original, synced, kept, out_path)
+        mapped = pysubs2.load(str(out_path)).events[5]
+        assert mapped.end - mapped.start == 100
+
     def test_negative_result_clamps_to_zero(self, tmp_path):
         events = _make_dialogue(12)
         kept = list(range(1, 12))

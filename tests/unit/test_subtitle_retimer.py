@@ -8,6 +8,7 @@ guarantee are exercised on real file contents.
 
 from __future__ import annotations
 
+import sys
 import threading
 from pathlib import Path
 from typing import Any
@@ -18,7 +19,7 @@ import pytest
 
 from anki_miner.exceptions.subtitle import AlassNotFoundError
 from anki_miner.services.retime_reference import RetimeReference
-from anki_miner.services.subtitle_retimer import TMP_SUBDIR_NAME, retime_subtitle
+from anki_miner.services.subtitle_retimer import TMP_SUBDIR_NAME, _temp_root_for_output, retime_subtitle
 from anki_miner.services.sync_engines import SyncResult
 from anki_miner.utils.file_pairing import FilePairMatcher
 
@@ -234,7 +235,7 @@ class TestEngineChain:
             "ffsubsync (single offset)",
         ]
 
-    def test_sub_reference_forwarded_to_alass(self, cfg, video, in_sub, out_sub, tmp_path):
+    def test_sub_reference_prefers_alass_and_forwards_reference_kind(self, cfg, video, in_sub, out_sub, tmp_path):
         reference = _write_sub(tmp_path / "ref.srt", _starts())
         captured: list[dict[str, Any]] = []
 
@@ -244,17 +245,36 @@ class TestEngineChain:
 
         with (
             patch(_REF, return_value=RetimeReference(path=reference, kind="subtitle", temp=None, label="eng")),
-            patch(_FFS, side_effect=_fake_engine(ok=False, engine="ffsubsync")),
+            patch(_FFS) as mock_ffs,
             patch(_ALASS, side_effect=_alass),
         ):
             outcome = retime_subtitle(cfg, video, in_sub, out_sub)
 
         assert outcome
+        mock_ffs.assert_not_called()
         assert captured[0]["sub_reference"] is True
         assert outcome.reference_label == "eng"
 
 
 class TestCleaningRoundTrip:
+    def test_srt_override_and_literal_brace_text_survives_map_back(self, cfg, video, tmp_path, out_sub):
+        texts = [r"{\an8}上の字幕", "{等等  你刚刚不是这样说的}", *[f"せりふ {i}" for i in range(12)]]
+        source = tmp_path / "positioned.srt"
+        source.write_text(
+            "\n\n".join(
+                f"{i + 1}\n00:00:{2 + i * 3:02d},000 --> 00:00:{3 + i * 3:02d},000\n{text}"
+                for i, text in enumerate(texts)
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        with patch(_FFS, side_effect=_fake_engine(1200, engine="ffsubsync")), patch(_ALASS):
+            outcome = retime_subtitle(cfg, video, source, out_sub)
+
+        assert outcome
+        assert [event.text for event in pysubs2.load(str(out_sub)).events] == texts
+
     def test_engine_sees_dialogue_only_output_keeps_all_lines(self, cfg, video, tmp_path, out_sub):
         starts = _starts(14)
         texts = [f"せりふ {i}" for i in range(14)]
@@ -315,19 +335,21 @@ class TestCommit:
         # Nothing named ".retime-" leaks at the pairing-folder top level...
         leftovers = [p.name for p in tmp_path.iterdir() if ".retime-" in p.name]
         assert leftovers == []
-        # ...and the working subdirectory itself is gone (emptied, then rmdir'd).
-        assert not (out_sub.parent / TMP_SUBDIR_NAME).exists()
+        # ...and the retained concurrency-safe root contains no run workspaces.
+        tmp_root = out_sub.parent / TMP_SUBDIR_NAME
+        assert tmp_root.is_dir()
+        assert list(tmp_root.iterdir()) == []
 
 
 class TestTempFileLocation:
-    """Working files must never land in the pairing folder itself.
+    """Working files stay unpairable and within aligner path limits."""
 
-    A crash-orphaned ``ep01.retime-cand-0.srt`` sitting directly beside the
-    real subtitle is a pairable file (real ``.srt`` suffix) that the next
-    folder run's episode matcher would consume, shadowing the genuine
-    subtitle. Confining temps to a subdirectory keeps them invisible to
-    FilePairMatcher's non-recursive folder scan.
-    """
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows legacy path limit")
+    def test_long_output_path_uses_short_same_drive_temp_root(self):
+        output = Path("D:/") / ("long-folder-name-" * 12) / ("episode-name-" * 8 + ".srt")
+
+        assert _temp_root_for_output(output) == Path(output.anchor) / TMP_SUBDIR_NAME
+
 
     def test_temps_live_under_tmp_subdir(self, cfg, video, in_sub, out_sub):
         seen: list[Path] = []
@@ -341,20 +363,23 @@ class TestTempFileLocation:
             outcome = retime_subtitle(cfg, video, in_sub, out_sub)
 
         assert outcome
-        tmp_dir = out_sub.parent / TMP_SUBDIR_NAME
+        tmp_root = out_sub.parent / TMP_SUBDIR_NAME
         seen_temps = [p for p in seen if p != in_sub]
         assert seen_temps, "engine should have been handed at least one temp path"
         for p in seen_temps:
-            assert p.parent == tmp_dir
+            assert p.parent.parent == tmp_root
+            assert p.parent.name.startswith("run-")
             # Engines infer the output format from the suffix, so it must
             # stay a real subtitle extension even while hidden from pairing.
             assert p.suffix in FilePairMatcher.SUBTITLE_EXTENSIONS
 
-    def test_tmp_dir_removed_when_empty_after_run(self, cfg, video, in_sub, out_sub):
+    def test_run_tmp_dir_removed_when_empty_after_run(self, cfg, video, in_sub, out_sub):
         with patch(_FFS, side_effect=_fake_engine(1500, engine="ffsubsync")), patch(_ALASS):
             assert retime_subtitle(cfg, video, in_sub, out_sub)
 
-        assert not (out_sub.parent / TMP_SUBDIR_NAME).exists()
+        tmp_root = out_sub.parent / TMP_SUBDIR_NAME
+        assert tmp_root.is_dir()
+        assert list(tmp_root.iterdir()) == []
 
     def test_leftover_temp_not_paired_as_subtitle(self, tmp_path):
         """Documents the hazard the fix removes: an orphaned temp from a
@@ -371,6 +396,58 @@ class TestTempFileLocation:
 
         assert len(pairs) == 1
         assert pairs[0].subtitle == real_sub
+
+    def test_concurrent_runs_in_same_output_folder_have_isolated_temp_dirs(self, cfg, tmp_path):
+        """One run finishing must not remove another run's empty workspace."""
+        video_a = tmp_path / "ep01.mkv"
+        video_b = tmp_path / "ep02.mkv"
+        video_a.touch()
+        video_b.touch()
+        input_a = _write_sub(tmp_path / "jp01.srt", _starts())
+        input_b = _write_sub(tmp_path / "jp02.srt", _starts())
+        output_a = tmp_path / "ep01_retimed.srt"
+        output_b = tmp_path / "ep02_retimed.srt"
+        b_waiting = threading.Event()
+        a_finished = threading.Event()
+        outcomes: dict[str, object] = {}
+
+        def duration_probe(video_path, _ffprobe):
+            if video_path == video_b:
+                b_waiting.set()
+                assert a_finished.wait(timeout=2)
+            else:
+                assert b_waiting.wait(timeout=2)
+            return None
+
+        def run_a():
+            try:
+                outcomes["a"] = retime_subtitle(cfg, video_a, input_a, output_a)
+            finally:
+                a_finished.set()
+
+        def run_b():
+            try:
+                outcomes["b"] = retime_subtitle(cfg, video_b, input_b, output_b)
+            except Exception as exc:  # the pre-fix race escapes the orchestrator
+                outcomes["b"] = exc
+
+        with (
+            patch(_DUR, side_effect=duration_probe),
+            patch(_FFS, side_effect=_fake_engine(1500, engine="ffsubsync")),
+            patch(_ALASS),
+        ):
+            thread_b = threading.Thread(target=run_b)
+            thread_a = threading.Thread(target=run_a)
+            thread_b.start()
+            assert b_waiting.wait(timeout=2)
+            thread_a.start()
+            thread_a.join(timeout=3)
+            thread_b.join(timeout=3)
+
+        assert outcomes["a"]
+        assert outcomes["b"]
+        assert output_a.exists()
+        assert output_b.exists()
 
 
 class TestCancellation:

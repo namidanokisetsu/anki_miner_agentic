@@ -1,11 +1,20 @@
 ---
 name: anki-miner-agent
-description: Use for Anki Miner Agentic CLI/MCP mining workflows.
+description: Use for Anki Miner automation and mining workflows.
 ---
 
 # Anki Miner Agentic
 
 Anki Miner Agentic owns synchronization, filtering, lookup data, media, note construction, limits, durable retries, and Anki writes. The agent only performs bounded semantic review and supplies configured text enrichments. Use the local `anki_miner` CLI by default; MCP is a compatibility fallback.
+
+## Standalone media operations
+
+- Use Anki Miner's own `probe`, `retime`, `condense`, `transcribe`, and `download` commands. Do not substitute a lower-level tool such as ffsubsync when Anki Miner exposes the requested operation.
+- One subtitle retime is `anki_miner retime --video VIDEO --subtitle INPUT --output OUTPUT`. `OUTPUT` must have the input's extension and be a distinct path. Trust success only when the command exits zero and its JSON result has `ok: true`.
+- For a directory-scale retime, inventory and pair every subtitle before writing. Preserve the source-relative directory structure in both the backup and staging roots, and persist one result per pair so an interrupted run can resume without repeating completed work.
+- When the user authorizes replacing inputs, first copy every raw subtitle to a separate backup root and verify its digest. Retime to staging, then replace the original path only after Anki Miner validates that file. A rejected or failed retime leaves the original unchanged.
+- Verify alass is installed before a large run; Anki Miner can then use its faster subtitle-to-subtitle path and retain ffsubsync for audio or fallback.
+- Start library retiming with one worker. Both aligners can saturate CPU and disk internally, so benchmark representative audio-reference and subtitle-reference jobs before adding concurrency; more workers can reduce throughput sharply. Account for every discovered pair, and never retry without reading the saved per-file result first.
 
 ## Before calling tools
 
@@ -17,12 +26,12 @@ Anki Miner Agentic owns synchronization, filtering, lookup data, media, note con
 
 ## Required workflow
 
-1. Write one preparation request and run `anki_miner --config AGENT_CONFIG mine prepare --request REQUEST --output PREPARED`. It synchronizes the learner profile and writes one durable, review-only shortlist of up to `max_cards` candidates. Use `prepare_mining_run(inputs, max_cards)` only as the MCP fallback.
+1. For a multi-subtitle request, preflight every SRT cue structurally in one local pass and collect all `start >= end` failures before mining. Preserve sources; if timing repair is necessary, use validated workspace copies. Then write one preparation request and run `anki_miner --config AGENT_CONFIG mine prepare --request REQUEST --output PREPARED`. It synchronizes the learner profile and validates policy/mappings, so do not separately run sync/status/policy commands on a healthy path. Use `prepare_mining_run(inputs, max_cards)` only as the MCP fallback.
 2. Review every returned candidate under `review_contract`. Zero selections and shortfalls are successful; there is no quota.
 3. Build one `reviews` array using each candidate ID unchanged. Each item is `select` or `reject`, names one allowed reason code, and may include a short rationale.
 4. A selected review must name the matching prepared `definition_option_id` and supply every key in `required_enrichments`. A rejected review must set `definition_option_id` to `null` and omit `enrichments`.
 5. Write one reviews request and run `anki_miner --config AGENT_CONFIG mine commit --request REVIEWS --output RECEIPT --summary` once. Validation is mandatory and internal; do not ask for a second approval or a dry run. Use `commit_mining_run(run_id, reviews)` only as the MCP fallback.
-6. Report selected, created, duplicate-skipped, and failed counts, the destination, enrichment coverage, per-candidate outcomes, and the job-tag Browser query.
+6. Report selected, created, duplicate-skipped, and failed counts, the destination, enrichment coverage, a compact rejection list, and the job-tag Browser query. Show accepted examples only when requested; do not enumerate every accepted card by default.
 
 ## Enrichment rules
 
@@ -38,5 +47,5 @@ Anki Miner Agentic owns synchronization, filtering, lookup data, media, note con
 - `pitch_available=false` means no safe match for that expression and reading; it does not prove the pitch source is missing.
 - Never override eligibility, invent IDs, edit the SQLite store, expose raw Anki data, or retry changed reviews against an already committed run.
 - An unchanged `commit_mining_run` retry returns or resumes the same durable job. For stale media/subtitles, prepare a new run.
-- Prefer one reviewer. Delegation is optional, not a review requirement; use it only when the compact shortlist still exceeds the reviewer's practical context. If Hermes truly needs it, dispatch one non-overlapping batch whose workers each apply the complete returned contract. The consolidated completion is delivered automatically: never poll delegation files, processes, or status in a loop. Merge once, verify exact candidate-ID coverage, and commit once.
+- Perform exactly one semantic review. For up to 100 candidates, use the current agent or one reviewer subagent; do not fan out merely for speed. Do not run a second semantic audit unless schema/ID validation fails, the reviewer explicitly flags unresolved items, or the user requests it. For a larger shortlist, use at most two non-overlapping reviewers, dispatch once, and never poll delegation status. Parse prepared/review JSON locally and print only counts, validation errors, and non-pass items—not the full shortlist or accepted set. Merge once, verify exact candidate-ID coverage, and commit once.
 - The CLI accepts file-backed reviews with `mine commit --request FILE`. When using it from an agent runtime, remove an injected `PYTHONPATH`, write the receipt with `--output FILE`, and combine it with `--summary` so only counts and actionable failures reach the transcript.
