@@ -35,6 +35,7 @@ from __future__ import annotations
 import contextlib
 import logging
 import os
+import tempfile
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -61,14 +62,18 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["RetimeOutcome", "retime_subtitle"]
 
-#: Subdirectory of ``out_sub.parent`` where working files are written. Keeping
-#: them out of the pairing folder itself means a crash-orphaned temp can never
-#: be picked up as a subtitle by ``FilePairMatcher`` (its folder scan is
-#: non-recursive) — the temp keeps a real ``.srt``/``.ass`` suffix, which the
-#: sync engines need to infer the output format, while staying invisible to
-#: the episode matcher. Same filesystem as *out_sub*, so ``_commit``'s
-#: ``os.replace`` cannot hit EXDEV.
+#: Root below ``out_sub.parent`` where each retime gets an isolated workspace.
+#: Keeping real subtitle temps below this hidden directory makes them invisible
+#: to ``FilePairMatcher`` while keeping them on the output filesystem, so
+#: ``_commit`` cannot hit EXDEV. The root itself is intentionally retained:
+#: deleting a shared root lets one concurrent run remove another run's empty
+#: workspace between creation and its first write.
 TMP_SUBDIR_NAME = ".anki-miner-retime-tmp"
+
+# Leave room below MAX_PATH for alass's own path handling and suffixes. Python
+# itself supports longer Windows paths, but alass v2.0.0 still fails to open
+# them unless its working files live under a short path.
+_WINDOWS_WORK_PATH_LIMIT = 240
 
 #: Formats every alignment engine can read and write. alass v2.0.0 accepts only
 #: SubRip, SubStationAlpha and VobSub -- handed a .vtt it prints "unknown
@@ -140,7 +145,17 @@ def retime_subtitle(
         log_cb: Called with human-readable progress/decision lines.
     """
     logger.info("retime: %s <- %s (out %s)", video.name, in_sub.name, out_sub.name)
-    tmp_dir = out_sub.parent / TMP_SUBDIR_NAME
+    local_tmp_root = out_sub.parent / TMP_SUBDIR_NAME
+    tmp_root = _temp_root_for_output(out_sub)
+    try:
+        tmp_root.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        # A volume root can be read-only even when the destination folder is
+        # writable. Fall back to the local path; the aligner will report a
+        # useful error if that path also exceeds a platform limit.
+        tmp_root = local_tmp_root
+        tmp_root.mkdir(parents=True, exist_ok=True)
+    tmp_dir = Path(tempfile.mkdtemp(prefix="run-", dir=tmp_root))
     temps: list[Path] = []
     reference = None
     try:
@@ -271,12 +286,20 @@ def retime_subtitle(
             _unlink_quiet(temp)
         if reference is not None and reference.temp is not None:
             _unlink_quiet(reference.temp)
-        # Guarded, not unconditional: a concurrent run in the same folder may
-        # still have files in tmp_dir, and rmdir on a non-empty or already
-        # gone (mkdir never ran / another run already removed it) directory
-        # both raise OSError — either way there is nothing more to do here.
+        # Remove only this run's workspace. TMP_SUBDIR_NAME is shared by
+        # concurrent runs and must remain present so no run can delete the
+        # directory after another has created it but before its first write.
         with contextlib.suppress(OSError):
             tmp_dir.rmdir()
+
+
+def _temp_root_for_output(out_sub: Path) -> Path:
+    """Choose a same-volume work root that remains usable by Windows alass."""
+    local_root = out_sub.parent / TMP_SUBDIR_NAME
+    probe = local_root / "run-xxxxxxxx" / f"{out_sub.stem}.retime-clean{out_sub.suffix}"
+    if os.name == "nt" and len(str(probe)) >= _WINDOWS_WORK_PATH_LIMIT and out_sub.anchor:
+        return Path(out_sub.anchor) / TMP_SUBDIR_NAME
+    return local_root
 
 
 def _engine_chain(config, *, sub_reference: bool, cancel_event: threading.Event | None):
@@ -314,8 +337,15 @@ def _engine_chain(config, *, sub_reference: bool, cancel_event: threading.Event 
             log_cb=log_cb,
         )
 
-    yield "ffsubsync", run_ffsubsync
-    yield "alass", run_alass_split
+    # Alass's subtitle-to-subtitle path is both more accurate and far faster
+    # than either engine's audio analysis. Prefer it for an extracted dialogue
+    # subtitle; retain ffsubsync as the portable first choice for audio.
+    if sub_reference:
+        yield "alass", run_alass_split
+        yield "ffsubsync", run_ffsubsync
+    else:
+        yield "ffsubsync", run_ffsubsync
+        yield "alass", run_alass_split
     yield "alass (single offset)", run_alass_offset
     yield "ffsubsync (single offset)", run_ffsubsync_offset
 
