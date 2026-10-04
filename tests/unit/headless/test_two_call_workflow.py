@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from unittest.mock import Mock
 
 import pytest
 
@@ -18,6 +19,33 @@ def config(**kwargs):
         WriteTarget("Mining", "Note", enabled=True),
         **kwargs,
     )
+
+
+@pytest.mark.parametrize(
+    ("payload", "code"),
+    [
+        ({"inputs": None, "max_cards": 1}, "invalid_input"),
+        ({"inputs": "episode", "max_cards": 1}, "invalid_input"),
+        ({"inputs": [None], "max_cards": 1}, "invalid_input"),
+        ({"inputs": [], "max_cards": 0}, "invalid_limit"),
+        ({"inputs": [], "max_cards": True}, "invalid_limit"),
+        ({"inputs": [], "max_cards": "10"}, "invalid_limit"),
+        ({"inputs": [{"video_file": None, "subtitle_file": "a.srt"}], "max_cards": 1}, "invalid_input"),
+        ({"inputs": [{"video_file": ["a.mp4"], "subtitle_file": "a.srt"}], "max_cards": 1}, "invalid_input"),
+        ({"inputs": [{"type": "unknown"}], "max_cards": 1}, "invalid_input"),
+    ],
+)
+def test_invalid_prepare_request_fails_before_learner_sync(payload, code):
+    profile = Mock()
+    candidates = Mock()
+    app = AgentMiningApplication(Mock(), config(), profile, candidates, Mock())
+
+    with pytest.raises(AgentMiningError) as raised:
+        app.prepare_mining_run(payload)
+
+    assert raised.value.code == code
+    profile.sync.assert_not_called()
+    candidates.prepare.assert_not_called()
 
 
 def make_run(

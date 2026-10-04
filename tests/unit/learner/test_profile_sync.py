@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from unittest.mock import Mock
+
 import pytest
 
 from anki_miner.agent.errors import AgentMiningError
@@ -96,6 +98,29 @@ def test_sync_cleans_aggregates_and_is_idempotent(tmp_path):
         "lapses": 1,
         "interval_days": 30,
     }
+
+
+def test_mapping_fetches_each_note_type_only_once_per_validation(tmp_path):
+    gateway = FakeGateway()
+    gateway.ordered_note_type_field_names = Mock(return_value=["word", "sentence", "answer"])
+    cfg = AgentProfileConfig(
+        knowledge_sources=(
+            KnowledgeSource("Deck A", "ExampleNote", ("word",), ("sentence",)),
+            KnowledgeSource("Destination", "ExampleNote", ("word",), ("sentence",)),
+        ),
+        write_target=WriteTarget("Destination", "ExampleNote"),
+        chosen_definition_field="answer",
+    )
+    service = LearnerProfileService(AgentStore(tmp_path / "learner.sqlite3"), FakeAnalyzer(), gateway, cfg)
+
+    service.validate_mapping()
+    gateway.ordered_note_type_field_names.assert_called_once_with("ExampleNote")
+
+    # A later validation must still see edits to the live Anki schema.
+    gateway.ordered_note_type_field_names.return_value = ["word", "sentence"]
+    with pytest.raises(AgentMiningError, match="Mapped enrichment fields"):
+        service.validate_mapping()
+    assert gateway.ordered_note_type_field_names.call_count == 2
 
 
 def test_bad_refresh_does_not_replace_published_profile(tmp_path):

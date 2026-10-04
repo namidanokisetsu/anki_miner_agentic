@@ -235,6 +235,8 @@ class LocalEpisodeInput:
             )
         except KeyError as exc:
             raise AgentMiningError("invalid_input", "Local input requires video_file and subtitle_file") from exc
+        except (TypeError, ValueError, OSError) as exc:
+            raise AgentMiningError("invalid_input", "Local video_file and subtitle_file must be valid paths") from exc
 
 
 @dataclass(frozen=True)

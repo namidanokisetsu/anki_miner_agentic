@@ -2,6 +2,8 @@
 
 The normal CLI path is two operations: prepare one durable run, then commit one reviewed batch. Anki Miner owns learner synchronization, source validation, deterministic filtering/ranking, dictionary data, media, note construction, limits, batching, provenance, and retries. The agent only reviews the bounded shortlist and enriches selected candidates; it receives no raw note dumps or database access. MCP remains a compatibility fallback over the same application facade.
 
+Preparation indexes sentence vocabulary once and sends repeated dictionary meanings only once, retaining the first configured source. Distinct meanings remain separate options. Invalid request shapes and card limits fail before learner synchronization, and shared note types need one live schema lookup per validation. Commit sends local media paths to Anki when accessible; inaccessible paths fall back to bounded inline uploads. These optimizations preserve the two-operation review contract and existing card authorization limits.
+
 This guide documents only the fork's agentic layer. See the [upstream Anki Miner documentation](https://github.com/0xzerolight/anki_miner#readme) for the inherited desktop application. The fork boundary and shared code changes are summarized in the root README.
 
 ## Quick start

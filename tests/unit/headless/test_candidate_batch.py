@@ -4,7 +4,7 @@ from collections import Counter
 from dataclasses import replace
 from types import SimpleNamespace
 
-from anki_miner.agent.candidates import CandidateBatchService
+from anki_miner.agent.candidates import CandidateBatchService, _compact_definition_options
 from anki_miner.agent.models import (
     AgentProfileConfig,
     AnalyzerIdentity,
@@ -92,6 +92,77 @@ def publish_empty_profile(store):
             "lexical_state": [],
         }
     )
+
+
+def test_definition_options_skip_repeated_meanings_across_dictionaries():
+    options = _compact_definition_options(
+        [
+            ("Primary", "<p>to eat; consume</p>"),
+            ("Duplicate", "to eat;  consume"),
+            ("Distinct", "<p>to live on</p>"),
+        ],
+        max_options=2,
+        max_chars=100,
+    )
+
+    assert options == [
+        {"option_id": "definition_1", "dictionary": "Primary", "text": "to eat; consume"},
+        {"option_id": "definition_2", "dictionary": "Distinct", "text": "to live on"},
+    ]
+
+
+def test_definition_options_do_not_deduplicate_only_by_a_truncated_prefix():
+    options = _compact_definition_options(
+        [("D", "shared prefix: first sense"), ("D", "shared prefix: second sense")],
+        max_options=2,
+        max_chars=10,
+    )
+
+    assert len(options) == 2
+    assert options[0]["option_id"] != options[1]["option_id"]
+
+
+def test_sentence_unknowns_include_each_variant_but_exclude_known_lexemes(tmp_path, monkeypatch):
+    def word(lemma, sentence, start):
+        return TokenizedWord(
+            surface=lemma,
+            lemma=lemma,
+            reading=lemma,
+            sentence=sentence,
+            start_time=start,
+            end_time=start + 1,
+            duration=1,
+        )
+
+    words = [
+        word("shared", "shared first known", 1),
+        word("first", "shared first known", 1),
+        word("known", "shared first known", 1),
+        word("shared", "shared second", 3),
+        word("second", "shared second", 3),
+    ]
+    parser = Parser()
+    monkeypatch.setattr(parser, "parse_subtitle_file_with_index", lambda path: (words, []))
+    monkeypatch.setattr(parser, "count_lemmas", lambda path: Counter(item.lemma for item in words))
+    video = tmp_path / "episode.mp4"
+    subtitle = tmp_path / "episode.srt"
+    video.write_bytes(b"video")
+    subtitle.write_text("fixture", encoding="utf-8")
+    store = AgentStore(tmp_path / "agent.sqlite3")
+    publish_empty_profile(store)
+    monkeypatch.setattr(store, "lexical_features", lambda: {"known": {"word_exposures": 1, "word_card_count": 0}})
+    batch = CandidateBatchService(store, Analyzer(), parser, Filter(), cfg()).prepare(
+        [LocalEpisodeInput(video, subtitle)], max_cards=10
+    )
+    page = store.list_candidates(
+        batch["batch_revision"], offset=0, limit=10, include_ineligible=True, expected_schema_version=1
+    )
+    by_term = {item["target"]["mined_form"]: item for item in page["candidates"]}
+
+    assert by_term["first"]["sentence"]["candidate_unknown_items"] == ["first", "shared"]
+    assert by_term["shared"]["sentence"]["candidate_unknown_items"] == ["first", "shared"]
+    assert by_term["second"]["sentence"]["candidate_unknown_items"] == ["second", "shared"]
+    assert all(item["sentence"]["unknown_lexemes"] == 2 for item in page["candidates"])
 
 
 def test_prepare_is_persistent_compact_and_idempotent(tmp_path):

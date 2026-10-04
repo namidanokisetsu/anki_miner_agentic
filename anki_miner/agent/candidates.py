@@ -63,7 +63,7 @@ def _compact_definition_options(
     entries: list[tuple[str, str]], *, max_options: int, max_chars: int
 ) -> list[dict[str, str]]:
     options: list[dict[str, str]] = []
-    seen: set[tuple[str, str]] = set()
+    seen: set[str] = set()
     for raw_dictionary, entry_html in entries:
         parser = _DefinitionTextExtractor()
         parser.feed(entry_html)
@@ -72,12 +72,15 @@ def _compact_definition_options(
         dictionary = " ".join(raw_dictionary.split())[:200]
         if not dictionary or not text:
             continue
+        # Several installed dictionaries can repeat the same definition. Keep
+        # the first source's option without spending review tokens on repeats.
+        # Compare the complete text: shared truncated prefixes are not proof
+        # that two senses are identical.
+        if text in seen:
+            continue
+        seen.add(text)
         if len(text) > max_chars:
             text = text[: max_chars - 1].rstrip() + "…"
-        identity = (dictionary, text)
-        if identity in seen:
-            continue
-        seen.add(identity)
         options.append({"option_id": f"definition_{len(options) + 1}", "dictionary": dictionary, "text": text})
         if len(options) >= max_options:
             break
@@ -186,6 +189,7 @@ class CandidateBatchService:
         known = self.store.lexical_features()
         occurrences: Counter[str] = Counter()
         variants: dict[str, list[tuple[TokenizedWord, dict[str, Any], tuple[str, ...]]]] = defaultdict(list)
+        lexemes_by_sentence: dict[str, set[str]] = defaultdict(set)
 
         for episode, source, parser, parsed in zip(resolved, sources, episode_parsers, parsed_episodes, strict=True):
             words, line_index, counts, _entries = parsed
@@ -199,6 +203,19 @@ class CandidateBatchService:
                 key = (round(word.start_time, 3), round(word.end_time, 3), word.sentence)
                 flags = cue_flags.get(key, ())
                 variants[word.mined_form].append((word, source, flags))
+                lexemes_by_sentence[word.sentence].add(word.mined_form)
+
+        # Compute each sentence's unknowns once. Scanning every variant for
+        # every candidate made episode preparation quadratic in vocabulary.
+        unknowns_by_sentence = {
+            sentence: sorted(
+                lexical_id
+                for lexical_id in lexemes
+                if known.get(lexical_id, {}).get("word_exposures", 0) == 0
+                and known.get(lexical_id, {}).get("word_card_count", 0) == 0
+            )
+            for sentence, lexemes in lexemes_by_sentence.items()
+        }
 
         definition_terms = sorted(variants)
         definition_map = self.definition_probe(definition_terms) if self.definition_probe else None
@@ -313,17 +330,8 @@ class CandidateBatchService:
                     if max_chars and len(primary.sentence) > max_chars:
                         reasons.append({"code": "sentence_too_long", "message": "Sentence exceeds the character limit"})
 
-            sentence_lexemes = {
-                other_id
-                for other_id, other_choices in variants.items()
-                if any(item[0].sentence == primary.sentence for item in other_choices)
-            }
-            unknown_count = sum(
-                1
-                for item in sentence_lexemes
-                if known.get(item, {"word_exposures": 0, "word_card_count": 0})["word_exposures"] == 0
-                and known.get(item, {"word_card_count": 0})["word_card_count"] == 0
-            )
+            unknown_items = unknowns_by_sentence[primary.sentence]
+            unknown_count = len(unknown_items)
             if (
                 not whitelisted
                 and policy is not None
@@ -389,12 +397,7 @@ class CandidateBatchService:
                     "chars": len(primary.sentence),
                     "duration_ms": round(primary.duration * 1000),
                     "unknown_lexemes": unknown_count,
-                    "candidate_unknown_items": sorted(
-                        item
-                        for item in sentence_lexemes
-                        if known.get(item, {"word_exposures": 0, "word_card_count": 0})["word_exposures"] == 0
-                        and known.get(item, {"word_card_count": 0})["word_card_count"] == 0
-                    ),
+                    "candidate_unknown_items": unknown_items,
                 },
                 "learner": learner,
                 "signals": {

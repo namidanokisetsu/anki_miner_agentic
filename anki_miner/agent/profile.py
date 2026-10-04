@@ -53,6 +53,14 @@ class LearnerProfileService:
     def validate_mapping(self) -> dict[str, Any]:
         validated: list[dict[str, Any]] = []
         fields_by_model: dict[str, list[str]] = {}
+
+        def model_fields(note_type: str) -> list[str]:
+            # dict.setdefault evaluates its default even on a cache hit.
+            # Several sources often share the same live Anki note type.
+            if note_type not in fields_by_model:
+                fields_by_model[note_type] = self.gateway.ordered_note_type_field_names(note_type)
+            return fields_by_model[note_type]
+
         available_decks = self.gateway.get_deck_names()
         configured_decks = {source.deck for source in self.config.knowledge_sources}
         configured_decks.add(self.config.write_target.deck)
@@ -76,10 +84,7 @@ class LearnerProfileService:
             available_note_types=available_models,
         )
         for source in self.config.knowledge_sources:
-            available = fields_by_model.setdefault(
-                source.note_type,
-                self.gateway.ordered_note_type_field_names(source.note_type),
-            )
+            available = model_fields(source.note_type)
             selected = [*source.word_fields, *source.text_fields, *source.ignored_fields]
             missing = sorted(set(selected) - set(available))
             require(
@@ -104,10 +109,7 @@ class LearnerProfileService:
         }
         mapped_enrichment_fields = {key: value for key, value in enrichment_fields.items() if value}
         if mapped_enrichment_fields:
-            available = fields_by_model.setdefault(
-                self.config.write_target.note_type,
-                self.gateway.ordered_note_type_field_names(self.config.write_target.note_type),
-            )
+            available = model_fields(self.config.write_target.note_type)
             missing = sorted(set(mapped_enrichment_fields.values()) - set(available))
             require(
                 not missing,

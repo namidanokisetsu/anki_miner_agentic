@@ -80,7 +80,8 @@ class AgentMiningApplication:
             result["ready"] = True
         return result
 
-    def prepare_mining_batch(self, request: dict[str, Any]) -> dict[str, Any]:
+    @staticmethod
+    def _parse_prepare_request(request: dict[str, Any]) -> tuple[list[LocalEpisodeInput | YouTubeInput], int]:
         if not isinstance(request, dict):
             raise AgentMiningError("invalid_request", "Preparation request must be an object")
         extra = sorted(set(request) - {"inputs", "max_cards"})
@@ -88,7 +89,10 @@ class AgentMiningApplication:
             code = "unsupported_agent_config_key" if "review_pool_size" in extra else "invalid_request"
             raise AgentMiningError(code, "Preparation request contains unsupported fields", {"fields": extra})
         parsed: list[LocalEpisodeInput | YouTubeInput] = []
-        for item in request.get("inputs", []):
+        inputs = request.get("inputs", [])
+        if not isinstance(inputs, list) or not all(isinstance(item, dict) for item in inputs):
+            raise AgentMiningError("invalid_input", "inputs must be an array of objects")
+        for item in inputs:
             if item.get("type", "local") == "local":
                 parsed.append(LocalEpisodeInput.from_dict(item))
             elif item.get("type") == "youtube":
@@ -96,8 +100,12 @@ class AgentMiningApplication:
             else:
                 raise AgentMiningError("invalid_input", f"Unsupported input type: {item.get('type')!r}")
         max_cards = request.get("max_cards")
-        if type(max_cards) is not int:
-            raise AgentMiningError("invalid_limit", "max_cards must be an integer")
+        if type(max_cards) is not int or max_cards < 1:
+            raise AgentMiningError("invalid_limit", "max_cards must be a positive integer")
+        return parsed, max_cards
+
+    def prepare_mining_batch(self, request: dict[str, Any]) -> dict[str, Any]:
+        parsed, max_cards = self._parse_prepare_request(request)
         return self.candidate_service.prepare(
             parsed,
             max_cards=max_cards,
@@ -105,14 +113,9 @@ class AgentMiningApplication:
 
     def prepare_mining_run(self, request: dict[str, Any]) -> dict[str, Any]:
         """Synchronize, prepare, internally page, and publish one durable shortlist."""
-        if not isinstance(request, dict):
-            raise AgentMiningError("invalid_request", "Preparation request must be an object")
-        extra = sorted(set(request) - {"inputs", "max_cards"})
-        if extra:
-            code = "unsupported_agent_config_key" if "review_pool_size" in extra else "invalid_request"
-            raise AgentMiningError(code, "Preparation request contains unsupported fields", {"fields": extra})
+        parsed, max_cards = self._parse_prepare_request(request)
         self.sync_learner_profile()
-        batch = self.prepare_mining_batch(request)
+        batch = self.candidate_service.prepare(parsed, max_cards=max_cards)
         shortlist: list[dict[str, Any]] = []
         offset = 0
         page_limit = _CANDIDATE_PAGE_SIZE
