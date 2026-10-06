@@ -1,7 +1,8 @@
 # Anki Miner Lean
 
 A small agent companion to [upstream Anki Miner](https://github.com/0xzerolight/anki_miner).
-Local code makes a shortlist; the agent selects words; upstream makes the cards.
+This companion finds candidate words in subtitles; the agent selects them; upstream Anki Miner creates the cards.
+Both programs run locally. Upstream's public API takes selected words; it does not export a candidate shortlist.
 This repository contains no desktop app, MCP server, or learner database.
 AI definitions and translations are optional later work. Upstream still supplies its normal dictionary fields.
 The previous desktop fork remains in Git history; its legacy CLI and MCP commands are retired.
