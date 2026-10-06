@@ -1,0 +1,6 @@
+{
+  "upstream": ["anki-miner"],
+  "language": "ja",
+  "profile": null,
+  "anki_connect": "http://127.0.0.1:8765"
+}

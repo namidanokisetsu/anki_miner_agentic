@@ -1,115 +1,19 @@
-# Python
+.venv/
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual environments
-venv/
-env/
-ENV/
-.venv
-.venv-release/
-
-# Release preflight build inputs (scripts/release_preflight.sh) — fetched/built,
-# never committed; CI regenerates them per run. licenses/ffmpeg/ stays tracked
-# (committed GPL text); licenses/alass/ and licenses/yt-dlp/ are fetched at build
-# time. yt-dlp's pinned version + per-OS digests live in .github/ytdlp-pin.json,
-# which IS tracked — only the downloaded binary is ignored.
-vendor/
-.release-cache/
-licenses/alass/
-licenses/yt-dlp/
-licenses/libmpv/Copyright
-licenses/libmpv/SOURCES.txt
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Project specific
-temp_media/
-*.log
-rename_log.txt
-.claude/
-.mypy_cache/
+build/
+dist/
 .ruff_cache/
-docs/
-.claude-runner/
-.agents/
+.pytest_cache/
+config.json
+runs/
+.mypy_cache/
 .codex/
-resources/
-debug/
-gifs/gif-tools
-# ...but keep the bundled card stylesheet, which lives in a package directory
-# named "resources" (Issue #44). Negate the dir + just its tracked file types,
-# so the broad rule above doesn't drop it (and __pycache__ stays ignored).
-!anki_miner/services/dictionary/resources/
-!anki_miner/services/dictionary/resources/__init__.py
-!anki_miner/services/dictionary/resources/*.css
-# Same for the GUI theme JSONs (Issue #27 family, #48 Dracula). Climb each
-# parent dir the broad resources/ rule excludes so themes/*.json can be tracked.
-!anki_miner/gui/resources/
-!anki_miner/gui/resources/styles/
-!anki_miner/gui/resources/styles/themes/
-!anki_miner/gui/resources/styles/themes/*.json
-# Same for the bundled name wordsets (Issue #59), relocated out of gui/resources
-# into their own non-GUI data package. Negate the package dirs + tracked file types.
-!anki_miner/resources/
-!anki_miner/resources/__init__.py
-!anki_miner/resources/wordsets/
-!anki_miner/resources/wordsets/__init__.py
-!anki_miner/resources/wordsets/*.txt
-TECH_DEBT_AUDIT.md
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Scratch output dir for demo-GIF regeneration (see gifs/gif-tools/README.md).
-# The tooling and the committed gifs/*.gif|mp4 are tracked; only scratch is hidden.
-gifs/test-gifs/
-
-# Logo design scratch (draft SVGs, downloaded fonts, generator scripts).
-# Only the picked logo is committed, into anki_miner/gui/resources/icons/.
-logo_drafts/
-# subagent-driven-development artifacts
-sdd/
-# uv lockfile — project uses pip+venv (see CLAUDE.md), not uv; stray artifact
-uv.lock
-# git worktrees for isolated feature work (superpowers:using-git-worktrees)
+.claude/
+.agents/
 .worktrees/
-
-plan_request.md
-plan.md
-.humanize
-sample
-
-# Private benchmark media, local Anki/Hermes configuration, and study outputs
+/sample/
 /benchmark-study/
+/plan.md
+/plan_request.md
+/.humanize

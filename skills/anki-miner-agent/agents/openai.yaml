@@ -1,4 +1,0 @@
-interface:
-  display_name: "Anki Miner Agentic"
-  short_description: "Run the safe Anki mining workflow step by step"
-  default_prompt: "Use $anki-miner-agent to sync, prepare, review the bounded shortlist, enrich selected candidates, and commit the exact unchanged reviews."

@@ -1,113 +1,18 @@
 name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  # Manual re-trigger. release.yml and publish.yml both refuse to act until a
-  # ci.yml run exists for the exact tagged SHA, and a push event that GitHub
-  # drops (an Actions incident shedding inbound traffic, 2026-08-26) cannot be
-  # redelivered -- leaving an empty commit as the only way to attach CI to a
-  # commit. Dispatch runs against the ref's current HEAD, so the ref being
-  # tagged can be attested without changing it.
-  workflow_dispatch:
-
-# Cancel superseded CI runs on the same ref (a new push to a PR obsoletes the
-# prior run). Safe to cancel: CI has no irreversible side effects.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-      - run: pip install -e ".[dev]"
-      - run: ruff check .
-      - run: black --check .
-
-  typecheck:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-      - run: pip install -e ".[dev]"
-      - run: mypy anki_miner
-
   test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
     strategy:
-      # One red interpreter must not cancel the other two: the default
-      # fail-fast reported "failure / cancelled / cancelled", which reads as a
-      # version-specific break even when all three fail identically.
-      fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.14"]
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install Qt system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libegl1 libpulse0 libxkbcommon0
-      - run: pip install -e ".[dev,languages]"
-      # `golden` = the Android-port engine parity contract; it's a separate
-      # project's concern, and every case clones the pinned revision and runs a
-      # real export. It has no hosted derivation workflow at all — the anki-miner
-      # repo's exporter is driven manually from anki-miner-android, which commits
-      # and verifies the reviewed contract. Excluding it is also why this checkout
-      # no longer needs fetch-depth: 0.
-      - run: pytest -m "not youtube and not e2e and not asr and not golden"
-        env:
-          QT_QPA_PLATFORM: offscreen
-          # Declared, not inherited. Qt derives QLocale() from LANG, and its C
-          # locale sets OmitGroupSeparator -- so a number the app renders as
-          # "184,200" on a developer's en_US box comes out "184200" here. Pin it
-          # so the runner image cannot change that under us.
-          LANG: C.UTF-8
-
-  wheel-assets:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-      - run: pip install --upgrade build
-      - run: python -m build --wheel
-      - run: python scripts/check_wheel_assets.py
-
-  test-asr:
-    # Installs the [asr] extra (faster-whisper + ctranslate2) and runs only the
-    # tests marked with @pytest.mark.asr.  The default lint/typecheck/test jobs
-    # keep .[dev] (no faster-whisper) so Task 2's import-seam + mypy overrides
-    # stay green there.  faster-whisper has binary wheels for Linux x86-64 on
-    # PyPI, so ubuntu-latest is the right runner.
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-      - name: Install Qt system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libegl1 libpulse0 libxkbcommon0
-      - run: pip install -e ".[dev,asr,asr-vulkan]"
-      - run: pytest -m "asr and not e2e"
-        env:
-          QT_QPA_PLATFORM: offscreen
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install . ruff
+      - run: python -m ruff check .
+      - run: python -m unittest discover -s tests -v

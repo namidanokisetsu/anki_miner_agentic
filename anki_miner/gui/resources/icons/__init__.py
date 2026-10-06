@@ -1,1 +1,0 @@
-"""GUI icon resources."""

@@ -1,4 +1,0 @@
-recursive-include anki_miner/gui/resources *
-recursive-include anki_miner/resources *
-global-exclude __pycache__
-global-exclude *.py[cod]
