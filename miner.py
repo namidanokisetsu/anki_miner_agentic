@@ -5,14 +5,13 @@ import hashlib
 import json
 import math
 import os
+import sys
 import tempfile
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
-from urllib.parse import urlparse
 
-from candidates import discover
-from transport import known_words, read_json, require_success, upstream, write_json
+from transport import bridge, read_json, require_success, upstream, write_json
 
 
 def require(condition, message):
@@ -28,42 +27,16 @@ def object_keys(value, allowed, required=()):
 
 def load_config(path):
     raw = read_json(path)
-    object_keys(raw, {"upstream", "profile", "language", "anki_connect", "anki_key_env", "known_words"})
-    config = {
-        "upstream": ["anki-miner"],
-        "profile": None,
-        "language": "ja",
-        "anki_connect": "http://127.0.0.1:8765",
-        **raw,
-    }
-    command = config["upstream"]
+    object_keys(raw, {"upstream_python", "profile", "language"})
+    config = {"upstream_python": sys.executable, "profile": None, "language": "ja", **raw}
     require(
-        isinstance(command, list) and command and all(isinstance(x, str) and x for x in command),
-        'upstream must be a nonempty command array, e.g. ["C:/path/AnkiMiner.exe"]',
+        isinstance(config["upstream_python"], str) and config["upstream_python"],
+        "upstream_python must be the Python executable where upstream Anki Miner is installed",
     )
-    require(config["language"] == "ja", "Candidate discovery currently supports Japanese (ja)")
+    require(config["language"] == "ja", "This workflow currently supports Japanese (ja)")
     require(
         config["profile"] is None or isinstance(config["profile"], str), "profile must be a string or null"
     )
-    require(isinstance(config["anki_connect"], str), "anki_connect must be a URL string")
-    url = urlparse(config["anki_connect"])
-    require(
-        url.scheme == "http" and url.hostname in {"127.0.0.1", "localhost", "::1"},
-        "anki_connect must be a local HTTP endpoint",
-    )
-    if "anki_key_env" in config:
-        require(
-            isinstance(config["anki_key_env"], str) and config["anki_key_env"],
-            "anki_key_env must name an environment variable",
-        )
-    if "known_words" in config:
-        require(isinstance(config["known_words"], list), "known_words must be a list")
-        for source in config["known_words"]:
-            object_keys(source, {"query", "field"}, {"query", "field"})
-            require(
-                all(isinstance(value, str) and value.strip() for value in source.values()),
-                "Each knowledge source needs a nonempty Anki query and field name",
-            )
     return config
 
 
@@ -90,7 +63,7 @@ def profile_args(config):
 
 
 def doctor(config):
-    with tempfile.TemporaryDirectory(prefix="anki-lean-check-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="anki-miner-check-") as temporary:
         log = Path(temporary) / "upstream.log"
         version = require_success(upstream(config, "version", log=log))
         require(
@@ -103,6 +76,7 @@ def doctor(config):
         return {
             "ok": bool(checks.get("ready")),
             "upstream_version": version.get("app"),
+            **bridge(config, "inspect", log=log),
             "checks": checks.get("items", []),
         }
 
@@ -130,6 +104,8 @@ def parse_sources(request):
             path = Path(item[key]).expanduser().resolve(strict=True)
             if path not in hashes:
                 hashes[path] = fingerprint(path)
+            if key == "subtitle_file":
+                require(hashes[path]["size"] <= 16 * 1024 * 1024, "Subtitle file exceeds 16 MiB")
             source[key] = str(path)
             source[key + "_fingerprint"] = hashes[path]
         offset = item.get("subtitle_offset", 0)
@@ -147,71 +123,29 @@ def prepare(config, request, folder):
     folder = Path(folder).expanduser().resolve()
     require(not folder.exists(), "Use a new run folder; prepared runs are immutable")
     sources = parse_sources(request)
-    # Finish all read-only work before publishing the run directory.
-    with tempfile.TemporaryDirectory(prefix="anki-lean-prepare-") as temporary:
-        settings_file = Path(temporary) / "settings.json"
+    with tempfile.TemporaryDirectory(prefix="anki-miner-prepare-") as temporary:
         log = Path(temporary) / "upstream.log"
-        checks = require_success(
-            upstream(config, "check", "--language", "ja", *profile_args(config), log=log)
+        prepared = bridge(
+            config,
+            "discover",
+            sources=sources,
+            limit=min(request["max_cards"] * 3, 1000),
+            log=log,
         )
-        require(
-            checks.get("ready") is True,
-            "Upstream setup is incomplete; run doctor to see the checks that failed",
-        )
-        require_success(
-            upstream(
-                config,
-                "settings-export",
-                "--language",
-                "ja",
-                "--out",
-                settings_file,
-                *profile_args(config),
-                log=log,
-            )
-        )
-        exported = read_json(settings_file)
-        require(
-            exported.get("anki_miner_settings") == 1 and exported.get("configured", True),
-            "Set up the Japanese profile in upstream Anki Miner first",
-        )
-        settings = exported["settings"]
-        target = {key: settings[key] for key in ("anki_deck_name", "anki_note_type", "anki_fields")}
-        for key in ("card_type", "card_type_marker_fields"):
-            if key in settings:
-                target[key] = settings[key]
-        target["allow_duplicate_cards"] = False
-        field = target["anki_fields"]["word"]
-        require(isinstance(field, str) and field, "Upstream must have an Expression field mapping")
-
-        def quote(value):
-            return (
-                '"'
-                + value.replace("\\", "\\\\").replace('"', '\\"').replace("*", "\\*").replace("_", "\\_")
-                + '"'
-            )
-
-        knowledge = config.get(
-            "known_words",
-            [
-                {
-                    "query": f'deck:{quote(target["anki_deck_name"])} note:{quote(target["anki_note_type"])}',
-                    "field": field,
-                }
-            ],
-        )
-        known = known_words(config, knowledge)
-        shortlist = discover(sources, known, min(request["max_cards"] * 3, 1000))
+        diagnostics = log.read_bytes() if log.is_file() else b""
+    shortlist, target = prepared["candidates"], prepared["target"]
     run = {
-        "schema": 1,
+        "schema": 2,
         "run_id": uuid.uuid4().hex[:16],
         "config_hash": digest(config),
         "max_cards": request["max_cards"],
         "target": target,
+        "upstream_state": prepared["upstream_state"],
         "sources": sources,
         "candidates": shortlist,
     }
     folder.mkdir(parents=True, exist_ok=False)
+    (folder / "upstream.log").write_bytes(diagnostics)
     write_json(folder / "run.json", run)
     # This is the only file the agent needs to read for semantic selection.
     write_json(folder / "shortlist.json", {"max_cards": run["max_cards"], "candidates": shortlist})
@@ -220,7 +154,7 @@ def prepare(config, request, folder):
         "run": str(folder),
         "shortlist": str(folder / "shortlist.json"),
         "candidates": len(shortlist),
-        "known_words": len(known),
+        "total_candidates": prepared["total_candidates"],
         "max_cards": run["max_cards"],
         "deck": target["anki_deck_name"],
     }
@@ -262,9 +196,9 @@ def build_job(config, run, selected, folder):
                     key: source[key]
                     for key in ("video_file", "subtitle_file", "subtitle_offset", "audio_track_override")
                 },
-                "tags": f'anki_miner_lean::{run["run_id"]}',
+                "tags": f'anki_miner::{run["run_id"]}',
                 "words": [
-                    {"word": candidate["word"], "line_start": candidate["line_start"]}
+                    {key: candidate[key] for key in ("word", "line_start", "line_expansion")}
                     for candidate in candidates
                 ],
             }
@@ -371,7 +305,7 @@ def collect_receipt(folder, run, selected, job, verdict=None, error=None):
         "counts": counts,
         "outputs": outputs,
         "deck": run["target"]["anki_deck_name"],
-        "browser_query": f'tag:anki_miner_lean::{run["run_id"]}',
+        "browser_query": f'tag:anki_miner::{run["run_id"]}',
         "error": (error if status == "uncertain" else None) or (verdict or {}).get("message"),
         "run_errors": run_errors,
         "media_store_failures": media_failures,
@@ -390,7 +324,7 @@ def commit(config, folder, selection):
     require(len(ids) == len(set(ids)), "Selection contains duplicate IDs")
     with run_lock(folder):
         run = read_json(folder / "run.json")
-        require(run.get("schema") == 1, "Unsupported prepared-run schema")
+        require(run.get("schema") == 2, "Prepared run is outdated; prepare a new run")
         require(len(ids) <= run["max_cards"], "Selection exceeds the authorized max_cards")
         candidates = {candidate["id"]: candidate for candidate in run["candidates"]}
         require(set(ids) <= set(candidates), "Selection contains an ID outside this run")
@@ -425,6 +359,12 @@ def commit(config, folder, selection):
                         f"Source changed; prepare a new run: {source[key]}",
                     )
                     checked.add(source[key])
+        if selected:
+            current = bridge(config, "inspect", log=folder / "upstream.log")
+            require(
+                current["upstream_state"] == run["upstream_state"],
+                "Upstream version or profile settings changed; prepare a new run",
+            )
         job = build_job(config, run, selected, folder)
         (folder / "upstream").mkdir(exist_ok=True)
         write_json(folder / "request.json", job)

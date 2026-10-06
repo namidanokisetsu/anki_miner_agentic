@@ -1,9 +1,9 @@
 ---
-name: anki-lean
-description: Mine Japanese video/subtitle pairs into Anki using a local shortlist and upstream Anki Miner. Use in an Anki Miner Lean checkout.
+name: anki-miner
+description: Mine Japanese video/subtitle pairs into Anki using upstream's filtered shortlist and card creation. Use in an Anki Miner checkout.
 ---
 
-# Anki Miner Lean
+# Anki Miner
 
 Run the commands from this checkout. Read `README.md` only for setup or recovery;
 routine mining needs the request, shortlist, selection, and receipt, not application source.

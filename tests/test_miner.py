@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import miner
 import transport
-from candidates import discover
 
 
 class WorkflowTests(unittest.TestCase):
@@ -20,10 +19,9 @@ class WorkflowTests(unittest.TestCase):
         self.video.write_bytes(b"test video")
         self.subtitles.write_text("1\n00:00:01,000 --> 00:00:03,000\n日本語を勉強する。\n", encoding="utf-8")
         self.config = {
-            "upstream": ["mock-miner"],
+            "upstream_python": "mock-python",
             "profile": None,
             "language": "ja",
-            "anki_connect": "http://127.0.0.1:8765",
         }
         self.request = {
             "max_cards": 1,
@@ -35,48 +33,39 @@ class WorkflowTests(unittest.TestCase):
         self.failure = None
         self.api = patch("miner.upstream", side_effect=self.fake_upstream).start()
         self.addCleanup(patch.stopall)
-        patch("miner.known_words", return_value=set()).start()
-        patch(
-            "miner.discover",
-            return_value=[
+        self.prepared = {
+            "target": {
+                "anki_deck_name": "Japanese",
+                "anki_note_type": "Vocabulary",
+                "anki_fields": {"word": "Expression"},
+                "allow_duplicate_cards": False,
+            },
+            "upstream_state": {"version": "3.6.0", "settings_hash": "fixture"},
+            "total_candidates": 2,
+            "candidates": [
                 {
                     "id": "c0001",
-                    "word": "勉強",
-                    "sentence": "日本語を勉強する。",
+                    "word": "study",
+                    "sentence": "test sentence",
                     "source": 0,
                     "line_start": 1.0,
+                    "line_expansion": [0, 1],
                     "occurrences": 2,
                 },
                 {
                     "id": "c0002",
-                    "word": "日本語",
-                    "sentence": "日本語を勉強する。",
+                    "word": "Japanese",
+                    "sentence": "test sentence",
                     "source": 0,
                     "line_start": 1.0,
+                    "line_expansion": [0, 0],
                     "occurrences": 1,
                 },
             ],
-        ).start()
-        patch(
-            "transport.urllib.request.urlopen", side_effect=AssertionError("Live network forbidden")
-        ).start()
+        }
+        self.bridge = patch("miner.bridge", side_effect=lambda *a, **kw: copy.deepcopy(self.prepared)).start()
 
     def fake_upstream(self, config, command, *args, **kwargs):
-        if command == "settings-export":
-            output = args[args.index("--out") + 1]
-            transport.write_json(
-                output,
-                {
-                    "anki_miner_settings": 1,
-                    "configured": True,
-                    "settings": {
-                        "anki_deck_name": "Japanese",
-                        "anki_note_type": "Vocabulary",
-                        "anki_fields": {"word": "Expression", "sentence": "Sentence"},
-                    },
-                },
-            )
-            return {"schema": 1, "ok": True}
         if command == "check":
             return {"schema": 1, "ok": True, "result": {"ready": True, "items": []}}
         if command == "version":
@@ -133,7 +122,9 @@ class WorkflowTests(unittest.TestCase):
         job = self.calls[0]
         self.assertEqual(job["config"]["anki_deck_name"], "Japanese")
         self.assertFalse(job["config"]["allow_duplicate_cards"])
-        self.assertEqual(job["episodes"][0]["words"], [{"word": "勉強", "line_start": 1.0}])
+        self.assertEqual(
+            job["episodes"][0]["words"], [{"word": "study", "line_start": 1.0, "line_expansion": [0, 1]}]
+        )
         self.assertEqual(receipt["outputs"][0]["note_id"], 100)
         self.assertTrue(receipt["ok"])
 
@@ -246,11 +237,35 @@ class WorkflowTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             miner.prepare(self.config, request, self.folder)
         self.api.assert_not_called()
+        self.bridge.assert_not_called()
+
+    def test_upstream_settings_change_requires_new_preparation(self):
+        self.prepare()
+        self.prepared["upstream_state"]["settings_hash"] = "changed"
+        with self.assertRaisesRegex(ValueError, "Upstream version or profile settings changed"):
+            self.commit()
+        self.assertEqual(self.calls, [])
+        self.assertFalse((self.folder / "receipt.json").exists())
+
+    def test_failed_discovery_does_not_publish_a_run(self):
+        self.bridge.side_effect = RuntimeError("Upstream filter failed")
+        with self.assertRaisesRegex(RuntimeError, "filter failed"):
+            self.prepare()
+        self.assertFalse(self.folder.exists())
+
+    def test_old_runs_require_new_preparation(self):
+        self.prepare()
+        run = transport.read_json(self.folder / "run.json")
+        run["schema"] = 1
+        transport.write_json(self.folder / "run.json", run)
+        with self.assertRaisesRegex(ValueError, "outdated"):
+            self.commit()
+        self.assertEqual(self.calls, [])
 
 
 class BoundaryTests(unittest.TestCase):
     def test_upstream_command_is_shell_free_and_scrubs_pythonpath(self):
-        config = {"upstream": ["C:/Program Files/AnkiMiner/AnkiMiner.exe"]}
+        config = {"upstream_python": "C:/Program Files/AnkiMiner/python.exe"}
         with tempfile.TemporaryDirectory() as folder:
             with patch.dict("os.environ", {"PYTHONPATH": "injected"}):
                 with patch(
@@ -261,46 +276,19 @@ class BoundaryTests(unittest.TestCase):
                 ) as call:
                     verdict = transport.upstream(config, "mine", "request.json", log=Path(folder) / "log")
             self.assertFalse(verdict["ok"])
-            self.assertEqual(call.call_args.args[0], [*config["upstream"], "--api", "mine", "request.json"])
+            self.assertEqual(
+                call.call_args.args[0],
+                [config["upstream_python"], "-I", "-m", "anki_miner", "--api", "mine", "request.json"],
+            )
             self.assertNotIn("PYTHONPATH", call.call_args.kwargs["env"])
             self.assertFalse(call.call_args.kwargs.get("shell", False))
 
-    def test_knowledge_reader_removes_ruby_readings_and_chunks_notes(self):
-        note = {"fields": {"Expression": {"value": "<ruby>勉強<rt>べんきょう</rt></ruby>"}}}
-        with patch("transport.anki", side_effect=[list(range(251)), [note] * 250, [note]]) as api:
-            words = transport.known_words({}, [{"query": "deck:Japanese", "field": "Expression"}])
-        self.assertEqual(words, {"勉強"})
-        self.assertEqual(len(api.call_args_list[1].kwargs["notes"]), 250)
-        self.assertEqual(len(api.call_args_list[2].kwargs["notes"]), 1)
-
-    def test_missing_knowledge_field_is_an_error(self):
-        with patch("transport.anki", side_effect=[[1], [{"fields": {}}]]):
-            with self.assertRaisesRegex(ValueError, "missing"):
-                transport.known_words({}, [{"query": "deck:Japanese", "field": "Expression"}])
-
-    def test_actual_subtitle_tokenization_filters_known_words_and_bounds_shortlist(self):
+    def test_removed_settings_require_migration(self):
         with tempfile.TemporaryDirectory() as folder:
-            path = Path(folder) / "sample.srt"
-            path.write_text(
-                "1\n00:00:01,000 --> 00:00:03,000\n日本語を勉強する。\n\n"
-                "2\n00:00:04,000 --> 00:00:06,000\n毎日勉強する。\n",
-                encoding="utf-8",
-            )
-            sources = [{"subtitle_file": str(path)}]
-            rows = discover(sources, set(), 10)
-            self.assertTrue(rows)
-            learned = rows[0]["word"]
-            filtered = discover(sources, {learned}, 1)
-            self.assertLessEqual(len(filtered), 1)
-            self.assertNotIn(learned, {row["word"] for row in filtered})
-            self.assertTrue(all(row["line_start"] in {1.0, 4.0} for row in rows))
-
-    def test_bad_subtitle_timing_fails_preparation(self):
-        with tempfile.TemporaryDirectory() as folder:
-            path = Path(folder) / "sample.srt"
-            path.write_text("1\n00:00:03,000 --> 00:00:01,000\n勉強する。\n", encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "Invalid subtitle timing"):
-                discover([{"subtitle_file": str(path)}], set(), 10)
+            path = Path(folder) / "config.json"
+            transport.write_json(path, {"known_words": []})
+            with self.assertRaisesRegex(ValueError, "Unknown keys"):
+                miner.load_config(path)
 
 
 if __name__ == "__main__":

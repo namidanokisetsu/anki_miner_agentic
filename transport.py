@@ -1,11 +1,8 @@
-"""The two external boundaries: upstream's CLI and AnkiConnect HTTP."""
+"""File records and calls into the separate upstream Python environment."""
 
-import html
 import json
 import os
-import re
 import subprocess
-import urllib.request
 from pathlib import Path
 
 MAX_JSON_BYTES = 8 * 1024 * 1024
@@ -38,14 +35,14 @@ def write_json(path, value):
         Path(temporary).unlink(missing_ok=True)
 
 
-def upstream(config, *arguments, log, timeout=60):
+def invoke(config, arguments, *, log, timeout=60):
     """Upstream exits zero for API refusals too; inspect the JSON verdict."""
     environment = dict(os.environ)
     environment.pop("PYTHONPATH", None)
     try:
         with Path(log).open("ab") as errors:
             result = subprocess.run(
-                [*config["upstream"], "--api", *map(str, arguments)],
+                [config["upstream_python"], "-I", *map(str, arguments)],
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=errors,
@@ -55,13 +52,16 @@ def upstream(config, *arguments, log, timeout=60):
             )
     except FileNotFoundError as exc:
         raise RuntimeError(
-            f"Upstream executable not found: {config['upstream'][0]}. "
-            "Install upstream Anki Miner separately and set upstream in config.json."
+            f"Upstream executable not found: {config['upstream_python']}. "
+            "Install upstream Anki Miner separately and set upstream_python in config.json."
         ) from exc
     except subprocess.TimeoutExpired as exc:
         raise RuntimeError("Upstream timed out; inspect saved results before attempting any new run") from exc
     if result.returncode:
-        raise RuntimeError(f"Upstream exited {result.returncode}; see {log}")
+        details = Path(log).read_text(encoding="utf-8", errors="replace")[-800:].strip()
+        raise RuntimeError(
+            f"Upstream exited {result.returncode}. Install upstream in upstream_python. {details}"
+        )
     if len(result.stdout) > MAX_JSON_BYTES:
         raise RuntimeError("Upstream returned an oversized verdict")
     verdict = json.loads(result.stdout.decode("utf-8-sig"))
@@ -81,43 +81,19 @@ def require_success(verdict):
     return verdict.get("result", {})
 
 
-def anki(config, action, **params):
-    payload = {"action": action, "version": 6, "params": params}
-    if config.get("anki_key_env"):
-        payload["key"] = os.environ[config["anki_key_env"]]
-    request = urllib.request.Request(
-        config["anki_connect"],
-        json.dumps(payload).encode("utf-8"),
-        {"Content-Type": "application/json"},
-    )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        data = response.read(MAX_JSON_BYTES + 1)
-    if len(data) > MAX_JSON_BYTES:
-        raise RuntimeError("AnkiConnect response is too large; narrow the knowledge query")
-    reply = json.loads(data)
-    if not isinstance(reply, dict) or set(reply) != {"result", "error"}:
-        raise RuntimeError("Malformed AnkiConnect response")
-    if reply["error"] is not None:
-        raise RuntimeError(f"AnkiConnect {action}: {reply['error']}")
-    return reply["result"]
+def upstream(config, *arguments, log, timeout=60):
+    return invoke(config, ["-m", "anki_miner", "--api", *arguments], log=log, timeout=timeout)
 
 
-def known_words(config, sources):
-    """Read exact expression fields, without copying a learner database."""
-    words = set()
-    for source in sources:
-        ids = anki(config, "findNotes", query=source["query"])
-        if not isinstance(ids, list) or any(type(note_id) is not int for note_id in ids):
-            raise RuntimeError("AnkiConnect returned invalid note IDs")
-        for offset in range(0, len(ids), 250):
-            rows = anki(config, "notesInfo", notes=ids[offset : offset + 250])
-            if not isinstance(rows, list) or len(rows) != len(ids[offset : offset + 250]):
-                raise RuntimeError("Incomplete AnkiConnect notesInfo response")
-            for row in rows:
-                try:
-                    value = row["fields"][source["field"]]["value"]
-                except (KeyError, TypeError) as exc:
-                    raise ValueError(f"Knowledge field {source['field']!r} is missing") from exc
-                value = re.sub(r"<rt\b[^>]*>.*?</rt>|\[sound:[^\]]*\]", "", value, flags=re.S | re.I)
-                words.add(html.unescape(re.sub(r"<[^>]+>", "", value)).strip())
-    return words
+def bridge(config, command, *, log, **request):
+    import tempfile
+
+    with tempfile.TemporaryDirectory(prefix="anki-miner-bridge-") as temporary:
+        path = Path(temporary) / "request.json"
+        write_json(
+            path,
+            {"command": command, "profile": config["profile"], "language": config["language"], **request},
+        )
+        return require_success(
+            invoke(config, [Path(__file__).with_name("candidates.py"), path], log=log, timeout=3600)
+        )
